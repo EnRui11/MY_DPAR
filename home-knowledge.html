@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY_DPAR - Disaster Preparedness and Response</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-100: #d4eaf7;
+            --primary-200: #b6ccd8;
+            --primary-300: #3b3c3d;
+            --accent-100: #71c4ef;
+            --accent-200: #00668c;
+            --text-100: #1d1c1c;
+            --text-200: #313d44;
+            --bg-100: #fffefb;
+            --bg-200: #f5f4f1;
+            --bg-300: #cccbc8;
+            --warning: #FF3D3D;
+        }
+        .glass-effect {
+            background: rgba(255, 254, 251, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 254, 251, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-[#1d1c1c] p-4 flex gap-4">
+    <!-- Home Page Mockup -->
+    <div class="w-[375px] h-[812px] bg-[#fffefb] rounded-[40px] p-1 shadow-xl">
+        <div class="w-full h-full bg-[#f5f4f1] rounded-[38px] overflow-hidden relative">
+            
+            <!-- Main Content -->
+            <div class="pt-16 px-6">
+                <h1 class="text-2xl font-bold text-[#3b3c3d] mb-2">Hello, Username</h1>
+                <p class="text-[#313d44] mb-1">Welcome to MY_DPAR</p>
+                <p class="text-[#313d44] mb-6">Your Disaster Preparedness and Response Assistant</p>
+                
+                <!-- SOS Button -->
+                <button class="w-full bg-[#FF3D3D] text-[#fffefb] rounded-2xl py-4 mb-6 flex items-center justify-center gap-2 shadow-lg hover:bg-opacity-90 transition-all">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/siren.svg" class="w-6 h-6 text-[#fffefb]">
+                    <span class="font-bold">SOS Emergency</span>
+                </button>
+                
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="glass-effect rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-[#d4eaf7] transition-all">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/map-pin.svg" class="w-6 h-6 text-[#00668c]">
+                        <span class="text-sm text-[#313d44]">Report Incident</span>
+                    </div>
+                    <div class="glass-effect rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-[#d4eaf7] transition-all">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/book-open.svg" class="w-6 h-6 text-[#00668c]">
+                        <span class="text-sm text-[#313d44]">Knowledge Base</span>
+                    </div>
+                </div>
+                
+                <!-- Recent Alerts -->
+                <h4 class="text-2xl font-bold text-[#3b3c3d] mb-2">Recent Alerts</h4>
+                <div class="space-y-4 max-h-[200px] overflow-y-auto mb-4">
+                    <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all">
+                        <div class="flex items-center gap-3 mb-2">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/alert-triangle.svg" class="w-5 h-5 text-[#FF3D3D]">
+                            <span class="font-medium text-[#3b3c3d]">Alert Topic</span>
+                        </div>
+                        <p class="text-sm text-[#313d44]">Description</p>
+                    </div>
+                    <div class="glass-effect rounded-2xl p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/alert-triangle.svg" class="w-5 h-5 text-[#FF3D3D]">
+                            <span class="font-medium text-[#3b3c3d]">Alert Topic</span>
+                        </div>
+                        <p class="text-sm text-[#313d44]">Description</p>
+                    </div>
+                    <div class="glass-effect rounded-2xl p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/alert-triangle.svg" class="w-5 h-5 text-[#FF3D3D]">
+                            <span class="font-medium text-[#3b3c3d]">Alert Topic</span>
+                        </div>
+                        <p class="text-sm text-[#313d44]">Description
+                    </div>
+                </div>
+                <button class="glass-effect w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-[#00668c] hover:bg-[#d4eaf7] transition-all">
+                    <span class="font-medium">View All Alerts</span>
+                    <img src="https://unpkg.com/lucide-static@latest/icons/chevron-right.svg" class="w-5 h-5">
+                </button>
+            </div>
+            
+            <!-- Bottom Navigation -->
+            <div class="glass-effect fixed bottom-0 w-[373px] h-16 flex justify-around items-center rounded-b-[38px]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/home.svg" class="w-6 h-6 text-[#00668c]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/map.svg" class="w-6 h-6 text-[#313d44]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/message-circle.svg" class="w-6 h-6 text-[#313d44]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/user.svg" class="w-6 h-6 text-[#313d44]">
+            </div>
+        </div>
+    </div>
+
+    <!-- Knowledge Base Mockup -->
+    <div class="w-[375px] h-[812px] bg-white rounded-[40px] p-1 shadow-xl">
+        <div class="w-full h-full bg-[#f5f4f1] rounded-[38px] overflow-hidden relative">
+            <!-- Status Bar -->
+            <div class="glass-effect h-12 flex items-center justify-between px-6 fixed w-[373px] z-10">
+                <div class="flex items-center gap-2">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/chevron-left.svg" class="w-6 h-6 text-[#3b3c3d]">
+                    <span class="font-semibold text-[#3b3c3d]">Knowledge Base</span>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="pt-16 px-6 pb-20 h-full overflow-y-auto">
+                <!-- Search Bar -->
+                <div class="glass-effect rounded-2xl p-3 flex items-center gap-3 mb-6">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/search.svg" class="w-5 h-5 text-[#313d44]">
+                    <input type="text" placeholder="Search guides and resources..." class="bg-transparent w-full text-[#3b3c3d] placeholder-[#313d44] focus:outline-none">
+                </div>
+
+                <!-- Featured Guide -->
+                <div class="glass-effect rounded-2xl p-6 mb-6 bg-gradient-to-br from-[#00668c] to-[#71c4ef]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/zap.svg" class="w-6 h-6 text-white">
+                        <span class="text-white font-semibold">Featured Guide</span>
+                    </div>
+                    <h3 class="text-white font-bold text-xl mb-2">Emergency Preparedness 101</h3>
+                    <p class="text-[#d4eaf7] mb-4">Essential steps to prepare for any disaster situation</p>
+                    <button class="bg-white text-[#00668c] py-2 px-4 rounded-xl font-medium hover:bg-opacity-90 transition-all">Learn More</button>
+                </div>
+
+                <!-- Quick Access Categories -->
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all cursor-pointer">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/clipboard-list.svg" class="w-8 h-8 text-[#00668c] mb-3">
+                        <h3 class="font-semibold text-[#3b3c3d] mb-1">Preparation Guides</h3>
+                        <p class="text-xs text-[#313d44]">Step-by-step disaster guides</p>
+                    </div>
+                    <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all cursor-pointer">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/phone.svg" class="w-8 h-8 text-[#00668c] mb-3">
+                        <h3 class="font-semibold text-[#3b3c3d] mb-1">Emergency Contacts</h3>
+                        <p class="text-xs text-[#313d44]">Important numbers & contacts</p>
+                    </div>
+                    <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all cursor-pointer">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/heart-pulse.svg" class="w-8 h-8 text-[#00668c] mb-3">
+                        <h3 class="font-semibold text-[#3b3c3d] mb-1">First Aid Guide</h3>
+                        <p class="text-xs text-[#313d44]">Medical emergency basics</p>
+                    </div>
+                    <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all cursor-pointer">
+                        <img src="https://unpkg.com/lucide-static@latest/icons/graduation-cap.svg" class="w-8 h-8 text-[#00668c] mb-3">
+                        <h3 class="font-semibold text-[#3b3c3d] mb-1">Training</h3>
+                        <p class="text-xs text-[#313d44]">Disaster response training resources</p>
+                    </div>
+                </div>
+
+                <!-- Recent & Popular Guides -->
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-[#3b3c3d] mb-4 flex items-center justify-between">
+                            <span>Recent Guides</span>
+                            <button class="text-sm text-[#00668c] hover:underline">View All</button>
+                        </h2>
+                        <div class="space-y-3">
+                            <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all cursor-pointer">
+                                <div class="flex items-start gap-3">
+                                    <img src="https://unpkg.com/lucide-static@latest/icons/file-text.svg" class="w-5 h-5 text-[#00668c] mt-1">
+                                    <div>
+                                        <h3 class="font-medium text-[#3b3c3d] mb-1">Guide Topic</h3>
+                                        <p class="text-sm text-[#313d44]">Description</p>
+                                        <div class="flex items-center gap-4 mt-2 text-xs text-[#313d44]">
+                                            <span class="flex items-center gap-1">
+                                                <img src="https://unpkg.com/lucide-static@latest/icons/clock.svg" class="w-4 h-4">
+                                                5 min read
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <img src="https://unpkg.com/lucide-static@latest/icons/bookmark.svg" class="w-4 h-4">
+                                                Save for later
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="glass-effect rounded-2xl p-4 hover:bg-[#d4eaf7] transition-all cursor-pointer">
+                                <div class="flex items-start gap-3">
+                                    <img src="https://unpkg.com/lucide-static@latest/icons/file-text.svg" class="w-5 h-5 text-[#00668c] mt-1">
+                                    <div>
+                                        <h3 class="font-medium text-[#3b3c3d] mb-1">Guide Topic</h3>
+                                        <p class="text-sm text-[#313d44]">Description</p>
+                                        <div class="flex items-center gap-4 mt-2 text-xs text-[#313d44]">
+                                            <span class="flex items-center gap-1">
+                                                <img src="https://unpkg.com/lucide-static@latest/icons/clock.svg" class="w-4 h-4">
+                                                3 min read
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <img src="https://unpkg.com/lucide-static@latest/icons/bookmark.svg" class="w-4 h-4">
+                                                Save for later
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Navigation -->
+            <div class="glass-effect fixed bottom-0 w-[373px] h-16 flex justify-around items-center rounded-b-[38px]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/home.svg" class="w-6 h-6 text-[#313d44]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/map.svg" class="w-6 h-6 text-[#313d44]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/message-circle.svg" class="w-6 h-6 text-[#313d44]">
+                <img src="https://unpkg.com/lucide-static@latest/icons/user.svg" class="w-6 h-6 text-[#313d44]">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

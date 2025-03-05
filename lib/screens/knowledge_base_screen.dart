@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/screens/home_screen.dart';
+import 'package:mydpar/screens/map_screen.dart';
 
 class KnowledgeBaseScreen extends StatelessWidget {
   const KnowledgeBaseScreen({super.key});
@@ -383,7 +384,12 @@ class KnowledgeBaseScreen extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.map_outlined),
                   color: AppColors.text200,
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MapScreen()),
+                    );
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.message_outlined),

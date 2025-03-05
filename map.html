@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map - MY_DPAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary-100: #d4eaf7;
+            --primary-200: #b6ccd8;
+            --primary-300: #3b3c3d;
+            --accent-100: #71c4ef;
+            --accent-200: #00668c;
+            --text-100: #1d1c1c;
+            --text-200: #313d44;
+            --bg-100: #fffefb;
+            --bg-200: #f5f4f1;
+            --bg-300: #cccbc8;
+            --warning: #FF3D3D;
+        }
+        .glass-effect {
+            background: rgba(255, 254, 251, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 254, 251, 0.2);
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-black p-4">
+    <div class="w-[375px] h-[812px] bg-white rounded-[40px] p-1 shadow-xl mx-auto">
+        <div class="w-full h-full bg-[#f5f4f1] rounded-[38px] overflow-hidden relative">
+            <!-- Map Container -->
+            <div id="map"></div>
+
+            <!-- Status Bar -->
+            <div class="glass-effect h-12 flex items-center justify-between px-6 fixed w-[373px] z-10">
+                <div class="flex items-center gap-2">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/chevron-left.svg" class="w-6 h-6 text-[#3b3c3d]">
+                    <span class="font-semibold text-[#3b3c3d]">Map</span>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="glass-effect fixed top-16 right-6 p-3 rounded-2xl z-10 space-y-2">
+                <button class="flex items-center gap-2 text-sm text-[#3b3c3d] hover:text-[#00668c]">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/alert-triangle.svg" class="w-4 h-4">
+                    <span>Incidents</span>
+                </button>
+                <button class="flex items-center gap-2 text-sm text-[#3b3c3d] hover:text-[#00668c]">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/home.svg" class="w-4 h-4">
+                    <span>Shelters</span>
+                </button>
+                <button class="flex items-center gap-2 text-sm text-[#3b3c3d] hover:text-[#00668c]">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/first-aid.svg" class="w-4 h-4">
+                    <span>Medical</span>
+                </button>
+                <button class="flex items-center gap-2 text-sm text-[#3b3c3d] hover:text-[#00668c]">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/package.svg" class="w-4 h-4">
+                    <span>Supplies</span>
+                </button>
+            </div>
+
+            <!-- Location Controls -->
+            <div class="glass-effect fixed bottom-24 right-6 p-3 rounded-2xl z-10 space-y-2">
+                <button class="p-2 bg-[#00668c] rounded-xl hover:bg-opacity-90 transition-all">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/crosshair.svg" class="w-5 h-5 text-white">
+                </button>
+            </div>
+
+            <!-- Report Button -->
+            <div class="glass-effect fixed bottom-6 left-1/2 transform -translate-x-1/2 z-10">
+                <button class="bg-[#FF3D3D] text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-opacity-90 transition-all">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/map-pin.svg" class="w-5 h-5">
+                    Report Incident
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([3.1390, 101.6869], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add self location marker
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                L.marker([position.coords.latitude, position.coords.longitude])
+                    .addTo(map)
+                    .bindPopup('You are here')
+                    .openPopup();
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/screens/knowledge_base_screen.dart';
-
+import 'package:flutter/material.dart';
+import 'package:mydpar/theme/color_theme.dart';
+import 'package:mydpar/screens/knowledge_base_screen.dart';
+import 'package:mydpar/screens/map_screen.dart';  
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -111,7 +114,7 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            _buildBottomNavigation(),
+            _buildBottomNavigation(context),
           ],
         ),
       ),
@@ -308,7 +311,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
   
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(BuildContext context) {
     return Positioned(
       bottom: 0,
       left: 0,
@@ -327,10 +330,15 @@ class HomeScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home, true),
-                _buildNavItem(Icons.map_outlined, false),
-                _buildNavItem(Icons.message_outlined, false),
-                _buildNavItem(Icons.person_outline, false),
+                _buildNavItem(Icons.home, true, () {}),
+                _buildNavItem(Icons.map_outlined, false, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MapScreen()),
+                  );
+                }),
+                _buildNavItem(Icons.message_outlined, false, () {}),
+                _buildNavItem(Icons.person_outline, false, () {}),
               ],
             ),
           ),
@@ -338,13 +346,19 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-  Widget _buildNavItem(IconData icon, bool isActive) {
-    return IconButton(
-      icon: Icon(icon),
-      color: isActive ? AppColors.accent200 : AppColors.text200,
-      onPressed: () {
-        // TODO: Implement navigation
-      },
+  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.accent200.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: Icon(icon),
+        color: isActive ? AppColors.accent200 : AppColors.text200,
+        onPressed: onPressed,
+        iconSize: 24,
+        padding: const EdgeInsets.all(12),
+      ),
     );
   }
 }

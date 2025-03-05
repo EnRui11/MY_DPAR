@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/screens/login_screen.dart';
+import 'package:mydpar/screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter', // Make sure to add this font to your pubspec.yaml
       ),
-      home: const LoginScreen(),
+      home: const HomeScreen(),
     );
   }
 }

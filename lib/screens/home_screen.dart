@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/theme/color_theme.dart';
+import 'package:mydpar/screens/knowledge_base_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,63 +8,106 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg200,
+      backgroundColor: AppColors.primary200, 
       body: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.only(top: 120, left: 24, right: 24, bottom: 24), // Adjusted padding for fixed header
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  
+                  const SizedBox(height: 64),
+
+                  // SOS Button
+                  _buildSOSButton(context),
+                  const SizedBox(height: 24),
+
+                  // Quick Actions
+                  _buildQuickActions(context),
+                  const SizedBox(height: 24),
+
+                  // Recent Alerts
+                  // Replace the Recent Alerts section with this:
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Alerts',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary300, // Changed to match the theme
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // TODO: Navigate to all alerts
+                        },
+                        child: Text(
+                          'View All',
+                          style: TextStyle(
+                            color: AppColors.accent200,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
+                  _buildAlertsList(),
+                  const SizedBox(height: 80), // Space for bottom navigation
+                  const SizedBox(height: 16),
+                  // Remove the entire _buildViewAllButton() method
+                  const SizedBox(height: 80), // Space for bottom navigation
+                ],
+              ),
+            ),
+            // Fixed welcome header
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.accent200, AppColors.accent100],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Text(
                     'Hello, Username',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary300,
+                      color: AppColors.bg100,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     'Welcome to MY_DPAR',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.text200,
+                      color: AppColors.primary100,
                     ),
                   ),
                   Text(
                     'Your Disaster Preparedness and Response Assistant',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.text200,
+                      color: AppColors.primary100,
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // SOS Button
-                  _buildSOSButton(),
-                  const SizedBox(height: 24),
-
-                  // Quick Actions
-                  _buildQuickActions(),
-                  const SizedBox(height: 24),
-
-                  // Recent Alerts
-                  Text(
-                    'Recent Alerts',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary300,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildAlertsList(),
-                  const SizedBox(height: 16),
-                  _buildViewAllButton(),
-                  const SizedBox(height: 80), // Space for bottom navigation
                 ],
               ),
             ),
@@ -74,46 +118,55 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSOSButton() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.warning,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warning.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: MaterialButton(
-        onPressed: () {
-          // TODO: Implement SOS functionality
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.bg100, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              'SOS Emergency',
-              style: TextStyle(
-                color: AppColors.bg100,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+  Widget _buildSOSButton(BuildContext context) {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0.95, end: 1.0),
+      duration: const Duration(seconds: 2),
+      curve: Curves.easeInOut,
+      builder: (context, double value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.warning,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.warning.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: MaterialButton(
+              onPressed: () {
+                // TODO: Implement SOS functionality
+              },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: AppColors.bg100, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    'SOS Emergency',
+                    style: TextStyle(
+                      color: AppColors.bg100,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
-
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     return Row(
       children: [
         Expanded(
@@ -126,12 +179,16 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
+        // In the _buildQuickActions method, update the knowledge base card's onTap:
         Expanded(
           child: _buildActionCard(
             icon: Icons.book_outlined,
             label: 'Knowledge Base',
             onTap: () {
-              // TODO: Navigate to knowledge base
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const KnowledgeBaseScreen()),
+              );
             },
           ),
         ),
@@ -158,12 +215,13 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: AppColors.accent200, size: 24),
-              const SizedBox(height: 8),
+              Icon(icon, color: AppColors.accent200, size: 32),
+              const SizedBox(height: 12),
               Text(
                 label,
                 style: TextStyle(
-                  color: AppColors.text200,
+                  color: AppColors.primary300,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -174,27 +232,6 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildAlertsList() {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 200),
-      child: SingleChildScrollView(
-        child: Column(
-          children: List.generate(
-            3,
-            (index) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildAlertCard(
-                topic: 'Alert Topic',
-                description: 'Description',
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildAlertCard({required String topic, required String description}) {
     return Container(
       decoration: BoxDecoration(
@@ -204,29 +241,31 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.warning_amber_rounded,
-                    color: AppColors.warning, size: 20),
-                const SizedBox(width: 12),
-                Text(
-                  topic,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.primary300,
+            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    topic,
+                    style: TextStyle(
+                      color: AppColors.primary300,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: TextStyle(
-                color: AppColors.text200,
-                fontSize: 14,
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: AppColors.text200,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -234,37 +273,41 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildViewAllButton() {
+  Widget _buildAlertsList() {
+    final List<Map<String, String>> alerts = [
+      {
+        'topic': 'Flash Flood Warning',
+        'description': 'Heavy rainfall expected in Klang Valley area. Please stay alert and avoid flood-prone areas.',
+      },
+      {
+        'topic': 'Earthquake Alert',
+        'description': 'Magnitude 5.2 earthquake detected. Stay away from damaged buildings.',
+      },
+      {
+        'topic': 'Weather Advisory',
+        'description': 'Strong winds and thunderstorms expected in the evening.',
+      },
+    ];
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
-      ),
-      child: MaterialButton(
-        onPressed: () {
-          // TODO: Navigate to all alerts
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'View All Alerts',
-              style: TextStyle(
-                color: AppColors.accent200,
-                fontWeight: FontWeight.w500,
+      constraints: const BoxConstraints(maxHeight: 300),
+      child: Scrollbar(
+        thickness: 6,
+        radius: const Radius.circular(3),
+        child: SingleChildScrollView(
+          child: Column(
+            children: alerts.map((alert) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildAlertCard(
+                topic: alert['topic']!,
+                description: alert['description']!,
               ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: AppColors.accent200),
-          ],
+            )).toList(),
+          ),
         ),
       ),
     );
   }
-
+  
   Widget _buildBottomNavigation() {
     return Positioned(
       bottom: 0,
@@ -295,7 +338,6 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildNavItem(IconData icon, bool isActive) {
     return IconButton(
       icon: Icon(icon),

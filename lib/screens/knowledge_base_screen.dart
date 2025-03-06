@@ -199,11 +199,14 @@ class KnowledgeBaseScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      children: categories.map((category) => _buildCategoryCard(
-        icon: category['icon'] as IconData,
-        title: category['title'] as String,
-        description: category['description'] as String,
-      )).toList(),
+      childAspectRatio: 1.1, // Add this line to adjust card height
+      children: categories
+          .map((category) => _buildCategoryCard(
+                icon: category['icon'] as IconData,
+                title: category['title'] as String,
+                description: category['description'] as String,
+              ))
+          .toList(),
     );
   }
 
@@ -221,23 +224,29 @@ class KnowledgeBaseScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // Add this line
         children: [
-          Icon(icon, color: AppColors.accent200, size: 32),
-          const SizedBox(height: 12),
+          Icon(icon, color: AppColors.accent200, size: 28), // Reduced icon size
+          const SizedBox(height: 8), // Reduced spacing
           Text(
             title,
             style: TextStyle(
               color: AppColors.primary300,
               fontWeight: FontWeight.w600,
+              fontSize: 13, // Reduced font size
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             description,
             style: TextStyle(
               color: AppColors.text200,
-              fontSize: 12,
+              fontSize: 11, // Reduced font size
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -332,7 +341,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Icon(Icons.bookmark_border, size: 16, color: AppColors.text200),
+                    Icon(Icons.bookmark_border,
+                        size: 16, color: AppColors.text200),
                     const SizedBox(width: 4),
                     Text(
                       'Save for later',
@@ -377,7 +387,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
                     // Navigate to home screen and remove all previous routes
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const HomeScreen()),
                     );
                   },
                 ),
@@ -387,7 +398,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const MapScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const MapScreen()),
                     );
                   },
                 ),

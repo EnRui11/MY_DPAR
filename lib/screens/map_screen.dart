@@ -5,6 +5,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:geocoding/geocoding.dart';
+import 'dart:async';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -16,6 +17,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
+  Timer? _locationTimer; // Add this line
   LatLng? _currentLocation;
   Set<String> _activeFilters = {};
   bool _isSearching = false;
@@ -24,20 +26,32 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _getCurrentLocation().then((_) {
+      if (_currentLocation != null) {
+        _mapController.move(_currentLocation!, 15);
+      }
+    });
+    _locationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _getCurrentLocation();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _locationTimer?.cancel(); // Cancel the timer
     super.dispose();
   }
+
+  // Add this variable with other class variables
+  double _currentHeading = 0.0;
 
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await Geolocator.getCurrentPosition();
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
+        _currentHeading = position.heading;
       });
     } catch (e) {
       // Handle location error
@@ -265,8 +279,8 @@ class _MapScreenState extends State<MapScreen> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: LatLng(3.1390, 101.6869), // KL coordinates
-              zoom: 13,
+              center: _currentLocation ?? LatLng(3.1390, 101.6869),
+              zoom: 15,
             ),
             children: [
               TileLayer(
@@ -279,7 +293,7 @@ class _MapScreenState extends State<MapScreen> {
                     Marker(
                       point: _currentLocation!,
                       builder: (ctx) => const Icon(
-                        Icons.navigation,
+                        Icons.my_location,
                         color: Colors.blue,
                         size: 30,
                       ),
@@ -328,7 +342,7 @@ class _MapScreenState extends State<MapScreen> {
 
           // Location Control
           Positioned(
-            bottom: 80,
+            bottom: 90,
             right: 24,
             child: Container(
               decoration: BoxDecoration(
@@ -341,6 +355,7 @@ class _MapScreenState extends State<MapScreen> {
                 color: AppColors.accent200,
                 onPressed: () async {
                   if (_currentLocation != null) {
+                    _mapController.rotate(-_currentHeading);
                     _mapController.move(_currentLocation!, 15);
                   }
                 },
@@ -350,7 +365,7 @@ class _MapScreenState extends State<MapScreen> {
 
           // Report Button
           Positioned(
-            bottom: 80,
+            bottom: 85,
             left: 0,
             right: 0,
             child: Center(

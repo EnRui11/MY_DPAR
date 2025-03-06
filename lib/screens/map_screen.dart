@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:geocoding/geocoding.dart';
 import 'dart:async';
+import 'package:mydpar/screens/profile_screen.dart';
+import 'package:mydpar/theme/theme_provider.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -17,11 +20,13 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
-  Timer? _locationTimer; // Add this line
+  Timer? _locationTimer;
   LatLng? _currentLocation;
   Set<String> _activeFilters = {};
   bool _isSearching = false;
   List<Location>? _searchResults;
+  double _currentHeading = 0.0;
+  LatLng? _searchedLocation;
 
   @override
   void initState() {
@@ -39,12 +44,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _locationTimer?.cancel(); // Cancel the timer
+    _locationTimer?.cancel();
     super.dispose();
   }
-
-  // Add this variable with other class variables
-  double _currentHeading = 0.0;
 
   Future<void> _getCurrentLocation() async {
     try {
@@ -54,20 +56,17 @@ class _MapScreenState extends State<MapScreen> {
         _currentHeading = position.heading;
       });
     } catch (e) {
-      // Handle location error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Unable to get current location'),
-          backgroundColor: AppColors.warning,
+          content: const Text('Unable to get current location'),
+          backgroundColor: Provider.of<ThemeProvider>(context, listen: false)
+              .currentTheme
+              .warning,
         ),
       );
     }
   }
 
-  // Add this variable with the other class variables
-  LatLng? _searchedLocation;
-
-  // Update the _searchLocation method
   Future<void> _searchLocation(String query) async {
     setState(() {
       _isSearching = true;
@@ -94,8 +93,10 @@ class _MapScreenState extends State<MapScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Location not found'),
-          backgroundColor: AppColors.warning,
+          content: const Text('Location not found'),
+          backgroundColor: Provider.of<ThemeProvider>(context, listen: false)
+              .currentTheme
+              .warning,
         ),
       );
     }
@@ -111,7 +112,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  Widget _buildFilterButton(IconData icon, String label) {
+  Widget _buildFilterButton(IconData icon, String label, dynamic colors) {
     final bool isActive = _activeFilters.contains(label);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -121,28 +122,25 @@ class _MapScreenState extends State<MapScreen> {
           onTap: () => _toggleFilter(label),
           borderRadius: BorderRadius.circular(24),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: isActive
-                  ? AppColors.accent200.withOpacity(0.1)
+                  ? colors.accent200.withOpacity(0.1)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
-                Icon(icon,
-                    size: 18,
-                    color:
-                        isActive ? AppColors.accent200 : AppColors.primary300),
+                Icon(
+                  icon,
+                  size: 18,
+                  color: isActive ? colors.accent200 : colors.primary300,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: TextStyle(
-                    color:
-                        isActive ? AppColors.accent200 : AppColors.primary300,
+                    color: isActive ? colors.accent200 : colors.primary300,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -155,10 +153,10 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(dynamic colors) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100,
+        color: colors.bg100,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -174,7 +172,7 @@ class _MapScreenState extends State<MapScreen> {
         children: [
           Icon(
             Icons.search,
-            color: AppColors.primary300,
+            color: colors.primary300,
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -184,7 +182,7 @@ class _MapScreenState extends State<MapScreen> {
               decoration: InputDecoration(
                 hintText: 'Search location',
                 hintStyle: TextStyle(
-                  color: AppColors.primary300.withOpacity(0.5),
+                  color: colors.primary300.withOpacity(0.5),
                   fontSize: 16,
                 ),
                 border: InputBorder.none,
@@ -195,13 +193,13 @@ class _MapScreenState extends State<MapScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.accent200,
+                          color: colors.accent200,
                         ),
                       )
                     : null,
               ),
               style: TextStyle(
-                color: AppColors.primary300,
+                color: colors.primary300,
                 fontSize: 16,
               ),
               onSubmitted: (value) {
@@ -216,17 +214,17 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed) {
+  Widget _buildNavItem(
+      IconData icon, bool isActive, VoidCallback onPressed, dynamic colors) {
     return Container(
       decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.accent200.withOpacity(0.1)
-            : Colors.transparent,
+        color:
+            isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(
         icon: Icon(icon),
-        color: isActive ? AppColors.accent200 : AppColors.text200,
+        color: isActive ? colors.accent200 : colors.text200,
         onPressed: onPressed,
         iconSize: 24,
         padding: const EdgeInsets.all(12),
@@ -234,16 +232,16 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(BuildContext context, dynamic colors) {
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg100.withOpacity(0.7),
+          color: colors.bg100.withOpacity(0.7),
           border: Border(
-            top: BorderSide(color: AppColors.bg100.withOpacity(0.2)),
+            top: BorderSide(color: colors.bg100.withOpacity(0.2)),
           ),
         ),
         child: SafeArea(
@@ -258,10 +256,16 @@ class _MapScreenState extends State<MapScreen> {
                     context,
                     MaterialPageRoute(builder: (context) => const HomeScreen()),
                   );
-                }),
-                _buildNavItem(Icons.map_outlined, true, () {}),
-                _buildNavItem(Icons.message_outlined, false, () {}),
-                _buildNavItem(Icons.person_outline, false, () {}),
+                }, colors),
+                _buildNavItem(Icons.map_outlined, true, () {}, colors),
+                _buildNavItem(Icons.message_outlined, false, () {}, colors),
+                _buildNavItem(Icons.person_outline, false, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ProfileScreen()),
+                  );
+                }, colors),
               ],
             ),
           ),
@@ -272,6 +276,9 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -279,7 +286,7 @@ class _MapScreenState extends State<MapScreen> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: _currentLocation ?? LatLng(3.1390, 101.6869),
+              center: _currentLocation ?? const LatLng(3.1390, 101.6869),
               zoom: 15,
             ),
             children: [
@@ -304,7 +311,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
 
           // Search Bar
-          _buildSearchBar(),
+          _buildSearchBar(colors),
 
           // Filter Controls
           Positioned(
@@ -313,7 +320,7 @@ class _MapScreenState extends State<MapScreen> {
             right: 24,
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.bg100,
+                color: colors.bg100,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -329,11 +336,12 @@ class _MapScreenState extends State<MapScreen> {
                 child: Row(
                   children: [
                     _buildFilterButton(
-                        Icons.warning_amber_rounded, 'Incidents'),
-                    _buildFilterButton(Icons.home_outlined, 'Shelters'),
+                        Icons.warning_amber_rounded, 'Incidents', colors),
+                    _buildFilterButton(Icons.home_outlined, 'Shelters', colors),
                     _buildFilterButton(
-                        Icons.local_hospital_outlined, 'Medical'),
-                    _buildFilterButton(Icons.inventory_2_outlined, 'Supplies'),
+                        Icons.local_hospital_outlined, 'Medical', colors),
+                    _buildFilterButton(
+                        Icons.inventory_2_outlined, 'Supplies', colors),
                   ],
                 ),
               ),
@@ -346,13 +354,12 @@ class _MapScreenState extends State<MapScreen> {
             right: 24,
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.bg100.withOpacity(0.7),
+                color: colors.bg100.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+                border: Border.all(color: colors.bg100.withOpacity(0.2)),
               ),
               child: IconButton(
-                icon: const Icon(Icons.my_location),
-                color: AppColors.accent200,
+                icon: Icon(Icons.my_location, color: colors.accent200),
                 onPressed: () async {
                   if (_currentLocation != null) {
                     _mapController.rotate(-_currentHeading);
@@ -371,16 +378,16 @@ class _MapScreenState extends State<MapScreen> {
             child: Center(
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.bg100.withOpacity(0.7),
+                  color: colors.bg100.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+                  border: Border.all(color: colors.bg100.withOpacity(0.2)),
                 ),
                 padding: const EdgeInsets.all(4),
                 child: MaterialButton(
                   onPressed: () {
                     // TODO: Implement report incident
                   },
-                  color: AppColors.warning,
+                  color: colors.warning,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -393,12 +400,12 @@ class _MapScreenState extends State<MapScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.location_on_outlined,
-                            color: AppColors.bg100, size: 20),
+                            color: colors.bg100, size: 20),
                         const SizedBox(width: 8),
                         Text(
                           'Report Incident',
                           style: TextStyle(
-                            color: AppColors.bg100,
+                            color: colors.bg100,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -411,7 +418,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
 
           // Bottom Navigation
-          _buildBottomNavigation(context),
+          _buildBottomNavigation(context, colors),
         ],
       ),
     );

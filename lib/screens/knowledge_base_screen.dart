@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mydpar/screens/profile_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:mydpar/screens/map_screen.dart';
+import 'package:mydpar/theme/theme_provider.dart';
 
 class KnowledgeBaseScreen extends StatelessWidget {
   const KnowledgeBaseScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
+
     return Scaffold(
-      backgroundColor: AppColors.primary200,
+      backgroundColor: colors.primary200,
       body: SafeArea(
         child: Stack(
           children: [
@@ -23,19 +29,19 @@ class KnowledgeBaseScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         // Search Bar
-                        _buildSearchBar(),
+                        _buildSearchBar(colors),
                         const SizedBox(height: 24),
 
                         // Featured Guide
-                        _buildFeaturedGuide(),
+                        _buildFeaturedGuide(colors),
                         const SizedBox(height: 24),
 
                         // Quick Access Categories
-                        _buildQuickAccessCategories(),
+                        _buildQuickAccessCategories(colors),
                         const SizedBox(height: 32),
 
                         // Recent Guides
-                        _buildRecentGuides(),
+                        _buildRecentGuides(colors),
                         const SizedBox(height: 80), // Space for bottom nav
                       ],
                     ),
@@ -45,30 +51,29 @@ class KnowledgeBaseScreen extends StatelessWidget {
             ),
 
             // Header
-            _buildHeader(context),
+            _buildHeader(context, colors),
 
             // Bottom Navigation
-            _buildBottomNavigation(context),
+            _buildBottomNavigation(context, colors),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, dynamic colors) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
+        color: colors.bg100.withOpacity(0.7),
         border: Border(
-          bottom: BorderSide(color: AppColors.bg100.withOpacity(0.2)),
+          bottom: BorderSide(color: colors.bg100.withOpacity(0.2)),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back),
-            color: AppColors.primary300,
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
@@ -77,7 +82,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.primary300,
+              color: colors.primary300,
             ),
           ),
         ],
@@ -85,23 +90,23 @@ class KnowledgeBaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(dynamic colors) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
+        color: colors.bg100.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(Icons.search, color: AppColors.text200),
+          Icon(Icons.search, color: colors.text200),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search guides and resources...',
-                hintStyle: TextStyle(color: AppColors.text200),
+                hintStyle: TextStyle(color: colors.text200),
                 border: InputBorder.none,
               ),
             ),
@@ -111,13 +116,13 @@ class KnowledgeBaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturedGuide() {
+  Widget _buildFeaturedGuide(dynamic colors) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.accent200, AppColors.accent100],
+          colors: [colors.accent200, colors.accent100],
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -127,12 +132,12 @@ class KnowledgeBaseScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.bolt, color: AppColors.bg100),
+              Icon(Icons.bolt, color: colors.bg100),
               const SizedBox(width: 12),
               Text(
                 'Featured Guide',
                 style: TextStyle(
-                  color: AppColors.bg100,
+                  color: colors.bg100,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -142,7 +147,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
           Text(
             'Emergency Preparedness 101',
             style: TextStyle(
-              color: AppColors.bg100,
+              color: colors.bg100,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -150,26 +155,31 @@ class KnowledgeBaseScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Essential steps to prepare for any disaster situation',
-            style: TextStyle(color: AppColors.primary100),
+            style: TextStyle(color: colors.primary100),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              // TODO: Navigate to detailed guide
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.bg100,
-              foregroundColor: AppColors.accent200,
+              backgroundColor: colors.bg100,
+              foregroundColor: colors.accent200,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Learn More'),
+            child: Text(
+              'Learn More',
+              style: TextStyle(color: colors.accent200),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickAccessCategories() {
+  Widget _buildQuickAccessCategories(dynamic colors) {
     final categories = [
       {
         'icon': Icons.assignment_outlined,
@@ -199,12 +209,13 @@ class KnowledgeBaseScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      childAspectRatio: 1.1, // Add this line to adjust card height
+      childAspectRatio: 1.1,
       children: categories
           .map((category) => _buildCategoryCard(
                 icon: category['icon'] as IconData,
                 title: category['title'] as String,
                 description: category['description'] as String,
+                colors: colors,
               ))
           .toList(),
     );
@@ -214,26 +225,27 @@ class KnowledgeBaseScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required String description,
+    required dynamic colors,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
+        color: colors.bg100.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this line
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.accent200, size: 28), // Reduced icon size
-          const SizedBox(height: 8), // Reduced spacing
+          Icon(icon, color: colors.accent200, size: 28),
+          const SizedBox(height: 8),
           Text(
             title,
             style: TextStyle(
-              color: AppColors.primary300,
+              color: colors.primary300,
               fontWeight: FontWeight.w600,
-              fontSize: 13, // Reduced font size
+              fontSize: 13,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -242,8 +254,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
           Text(
             description,
             style: TextStyle(
-              color: AppColors.text200,
-              fontSize: 11, // Reduced font size
+              color: colors.text200,
+              fontSize: 11,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -253,7 +265,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentGuides() {
+  Widget _buildRecentGuides(dynamic colors) {
     return Column(
       children: [
         Row(
@@ -264,14 +276,16 @@ class KnowledgeBaseScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: AppColors.primary300,
+                color: colors.primary300,
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                // TODO: Navigate to all guides
+              },
               child: Text(
                 'View All',
-                style: TextStyle(color: AppColors.accent200),
+                style: TextStyle(color: colors.accent200),
               ),
             ),
           ],
@@ -281,12 +295,14 @@ class KnowledgeBaseScreen extends StatelessWidget {
           title: 'Guide Topic',
           description: 'Description',
           readTime: '5 min read',
+          colors: colors,
         ),
         const SizedBox(height: 12),
         _buildGuideCard(
           title: 'Guide Topic',
           description: 'Description',
           readTime: '3 min read',
+          colors: colors,
         ),
       ],
     );
@@ -296,18 +312,19 @@ class KnowledgeBaseScreen extends StatelessWidget {
     required String title,
     required String description,
     required String readTime,
+    required dynamic colors,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
+        color: colors.bg100.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.article_outlined, color: AppColors.accent200),
+          Icon(Icons.article_outlined, color: colors.accent200),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -316,7 +333,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: AppColors.primary300,
+                    color: colors.primary300,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -324,30 +341,30 @@ class KnowledgeBaseScreen extends StatelessWidget {
                 Text(
                   description,
                   style: TextStyle(
-                    color: AppColors.text200,
+                    color: colors.text200,
                     fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 16, color: AppColors.text200),
+                    Icon(Icons.access_time, size: 16, color: colors.text200),
                     const SizedBox(width: 4),
                     Text(
                       readTime,
                       style: TextStyle(
-                        color: AppColors.text200,
+                        color: colors.text200,
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Icon(Icons.bookmark_border,
-                        size: 16, color: AppColors.text200),
+                        size: 16, color: colors.text200),
                     const SizedBox(width: 4),
                     Text(
                       'Save for later',
                       style: TextStyle(
-                        color: AppColors.text200,
+                        color: colors.text200,
                         fontSize: 12,
                       ),
                     ),
@@ -361,16 +378,16 @@ class KnowledgeBaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(BuildContext context, dynamic colors) {
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg100.withOpacity(0.7),
+          color: colors.bg100.withOpacity(0.7),
           border: Border(
-            top: BorderSide(color: AppColors.bg100.withOpacity(0.2)),
+            top: BorderSide(color: colors.bg100.withOpacity(0.2)),
           ),
         ),
         child: SafeArea(
@@ -381,10 +398,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.home_outlined),
-                  color: AppColors.text200,
+                  icon: Icon(Icons.home_outlined, color: colors.text200),
                   onPressed: () {
-                    // Navigate to home screen and remove all previous routes
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -393,8 +408,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.map_outlined),
-                  color: AppColors.text200,
+                  icon: Icon(Icons.map_outlined, color: colors.text200),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -404,14 +418,20 @@ class KnowledgeBaseScreen extends StatelessWidget {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.message_outlined),
-                  color: AppColors.text200,
-                  onPressed: () {},
+                  icon: Icon(Icons.message_outlined, color: colors.text200),
+                  onPressed: () {
+                    // TODO: Implement messaging functionality
+                  },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.person_outline),
-                  color: AppColors.text200,
-                  onPressed: () {},
+                  icon: Icon(Icons.person_outline, color: colors.text200),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ProfileScreen()),
+                    );
+                  },
                 ),
               ],
             ),

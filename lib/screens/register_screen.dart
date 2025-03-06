@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
+import 'package:mydpar/theme/theme_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -56,8 +58,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
+
     return Scaffold(
-      backgroundColor: AppColors.bg200,
+      backgroundColor: colors.bg200,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -73,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary300,
+                      color: colors.primary300,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -81,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'Create your account to continue',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.text200,
+                      color: colors.text200,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -94,6 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _firstNameController,
                           label: 'First Name',
                           hint: 'First name',
+                          colors: colors,
                           required: true,
                         ),
                       ),
@@ -103,6 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _lastNameController,
                           label: 'Last Name',
                           hint: 'Last name',
+                          colors: colors,
                           required: true,
                         ),
                       ),
@@ -114,6 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emailController,
                     label: 'Email',
                     hint: 'Enter your email',
+                    colors: colors,
                     keyboardType: TextInputType.emailAddress,
                     required: true,
                   ),
@@ -124,22 +132,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _passwordController,
                     label: 'Password',
                     hint: 'Create a password',
+                    colors: colors,
                     isVisible: _isPasswordVisible,
                     onVisibilityChanged: (value) =>
                         setState(() => _isPasswordVisible = value),
                     onChanged: (value) => _updatePasswordStatus(),
                   ),
-                  
+
                   // Password Requirements
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Column(
                       children: [
-                        _buildRequirement('At least 8 characters', _hasMinLength),
-                        _buildRequirement('At least one uppercase letter', _hasUpperCase),
-                        _buildRequirement('At least one lowercase letter', _hasLowerCase),
-                        _buildRequirement('At least one number', _hasNumber),
-                        _buildRequirement('At least one special character', _hasSpecialChar),
+                        _buildRequirement(
+                            'At least 8 characters', _hasMinLength, colors),
+                        _buildRequirement('At least one uppercase letter',
+                            _hasUpperCase, colors),
+                        _buildRequirement('At least one lowercase letter',
+                            _hasLowerCase, colors),
+                        _buildRequirement(
+                            'At least one number', _hasNumber, colors),
+                        _buildRequirement('At least one special character',
+                            _hasSpecialChar, colors),
                       ],
                     ),
                   ),
@@ -148,6 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _confirmPasswordController,
                     label: 'Confirm Password',
                     hint: 'Re-enter your password',
+                    colors: colors,
                     isVisible: _isConfirmPasswordVisible,
                     onVisibilityChanged: (value) =>
                         setState(() => _isConfirmPasswordVisible = value),
@@ -158,6 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _buildRequirement(
                       'Passwords match',
                       _passwordsMatch,
+                      colors,
                     ),
 
                   // Emergency Contact Section
@@ -167,14 +183,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary300,
+                      color: colors.primary300,
                     ),
                   ),
                   Text(
                     'You can add this field later.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.warning,
+                      color: colors.warning,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -184,6 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emergencyNameController,
                     label: 'Contact Name',
                     hint: 'Emergency contact name',
+                    colors: colors,
                   ),
                   const SizedBox(height: 16),
 
@@ -191,6 +208,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emergencyRelationController,
                     label: 'Relationship',
                     hint: 'Relationship to contact',
+                    colors: colors,
                   ),
                   const SizedBox(height: 16),
 
@@ -198,6 +216,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emergencyPhoneController,
                     label: 'Contact Phone',
                     hint: 'Emergency contact phone',
+                    colors: colors,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 32),
@@ -206,19 +225,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ElevatedButton(
                     onPressed: _canSubmit() ? _handleSubmit : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent200,
+                      backgroundColor: colors.accent200,
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      disabledBackgroundColor: AppColors.accent200.withOpacity(0.5),
+                      disabledBackgroundColor:
+                          colors.accent200.withOpacity(0.5),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Create Account',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: colors.text100, // Using text100 for contrast
                       ),
                     ),
                   ),
@@ -231,14 +251,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Text(
                           'Already have an account? ',
-                          style: TextStyle(color: AppColors.text200),
+                          style: TextStyle(color: colors.text200),
                         ),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
                           child: Text(
                             'Sign In',
                             style: TextStyle(
-                              color: AppColors.accent200,
+                              color: colors.accent200,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -259,6 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required TextEditingController controller,
     required String label,
     required String hint,
+    required dynamic colors, // Dynamic theme colors
     TextInputType? keyboardType,
     bool required = false,
   }) {
@@ -271,13 +292,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColors.text200,
+              color: colors.text200,
             ),
             children: required
                 ? [
                     TextSpan(
                       text: ' *',
-                      style: TextStyle(color: AppColors.warning),
+                      style: TextStyle(color: colors.warning),
                     ),
                   ]
                 : null,
@@ -289,9 +310,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: AppColors.text200.withOpacity(0.5)),
+            hintStyle: TextStyle(color: colors.text200.withOpacity(0.5)),
             filled: true,
-            fillColor: AppColors.bg100,
+            fillColor: colors.bg100,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -307,6 +328,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required TextEditingController controller,
     required String label,
     required String hint,
+    required dynamic colors,
     required bool isVisible,
     required Function(bool) onVisibilityChanged,
     required Function(String) onChanged,
@@ -320,12 +342,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColors.text200,
+              color: colors.text200,
             ),
             children: [
               TextSpan(
                 text: ' *',
-                style: TextStyle(color: AppColors.warning),
+                style: TextStyle(color: colors.warning),
               ),
             ],
           ),
@@ -337,9 +359,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: AppColors.text200.withOpacity(0.5)),
+            hintStyle: TextStyle(color: colors.text200.withOpacity(0.5)),
             filled: true,
-            fillColor: AppColors.bg100,
+            fillColor: colors.bg100,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -348,7 +370,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             suffixIcon: IconButton(
               icon: Icon(
                 isVisible ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.text200,
+                color: colors.text200,
               ),
               onPressed: () => onVisibilityChanged(!isVisible),
             ),
@@ -358,7 +380,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildRequirement(String text, bool isMet) {
+  Widget _buildRequirement(String text, bool isMet, dynamic colors) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -368,7 +390,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             height: 8,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isMet ? Colors.green : AppColors.warning,
+              color: isMet ? Colors.green : colors.warning,
             ),
           ),
           const SizedBox(width: 8),
@@ -376,7 +398,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             text,
             style: TextStyle(
               fontSize: 14,
-              color: isMet ? Colors.green : AppColors.warning,
+              color: isMet ? Colors.green : colors.warning,
             ),
           ),
         ],
@@ -399,6 +421,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleSubmit() {
     if (_formKey.currentState!.validate()) {
       // TODO: Implement registration logic
+      // Example:
+      // final userData = {
+      //   'firstName': _firstNameController.text,
+      //   'lastName': _lastNameController.text,
+      //   'email': _emailController.text,
+      //   'password': _passwordController.text,
+      //   'emergencyContact': {
+      //     'name': _emergencyNameController.text,
+      //     'relation': _emergencyRelationController.text,
+      //     'phone': _emergencyPhoneController.text,
+      //   }
+      // };
+      // Navigate to next screen or show success message
     }
   }
 }

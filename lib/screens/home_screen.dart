@@ -1,38 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mydpar/screens/profile_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/screens/knowledge_base_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:mydpar/theme/color_theme.dart';
-import 'package:mydpar/screens/knowledge_base_screen.dart';
-import 'package:mydpar/screens/map_screen.dart';  
+import 'package:mydpar/screens/map_screen.dart';
+import 'package:mydpar/theme/theme_provider.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
+
     return Scaffold(
-      backgroundColor: AppColors.primary200, 
+      backgroundColor: colors.primary200,
       body: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 120, left: 24, right: 24, bottom: 24), // Adjusted padding for fixed header
+              padding: const EdgeInsets.only(
+                top: 120,
+                left: 24,
+                right: 24,
+                bottom: 24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   const SizedBox(height: 64),
 
                   // SOS Button
-                  _buildSOSButton(context),
+                  _buildSOSButton(context, colors),
                   const SizedBox(height: 24),
 
                   // Quick Actions
-                  _buildQuickActions(context),
+                  _buildQuickActions(context, colors),
                   const SizedBox(height: 24),
 
                   // Recent Alerts
-                  // Replace the Recent Alerts section with this:
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -41,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary300, // Changed to match the theme
+                          color: colors.primary300,
                         ),
                       ),
                       TextButton(
@@ -51,7 +58,7 @@ class HomeScreen extends StatelessWidget {
                         child: Text(
                           'View All',
                           style: TextStyle(
-                            color: AppColors.accent200,
+                            color: colors.accent200,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -59,10 +66,7 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _buildAlertsList(),
-                  const SizedBox(height: 80), // Space for bottom navigation
-                  const SizedBox(height: 16),
-                  // Remove the entire _buildViewAllButton() method
+                  _buildAlertsList(colors),
                   const SizedBox(height: 80), // Space for bottom navigation
                 ],
               ),
@@ -73,7 +77,7 @@ class HomeScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.accent200, AppColors.accent100],
+                  colors: [colors.accent200, colors.accent100],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -89,11 +93,11 @@ class HomeScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Hello, Username',
+                    'Hello, Username', // TODO: Replace with actual username
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.bg100,
+                      color: colors.bg100,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -101,27 +105,27 @@ class HomeScreen extends StatelessWidget {
                     'Welcome to MY_DPAR',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.primary100,
+                      color: colors.primary100,
                     ),
                   ),
                   Text(
                     'Your Disaster Preparedness and Response Assistant',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.primary100,
+                      color: colors.primary100,
                     ),
                   ),
                 ],
               ),
             ),
-            _buildBottomNavigation(context),
+            _buildBottomNavigation(context, colors),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSOSButton(BuildContext context) {
+  Widget _buildSOSButton(BuildContext context, dynamic colors) {
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0.95, end: 1.0),
       duration: const Duration(seconds: 2),
@@ -132,11 +136,11 @@ class HomeScreen extends StatelessWidget {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.warning,
+              color: colors.warning,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.warning.withOpacity(0.3),
+                  color: colors.warning.withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -146,17 +150,20 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {
                 // TODO: Implement SOS functionality
               },
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: AppColors.bg100, size: 24),
+                  Icon(Icons.warning_amber_rounded,
+                      color: colors.bg100, size: 24),
                   const SizedBox(width: 8),
                   Text(
                     'SOS Emergency',
                     style: TextStyle(
-                      color: AppColors.bg100,
+                      color: colors.bg100,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -169,28 +176,31 @@ class HomeScreen extends StatelessWidget {
       },
     );
   }
-  Widget _buildQuickActions(BuildContext context) {
+
+  Widget _buildQuickActions(BuildContext context, dynamic colors) {
     return Row(
       children: [
         Expanded(
           child: _buildActionCard(
             icon: Icons.location_on_outlined,
             label: 'Report Incident',
+            colors: colors,
             onTap: () {
               // TODO: Navigate to incident reporting
             },
           ),
         ),
         const SizedBox(width: 16),
-        // In the _buildQuickActions method, update the knowledge base card's onTap:
         Expanded(
           child: _buildActionCard(
             icon: Icons.book_outlined,
             label: 'Knowledge Base',
+            colors: colors,
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const KnowledgeBaseScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const KnowledgeBaseScreen()),
               );
             },
           ),
@@ -202,13 +212,14 @@ class HomeScreen extends StatelessWidget {
   Widget _buildActionCard({
     required IconData icon,
     required String label,
+    required dynamic colors,
     required VoidCallback onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
+        color: colors.bg100.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
       ),
       child: InkWell(
         onTap: onTap,
@@ -218,12 +229,12 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: AppColors.accent200, size: 32),
+              Icon(icon, color: colors.accent200, size: 32),
               const SizedBox(height: 12),
               Text(
                 label,
                 style: TextStyle(
-                  color: AppColors.primary300,
+                  color: colors.primary300,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -235,19 +246,23 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-  Widget _buildAlertCard({required String topic, required String description}) {
+
+  Widget _buildAlertCard(
+      {required String topic,
+      required String description,
+      required dynamic colors}) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bg100.withOpacity(0.7),
+        color: colors.bg100.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.bg100.withOpacity(0.2)),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+            Icon(Icons.warning_amber_rounded, color: colors.warning, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -256,7 +271,7 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     topic,
                     style: TextStyle(
-                      color: AppColors.primary300,
+                      color: colors.primary300,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -264,7 +279,7 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     description,
                     style: TextStyle(
-                      color: AppColors.text200,
+                      color: colors.text200,
                       fontSize: 14,
                     ),
                   ),
@@ -276,19 +291,23 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-  Widget _buildAlertsList() {
+
+  Widget _buildAlertsList(dynamic colors) {
     final List<Map<String, String>> alerts = [
       {
         'topic': 'Flash Flood Warning',
-        'description': 'Heavy rainfall expected in Klang Valley area. Please stay alert and avoid flood-prone areas.',
+        'description':
+            'Heavy rainfall expected in Klang Valley area. Please stay alert and avoid flood-prone areas.',
       },
       {
         'topic': 'Earthquake Alert',
-        'description': 'Magnitude 5.2 earthquake detected. Stay away from damaged buildings.',
+        'description':
+            'Magnitude 5.2 earthquake detected. Stay away from damaged buildings.',
       },
       {
         'topic': 'Weather Advisory',
-        'description': 'Strong winds and thunderstorms expected in the evening.',
+        'description':
+            'Strong winds and thunderstorms expected in the evening.',
       },
     ];
     return Container(
@@ -298,29 +317,32 @@ class HomeScreen extends StatelessWidget {
         radius: const Radius.circular(3),
         child: SingleChildScrollView(
           child: Column(
-            children: alerts.map((alert) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildAlertCard(
-                topic: alert['topic']!,
-                description: alert['description']!,
-              ),
-            )).toList(),
+            children: alerts
+                .map((alert) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildAlertCard(
+                        topic: alert['topic']!,
+                        description: alert['description']!,
+                        colors: colors,
+                      ),
+                    ))
+                .toList(),
           ),
         ),
       ),
     );
   }
-  
-  Widget _buildBottomNavigation(BuildContext context) {
+
+  Widget _buildBottomNavigation(BuildContext context, dynamic colors) {
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg100.withOpacity(0.7),
+          color: colors.bg100.withOpacity(0.7),
           border: Border(
-            top: BorderSide(color: AppColors.bg100.withOpacity(0.2)),
+            top: BorderSide(color: colors.bg100.withOpacity(0.2)),
           ),
         ),
         child: SafeArea(
@@ -330,15 +352,21 @@ class HomeScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home, true, () {}),
+                _buildNavItem(Icons.home, true, () {}, colors),
                 _buildNavItem(Icons.map_outlined, false, () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const MapScreen()),
                   );
-                }),
-                _buildNavItem(Icons.message_outlined, false, () {}),
-                _buildNavItem(Icons.person_outline, false, () {}),
+                }, colors),
+                _buildNavItem(Icons.message_outlined, false, () {}, colors),
+                _buildNavItem(Icons.person_outline, false, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ProfileScreen()),
+                  );
+                }, colors),
               ],
             ),
           ),
@@ -346,15 +374,18 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed) {
+
+  Widget _buildNavItem(
+      IconData icon, bool isActive, VoidCallback onPressed, dynamic colors) {
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? AppColors.accent200.withOpacity(0.1) : Colors.transparent,
+        color:
+            isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(
         icon: Icon(icon),
-        color: isActive ? AppColors.accent200 : AppColors.text200,
+        color: isActive ? colors.accent200 : colors.text200,
         onPressed: onPressed,
         iconSize: 24,
         padding: const EdgeInsets.all(12),

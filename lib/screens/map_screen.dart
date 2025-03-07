@@ -9,6 +9,7 @@ import 'package:geocoding/geocoding.dart';
 import 'dart:async';
 import 'package:mydpar/screens/profile_screen.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/screens/report_incident_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -385,7 +386,11 @@ class _MapScreenState extends State<MapScreen> {
                 padding: const EdgeInsets.all(4),
                 child: MaterialButton(
                   onPressed: () {
-                    // TODO: Implement report incident
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ReportIncidentScreen()),
+                    );
                   },
                   color: colors.warning,
                   shape: RoundedRectangleBorder(

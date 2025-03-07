@@ -5,6 +5,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/screens/knowledge_base_screen.dart';
 import 'package:mydpar/screens/map_screen.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/screens/report_incident_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -186,7 +187,11 @@ class HomeScreen extends StatelessWidget {
             label: 'Report Incident',
             colors: colors,
             onTap: () {
-              // TODO: Navigate to incident reporting
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ReportIncidentScreen()),
+              );
             },
           ),
         ),

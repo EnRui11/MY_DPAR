@@ -19,42 +19,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Main Content
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 70), // Space for header
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      children: [
-                        // Search Bar
-                        _buildSearchBar(colors),
-                        const SizedBox(height: 24),
-
-                        // Featured Guide
-                        _buildFeaturedGuide(colors),
-                        const SizedBox(height: 24),
-
-                        // Quick Access Categories
-                        _buildQuickAccessCategories(colors),
-                        const SizedBox(height: 32),
-
-                        // Recent Guides
-                        _buildRecentGuides(colors),
-                        const SizedBox(height: 80), // Space for bottom nav
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Header
+            _buildContent(colors),
             _buildHeader(context, colors),
-
-            // Bottom Navigation
-            _buildBottomNavigation(context, colors),
           ],
         ),
       ),
@@ -65,9 +31,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colors.bg100.withOpacity(0.7),
-        border: Border(
-          bottom: BorderSide(color: colors.bg100.withOpacity(0.2)),
-        ),
+        border:
+            Border(bottom: BorderSide(color: colors.bg100.withOpacity(0.2))),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -85,6 +50,23 @@ class KnowledgeBaseScreen extends StatelessWidget {
               color: colors.primary300,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(dynamic colors) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 70, 24, 24),
+      child: Column(
+        children: [
+          _buildSearchBar(colors),
+          const SizedBox(height: 24),
+          _buildFeaturedGuide(colors),
+          const SizedBox(height: 24),
+          _buildQuickAccessCategories(colors),
+          const SizedBox(height: 32),
+          _buildRecentGuides(colors),
         ],
       ),
     );
@@ -136,10 +118,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'Featured Guide',
-                style: TextStyle(
-                  color: colors.bg100,
-                  fontWeight: FontWeight.w600,
-                ),
+                style:
+                    TextStyle(color: colors.bg100, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -166,13 +146,9 @@ class KnowledgeBaseScreen extends StatelessWidget {
               backgroundColor: colors.bg100,
               foregroundColor: colors.accent200,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(
-              'Learn More',
-              style: TextStyle(color: colors.accent200),
-            ),
+            child: const Text('Learn More'),
           ),
         ],
       ),
@@ -180,26 +156,26 @@ class KnowledgeBaseScreen extends StatelessWidget {
   }
 
   Widget _buildQuickAccessCategories(dynamic colors) {
-    final categories = [
+    const categories = [
       {
         'icon': Icons.assignment_outlined,
         'title': 'Preparation Guides',
-        'description': 'Step-by-step disaster guides'
+        'description': 'Step-by-step disaster guides',
       },
       {
         'icon': Icons.phone_outlined,
         'title': 'Emergency Contacts',
-        'description': 'Important numbers & contacts'
+        'description': 'Important numbers & contacts',
       },
       {
         'icon': Icons.favorite_outline,
         'title': 'First Aid Guide',
-        'description': 'Medical emergency basics'
+        'description': 'Medical emergency basics',
       },
       {
         'icon': Icons.school_outlined,
         'title': 'Training',
-        'description': 'Disaster response training resources'
+        'description': 'Disaster response training resources',
       },
     ];
 
@@ -227,46 +203,62 @@ class KnowledgeBaseScreen extends StatelessWidget {
     required String description,
     required dynamic colors,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.bg100.withOpacity(0.2)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: colors.accent200, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              color: colors.primary300,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to category detail
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.bg100.withOpacity(0.2)),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: colors.accent200, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: colors.primary300,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: TextStyle(
-              color: colors.text200,
-              fontSize: 11,
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(color: colors.text200, fontSize: 11),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildRecentGuides(dynamic colors) {
+    const guides = [
+      {
+        'title': 'Guide Topic',
+        'description': 'Description',
+        'readTime': '5 min read',
+      },
+      {
+        'title': 'Guide Topic',
+        'description': 'Description',
+        'readTime': '3 min read',
+      },
+    ];
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -283,27 +275,21 @@ class KnowledgeBaseScreen extends StatelessWidget {
               onPressed: () {
                 // TODO: Navigate to all guides
               },
-              child: Text(
-                'View All',
-                style: TextStyle(color: colors.accent200),
-              ),
+              child:
+                  Text('View All', style: TextStyle(color: colors.accent200)),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        _buildGuideCard(
-          title: 'Guide Topic',
-          description: 'Description',
-          readTime: '5 min read',
-          colors: colors,
-        ),
-        const SizedBox(height: 12),
-        _buildGuideCard(
-          title: 'Guide Topic',
-          description: 'Description',
-          readTime: '3 min read',
-          colors: colors,
-        ),
+        ...guides.map((guide) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildGuideCard(
+                title: guide['title'] as String,
+                description: guide['description'] as String,
+                readTime: guide['readTime'] as String,
+                colors: colors,
+              ),
+            )),
       ],
     );
   }
@@ -314,128 +300,61 @@ class KnowledgeBaseScreen extends StatelessWidget {
     required String readTime,
     required dynamic colors,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.bg100.withOpacity(0.2)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.article_outlined, color: colors.accent200),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: colors.primary300,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: colors.text200,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.access_time, size: 16, color: colors.text200),
-                    const SizedBox(width: 4),
-                    Text(
-                      readTime,
-                      style: TextStyle(
-                        color: colors.text200,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.bookmark_border,
-                        size: 16, color: colors.text200),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Save for later',
-                      style: TextStyle(
-                        color: colors.text200,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigation(BuildContext context, dynamic colors) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to guide detail
+      },
       child: Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
-          border: Border(
-            top: BorderSide(color: colors.bg100.withOpacity(0.2)),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.bg100.withOpacity(0.2)),
         ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.home_outlined, color: colors.text200),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const HomeScreen()),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.map_outlined, color: colors.text200),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MapScreen()),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.message_outlined, color: colors.text200),
-                  onPressed: () {
-                    // TODO: Implement messaging functionality
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.person_outline, color: colors.text200),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ProfileScreen()),
-                    );
-                  },
-                ),
-              ],
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.article_outlined, color: colors.accent200),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: colors.primary300,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(color: colors.text200, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, size: 16, color: colors.text200),
+                      const SizedBox(width: 4),
+                      Text(
+                        readTime,
+                        style: TextStyle(color: colors.text200, fontSize: 12),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.bookmark_border,
+                          size: 16, color: colors.text200),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Save for later',
+                        style: TextStyle(color: colors.text200, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

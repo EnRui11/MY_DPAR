@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/theme/color_theme.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:geocoding/geocoding.dart';
@@ -35,7 +34,8 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _initializeLocation();
-    _locationTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateLocation());
+    _locationTimer =
+        Timer.periodic(const Duration(seconds: 1), (_) => _updateLocation());
   }
 
   @override
@@ -72,7 +72,8 @@ class _MapScreenState extends State<MapScreen> {
         _searchResults = locations;
         _isSearching = false;
         if (locations.isNotEmpty) {
-          _searchedLocation = LatLng(locations.first.latitude, locations.first.longitude);
+          _searchedLocation =
+              LatLng(locations.first.latitude, locations.first.longitude);
           _mapController.move(_searchedLocation!, 15);
         }
       });
@@ -86,7 +87,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _toggleFilter(String filter) {
-    setState(() => _activeFilters.contains(filter) ? _activeFilters.remove(filter) : _activeFilters.add(filter));
+    setState(() => _activeFilters.contains(filter)
+        ? _activeFilters.remove(filter)
+        : _activeFilters.add(filter));
   }
 
   void _showSnackBar(String message, Color backgroundColor) {
@@ -116,7 +119,8 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildMap() {
     return FlutterMap(
       mapController: _mapController,
-      options: MapOptions(center: _currentLocation ?? _defaultLocation, zoom: 15),
+      options:
+          MapOptions(center: _currentLocation ?? _defaultLocation, zoom: 15),
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -127,7 +131,8 @@ class _MapScreenState extends State<MapScreen> {
             if (_currentLocation != null)
               Marker(
                 point: _currentLocation!,
-                builder: (_) => const Icon(Icons.my_location, color: Colors.blue, size: 30),
+                builder: (_) =>
+                    const Icon(Icons.my_location, color: Colors.blue, size: 30),
               ),
           ],
         ),
@@ -140,7 +145,12 @@ class _MapScreenState extends State<MapScreen> {
       decoration: BoxDecoration(
         color: colors.bg100,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
+        ],
       ),
       margin: const EdgeInsets.only(top: 48, left: 24, right: 24),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -156,11 +166,16 @@ class _MapScreenState extends State<MapScreen> {
                 hintStyle: TextStyle(color: colors.primary300.withOpacity(0.5)),
                 border: InputBorder.none,
                 suffixIcon: _isSearching
-                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colors.accent200))
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: colors.accent200))
                     : null,
               ),
               style: TextStyle(color: colors.primary300),
-              onSubmitted: (value) => value.isNotEmpty ? _searchLocation(value) : null,
+              onSubmitted: (value) =>
+                  value.isNotEmpty ? _searchLocation(value) : null,
             ),
           ),
         ],
@@ -177,17 +192,25 @@ class _MapScreenState extends State<MapScreen> {
         decoration: BoxDecoration(
           color: colors.bg100,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterButton(Icons.warning_amber_rounded, 'Incidents', colors),
+              _buildFilterButton(
+                  Icons.warning_amber_rounded, 'Incidents', colors),
               _buildFilterButton(Icons.home_outlined, 'Shelters', colors),
-              _buildFilterButton(Icons.local_hospital_outlined, 'Medical', colors),
-              _buildFilterButton(Icons.inventory_2_outlined, 'Supplies', colors),
+              _buildFilterButton(
+                  Icons.local_hospital_outlined, 'Medical', colors),
+              _buildFilterButton(
+                  Icons.inventory_2_outlined, 'Supplies', colors),
             ],
           ),
         ),
@@ -204,12 +227,16 @@ class _MapScreenState extends State<MapScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
+            color: isActive
+                ? colors.accent200.withOpacity(0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 18, color: isActive ? colors.accent200 : colors.primary300),
+              Icon(icon,
+                  size: 18,
+                  color: isActive ? colors.accent200 : colors.primary300),
               const SizedBox(width: 8),
               Text(
                 label,
@@ -228,7 +255,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildLocationControl(dynamic colors) {
     return Positioned(
       bottom: 90,
-      right: 24,
+      right: 10,
       child: Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
@@ -265,18 +292,21 @@ class _MapScreenState extends State<MapScreen> {
             onPressed: () => _navigateTo(context, const ReportIncidentScreen()),
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.warning,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_on_outlined, color: colors.bg100, size: 20),
+                  Icon(Icons.location_on_outlined,
+                      color: colors.bg100, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'Report Incident',
-                    style: TextStyle(color: colors.bg100, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: colors.bg100, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -302,10 +332,12 @@ class _MapScreenState extends State<MapScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home, false, () => _navigateTo(context, const HomeScreen()), colors),
+                _buildNavItem(Icons.home, false,
+                    () => _navigateTo(context, const HomeScreen()), colors),
                 _buildNavItem(Icons.map_outlined, true, () {}, colors),
                 _buildNavItem(Icons.message_outlined, false, () {}, colors),
-                _buildNavItem(Icons.person_outline, false, () => _navigateTo(context, const ProfileScreen()), colors),
+                _buildNavItem(Icons.person_outline, false,
+                    () => _navigateTo(context, const ProfileScreen()), colors),
               ],
             ),
           ),
@@ -314,10 +346,12 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed, dynamic colors) {
+  Widget _buildNavItem(
+      IconData icon, bool isActive, VoidCallback onPressed, dynamic colors) {
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
+        color:
+            isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(

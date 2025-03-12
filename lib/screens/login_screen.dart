@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/register_screen.dart';
-import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
@@ -119,7 +118,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
                 color: colors.text200,
               ),
-              onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+              onPressed: () =>
+                  setState(() => _isPasswordVisible = !_isPasswordVisible),
             ),
           ),
         ),
@@ -183,9 +183,11 @@ class _LoginScreenState extends State<LoginScreen> {
     _navigateTo(context, const HomeScreen(), replace: true);
   }
 
-  void _navigateTo(BuildContext context, Widget screen, {bool replace = false}) {
+  void _navigateTo(BuildContext context, Widget screen,
+      {bool replace = false}) {
     if (replace) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => screen));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => screen));
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     }

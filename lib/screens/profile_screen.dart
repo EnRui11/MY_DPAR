@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:mydpar/screens/map_screen.dart';
@@ -27,7 +26,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, ThemeProvider themeProvider, dynamic colors) {
+  Widget _buildHeader(
+      BuildContext context, ThemeProvider themeProvider, dynamic colors) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -74,13 +74,17 @@ class ProfileScreen extends StatelessWidget {
         Container(
           width: 96,
           height: 96,
-          decoration: BoxDecoration(color: colors.primary100, shape: BoxShape.circle),
+          decoration:
+              BoxDecoration(color: colors.primary100, shape: BoxShape.circle),
           child: Icon(Icons.person_outline, size: 48, color: colors.accent200),
         ),
         const SizedBox(height: 16),
         Text(
           'Username', // TODO: Replace with actual username
-          style: TextStyle(color: colors.primary300, fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: colors.primary300,
+              fontSize: 24,
+              fontWeight: FontWeight.bold),
         ),
         Text(
           'email@example.com', // TODO: Replace with actual email
@@ -105,7 +109,10 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Text(
               'Emergency Contacts',
-              style: TextStyle(color: colors.primary300, fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: colors.primary300,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600),
             ),
             IconButton(
               icon: Icon(Icons.add, color: colors.accent200),
@@ -124,15 +131,15 @@ class ProfileScreen extends StatelessWidget {
             child: ListView(
               children: contacts
                   .map((contact) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildEmergencyContact(
-                  context,
-                  contact.name,
-                  contact.relation,
-                  contact.phone,
-                  colors,
-                ),
-              ))
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildEmergencyContact(
+                          context,
+                          contact.name,
+                          contact.relation,
+                          contact.phone,
+                          colors,
+                        ),
+                      ))
                   .toList(),
             ),
           ),
@@ -142,12 +149,12 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildEmergencyContact(
-      BuildContext context,
-      String name,
-      String relation,
-      String phone,
-      dynamic colors,
-      ) {
+    BuildContext context,
+    String name,
+    String relation,
+    String phone,
+    dynamic colors,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: colors.bg100.withOpacity(0.7),
@@ -161,9 +168,13 @@ class ProfileScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: TextStyle(color: colors.primary300, fontWeight: FontWeight.w500)),
-              Text(relation, style: TextStyle(color: colors.text200, fontSize: 14)),
-              Text(phone, style: TextStyle(color: colors.text200, fontSize: 14)),
+              Text(name,
+                  style: TextStyle(
+                      color: colors.primary300, fontWeight: FontWeight.w500)),
+              Text(relation,
+                  style: TextStyle(color: colors.text200, fontSize: 14)),
+              Text(phone,
+                  style: TextStyle(color: colors.text200, fontSize: 14)),
             ],
           ),
           Row(
@@ -196,14 +207,16 @@ class ProfileScreen extends StatelessWidget {
     return Column(
       children: settings
           .map((setting) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: _buildSettingItem(context, setting.icon, setting.title, colors),
-      ))
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildSettingItem(
+                    context, setting.icon, setting.title, colors),
+              ))
           .toList(),
     );
   }
 
-  Widget _buildSettingItem(BuildContext context, IconData icon, String title, dynamic colors) {
+  Widget _buildSettingItem(
+      BuildContext context, IconData icon, String title, dynamic colors) {
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to respective setting screen
@@ -242,8 +255,16 @@ class ProfileScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.home_outlined, false, () => _navigateTo(context, const HomeScreen(), replace: true), colors),
-          _buildNavItem(Icons.map_outlined, false, () => _navigateTo(context, const MapScreen(), replace: true), colors),
+          _buildNavItem(
+              Icons.home_outlined,
+              false,
+              () => _navigateTo(context, const HomeScreen(), replace: true),
+              colors),
+          _buildNavItem(
+              Icons.map_outlined,
+              false,
+              () => _navigateTo(context, const MapScreen(), replace: true),
+              colors),
           _buildNavItem(Icons.message_outlined, false, () {
             // TODO: Implement messaging functionality
           }, colors),
@@ -253,7 +274,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed, dynamic colors) {
+  Widget _buildNavItem(
+      IconData icon, bool isActive, VoidCallback onPressed, dynamic colors) {
     return IconButton(
       icon: Icon(icon),
       color: isActive ? colors.accent200 : colors.text200,
@@ -261,9 +283,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _navigateTo(BuildContext context, Widget screen, {bool replace = false}) {
+  void _navigateTo(BuildContext context, Widget screen,
+      {bool replace = false}) {
     if (replace) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => screen));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => screen));
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     }

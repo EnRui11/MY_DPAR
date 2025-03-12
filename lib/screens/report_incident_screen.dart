@@ -5,6 +5,8 @@ import 'package:mydpar/screens/select_location_screen.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class ReportIncidentScreen extends StatefulWidget {
   const ReportIncidentScreen({super.key});
@@ -16,7 +18,9 @@ class ReportIncidentScreen extends StatefulWidget {
 class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _descriptionController;
-  late final MapController _mapController; // Add MapController
+  late final MapController _mapController;
+  final ImagePicker _picker = ImagePicker();
+  List<File> _selectedPhotos = [];
 
   String? _selectedIncidentType;
   String? _otherIncidentType;
@@ -94,7 +98,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
         _isLoadingLocation = false;
-        _mapController.move(_currentLocation ?? _defaultLocation, 15); // Initial center
+        _mapController.move(
+            _currentLocation ?? _defaultLocation, 15); // Initial center
       });
     } catch (e) {
       debugPrint('Failed to get current location: $e');
@@ -104,7 +109,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
   bool _isFormValid() {
     if (_selectedIncidentType == null) return false;
-    if (_selectedIncidentType == 'Other' && (_otherIncidentType?.isEmpty ?? true)) return false;
+    if (_selectedIncidentType == 'Other' &&
+        (_otherIncidentType?.isEmpty ?? true)) return false;
     if (_selectedSeverity == null) return false;
     if (_selectedLocation == null) return false;
     return true;
@@ -130,10 +136,12 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
   Widget _buildStatusBar(dynamic colors) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
       decoration: BoxDecoration(
         color: colors.bg100.withOpacity(0.7),
-        border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
+        border:
+            Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
       ),
       child: Row(
         children: [
@@ -144,7 +152,10 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
           ),
           Text(
             'Report Incident',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300),
           ),
         ],
       ),
@@ -244,12 +255,18 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       children: [
         Text(
           text,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.primary300),
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: colors.primary300),
         ),
         if (isRequired)
           Text(
             ' *',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.warning),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: colors.warning),
           ),
       ],
     );
@@ -261,16 +278,19 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       child: DropdownButtonFormField<String>(
         value: _selectedIncidentType,
         decoration: const InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
           border: InputBorder.none,
         ),
         dropdownColor: colors.bg100,
         style: TextStyle(color: colors.text200, fontSize: 16),
-        hint: Text('Select incident type', style: TextStyle(color: colors.text200)),
+        hint: Text('Select incident type',
+            style: TextStyle(color: colors.text200)),
         items: _incidentTypes.map((String value) {
           return DropdownMenuItem<String>(value: value, child: Text(value));
         }).toList(),
-        onChanged: (String? newValue) => setState(() => _selectedIncidentType = newValue),
+        onChanged: (String? newValue) =>
+            setState(() => _selectedIncidentType = newValue),
       ),
     );
   }
@@ -284,7 +304,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         decoration: InputDecoration(
           hintText: 'Please specify the incident type',
           hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: _spacingMedium, vertical: 12),
           border: InputBorder.none,
         ),
       ),
@@ -302,7 +323,9 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             child: ElevatedButton(
               onPressed: () => setState(() => _selectedSeverity = severity),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? colors.accent200 : colors.bg100.withOpacity(0.7),
+                backgroundColor: isSelected
+                    ? colors.accent200
+                    : colors.bg100.withOpacity(0.7),
                 foregroundColor: isSelected ? colors.bg100 : colors.text200,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -328,7 +351,9 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             color: colors.bg100.withOpacity(0.7),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _selectedLocation == null ? colors.warning : colors.bg300.withOpacity(0.2),
+              color: _selectedLocation == null
+                  ? colors.warning
+                  : colors.bg300.withOpacity(0.2),
             ),
           ),
           child: ClipRRect(
@@ -336,22 +361,27 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             child: Stack(
               children: [
                 if (_isLoadingLocation)
-                  Center(child: CircularProgressIndicator(color: colors.accent200))
+                  Center(
+                      child: CircularProgressIndicator(color: colors.accent200))
                 else
                   FlutterMap(
                     mapController: _mapController, // Use MapController
                     options: MapOptions(
-                      center: _selectedMapLocation ?? _currentLocation ?? _defaultLocation,
+                      center: _selectedMapLocation ??
+                          _currentLocation ??
+                          _defaultLocation,
                       zoom: 15,
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.mydpar.app',
                       ),
                       MarkerLayer(
                         markers: [
-                          if (_currentLocation != null && _selectedMapLocation == null)
+                          if (_currentLocation != null &&
+                              _selectedMapLocation == null)
                             Marker(
                               point: _currentLocation!,
                               builder: (ctx) => Icon(
@@ -369,7 +399,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                                 size: 40,
                               ),
                             ),
-                          if (_currentLocation == null && _selectedMapLocation == null)
+                          if (_currentLocation == null &&
+                              _selectedMapLocation == null)
                             Marker(
                               point: _defaultLocation,
                               builder: (ctx) => Icon(
@@ -403,7 +434,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
               controller: TextEditingController(text: _selectedLocation),
               style: TextStyle(color: colors.text200),
               decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: _spacingMedium, vertical: 12),
                 border: InputBorder.none,
                 disabledBorder: InputBorder.none,
               ),
@@ -431,29 +463,136 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     );
   }
 
+  Future<void> _pickPhotos() async {
+    try {
+      // Show options to pick from gallery or camera
+      final source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        builder: (context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Camera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      );
+
+      if (source != null) {
+        final XFile? pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 85, // Reduce file size
+          maxWidth: 1024, // Limit resolution
+          maxHeight: 1024,
+        );
+
+        if (pickedFile != null) {
+          setState(() {
+            _selectedPhotos.add(File(pickedFile.path));
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking photo: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick photo: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   Widget _buildPhotoUploader(dynamic colors) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.bg300.withOpacity(0.2), width: 2),
-      ),
-      child: MaterialButton(
-        onPressed: () {
-          // TODO: Implement photo upload
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
-          child: Column(
-            children: [
-              Icon(Icons.upload_outlined, color: colors.accent200, size: 32),
-              const SizedBox(height: _spacingSmall),
-              Text('Tap to upload photo', style: TextStyle(color: colors.text200)),
-            ],
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: colors.bg100.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.bg300.withOpacity(0.2), width: 2),
+          ),
+          child: MaterialButton(
+            onPressed: _pickPhotos,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
+              child: Column(
+                children: [
+                  Icon(Icons.upload_outlined, color: colors.accent200, size: 32),
+                  const SizedBox(height: _spacingSmall),
+                  Text(
+                    _selectedPhotos.isEmpty
+                        ? 'Tap to upload photo'
+                        : 'Tap to add more photos (${_selectedPhotos.length} selected)',
+                    style: TextStyle(color: colors.text200),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
+        // Display selected photos
+        if (_selectedPhotos.isNotEmpty) ...[
+          const SizedBox(height: _spacingMedium),
+          SizedBox(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedPhotos.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: _spacingSmall),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: FileImage(_selectedPhotos[index]),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedPhotos.removeAt(index);
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: colors.bg100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: colors.warning,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -466,7 +605,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
           backgroundColor: colors.accent200,
           foregroundColor: colors.bg100,
           padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: const Text(
           'Submit Report',
@@ -496,17 +636,52 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
-        _selectedMapLocation = LatLng(result['latitude'] as double, result['longitude'] as double);
-        _selectedLocation = result['locationName'] as String? ?? 'Location selected';
-        _mapController.move(_selectedMapLocation!, 15); // Explicitly move map to selected location
+        _selectedMapLocation =
+            LatLng(result['latitude'] as double, result['longitude'] as double);
+        _selectedLocation =
+            result['locationName'] as String? ?? 'Location selected';
+        _mapController.move(_selectedMapLocation!,
+            15); // Explicitly move map to selected location
       });
     }
   }
 
   void _handleSubmit(dynamic colors) {
     if (_isFormValid()) {
-      // TODO: Implement report submission
-      debugPrint('Form is valid, submitting...');
+      // Create a report object with all the data including photos
+      final reportData = {
+        'incidentType': _selectedIncidentType,
+        'otherIncidentType': _otherIncidentType,
+        'severity': _selectedSeverity,
+        'location': _selectedLocation,
+        'latitude': _selectedMapLocation?.latitude,
+        'longitude': _selectedMapLocation?.longitude,
+        'description': _descriptionController.text,
+        'photos': _selectedPhotos.map((photo) => photo.path).toList(),
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      debugPrint('Submitting report: $reportData');
+      // TODO: Implement actual submission logic (e.g., API call)
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Report submitted successfully!'),
+          backgroundColor: colors.accent200,
+        ),
+      );
+
+      // Reset form
+      setState(() {
+        _selectedIncidentType = null;
+        _otherIncidentType = null;
+        _selectedSeverity = null;
+        _selectedLocation = null;
+        _selectedMapLocation = null;
+        _descriptionController.clear();
+        _selectedPhotos.clear();
+      });
     } else {
       _showValidationErrors(colors);
     }
@@ -515,7 +690,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   void _showValidationErrors(dynamic colors) {
     final List<String> missingFields = [];
     if (_selectedIncidentType == null) missingFields.add('Incident Type');
-    if (_selectedIncidentType == 'Other' && (_otherIncidentType?.isEmpty ?? true)) {
+    if (_selectedIncidentType == 'Other' &&
+        (_otherIncidentType?.isEmpty ?? true)) {
       missingFields.add('Other Incident Type specification');
     }
     if (_selectedSeverity == null) missingFields.add('Severity Level');

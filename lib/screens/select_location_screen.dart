@@ -252,7 +252,7 @@ class _SelectLocationScreenState extends State<SelectLocationScreen> {
   Widget _buildCurrentLocationButton(dynamic colors) {
     return Positioned(
       right: _spacingLarge,
-      bottom: 120,
+      bottom: 220,
       child: FloatingActionButton(
         onPressed: () async {
           await _fetchCurrentLocation();

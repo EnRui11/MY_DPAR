@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/theme/color_theme.dart'; // Ensure this defines ColorTheme
 import 'package:mydpar/theme/theme_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -71,14 +70,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _hasLowerCase = password.contains(RegExp(r'[a-z]'));
       _hasNumber = password.contains(RegExp(r'[0-9]'));
       _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-      _passwordsMatch = password == confirmPassword && confirmPassword.isNotEmpty;
+      _passwordsMatch =
+          password == confirmPassword && confirmPassword.isNotEmpty;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final  colors = themeProvider.currentTheme; // Ensure ColorTheme is defined
+    final colors = themeProvider.currentTheme; // Ensure ColorTheme is defined
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -113,7 +113,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 40),
         Text(
           'Get Started',
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colors.primary300),
+          style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: colors.primary300),
         ),
         const SizedBox(height: _spacingSmall),
         Text(
@@ -173,7 +176,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hint: 'Create a password',
           colors: colors,
           isVisible: _isPasswordVisible,
-          toggleVisibility: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+          toggleVisibility: () =>
+              setState(() => _isPasswordVisible = !_isPasswordVisible),
           onChanged: (value) => _updatePasswordRequirements(),
         ),
         _buildPasswordRequirements(colors),
@@ -183,7 +187,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hint: 'Re-enter your password',
           colors: colors,
           isVisible: _isConfirmPasswordVisible,
-          toggleVisibility: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+          toggleVisibility: () => setState(
+              () => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
           onChanged: (value) => _updatePasswordRequirements(),
         ),
         if (_confirmPasswordController.text.isNotEmpty)
@@ -197,11 +202,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
       child: Column(
         children: [
-          _buildRequirement('At least $_minPasswordLength characters', _hasMinLength, colors),
-          _buildRequirement('At least one uppercase letter', _hasUpperCase, colors),
-          _buildRequirement('At least one lowercase letter', _hasLowerCase, colors),
+          _buildRequirement(
+              'At least $_minPasswordLength characters', _hasMinLength, colors),
+          _buildRequirement(
+              'At least one uppercase letter', _hasUpperCase, colors),
+          _buildRequirement(
+              'At least one lowercase letter', _hasLowerCase, colors),
           _buildRequirement('At least one number', _hasNumber, colors),
-          _buildRequirement('At least one special character', _hasSpecialChar, colors),
+          _buildRequirement(
+              'At least one special character', _hasSpecialChar, colors),
         ],
       ),
     );
@@ -214,11 +223,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: _spacingLarge),
         Text(
           'Emergency Contact',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colors.primary300),
         ),
         Text(
           'You can add this field later.',
-          style: TextStyle(fontSize: 14, color: colors.warning, fontStyle: FontStyle.italic),
+          style: TextStyle(
+              fontSize: 14, color: colors.warning, fontStyle: FontStyle.italic),
         ),
         const SizedBox(height: _spacingMedium),
         _buildTextField(
@@ -268,12 +281,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Already have an account? ', style: TextStyle(color: colors.text200)),
+          Text('Already have an account? ',
+              style: TextStyle(color: colors.text200)),
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Text(
               'Sign In',
-              style: TextStyle(color: colors.accent200, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: colors.accent200, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -295,9 +310,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         RichText(
           text: TextSpan(
             text: label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.text200),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: colors.text200),
             children: isRequired
-                ? [TextSpan(text: ' *', style: TextStyle(color: colors.warning))]
+                ? [
+                    TextSpan(
+                        text: ' *', style: TextStyle(color: colors.warning))
+                  ]
                 : null,
           ),
         ),
@@ -326,8 +347,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         RichText(
           text: TextSpan(
             text: label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.text200),
-            children: [TextSpan(text: ' *', style: TextStyle(color: colors.warning))],
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: colors.text200),
+            children: [
+              TextSpan(text: ' *', style: TextStyle(color: colors.warning))
+            ],
           ),
         ),
         const SizedBox(height: _spacingSmall),
@@ -337,7 +363,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onChanged: onChanged,
           decoration: _textFieldDecoration(hint, colors).copyWith(
             suffixIcon: IconButton(
-              icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility, color: colors.text200),
+              icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility,
+                  color: colors.text200),
               onPressed: toggleVisibility,
             ),
           ),
@@ -352,7 +379,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       hintStyle: TextStyle(color: colors.text200.withOpacity(0.5)),
       filled: true,
       fillColor: colors.bg100,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
       contentPadding: const EdgeInsets.all(16),
     );
   }
@@ -373,7 +401,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(width: _spacingSmall),
           Text(
             text,
-            style: TextStyle(fontSize: 14, color: isMet ? Colors.green : colors.warning),
+            style: TextStyle(
+                fontSize: 14, color: isMet ? Colors.green : colors.warning),
           ),
         ],
       ),

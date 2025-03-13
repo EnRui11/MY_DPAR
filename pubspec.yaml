@@ -38,6 +38,7 @@ dependencies:
   image_picker: ^1.1.2
   vibration: ^1.8.1
   url_launcher: ^6.3.1
+  audioplayers: ^5.2.1
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -68,6 +69,7 @@ flutter:
 
   assets:
     - assets/fonts/Inter/
+    - assets/sounds/loud-emergency-alarm.mp3
 
   fonts:
     - family: Inter

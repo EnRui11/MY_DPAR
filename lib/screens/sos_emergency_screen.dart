@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:vibration/vibration.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SOSEmergencyScreen extends StatefulWidget {
   const SOSEmergencyScreen({super.key});
@@ -66,8 +67,7 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
       setState(() {
         currentPosition = position;
-        _mapController.move(
-            LatLng(position.latitude, position.longitude), 15);
+        _mapController.move(LatLng(position.latitude, position.longitude), 15);
       });
 
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -215,14 +215,14 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
                 end: Alignment.bottomRight,
                 colors: isAlertSent
                     ? [
-                  _flickerAnimation.value ?? colors.warning,
-                  (_flickerAnimation.value ?? colors.warning)
-                      .withOpacity(0.8),
-                ]
+                        _flickerAnimation.value ?? colors.warning,
+                        (_flickerAnimation.value ?? colors.warning)
+                            .withOpacity(0.8),
+                      ]
                     : [
-                  colors.warning,
-                  colors.warning.withOpacity(0.8),
-                ],
+                        colors.warning,
+                        colors.warning.withOpacity(0.8),
+                      ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
@@ -299,7 +299,7 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
                 options: MapOptions(
                   center: currentPosition != null
                       ? LatLng(
-                      currentPosition!.latitude, currentPosition!.longitude)
+                          currentPosition!.latitude, currentPosition!.longitude)
                       : const LatLng(3.1390, 101.6869),
                   zoom: 15,
                   interactiveFlags: InteractiveFlag.none,
@@ -307,7 +307,7 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
                 children: [
                   TileLayer(
                     urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                     subdomains: const ['a', 'b', 'c'],
                   ),
                   MarkerLayer(
@@ -353,8 +353,23 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
           title: 'Emergency Services',
           subtitle: 'Call 999',
           colors: colors,
-          onTap: () {
-            // TODO: Implement emergency call
+          onTap: () async {
+            final Uri phoneUri = Uri(
+              scheme: 'tel',
+              path: '999',
+            );
+            if (await canLaunchUrl(phoneUri)) {
+              await launchUrl(phoneUri);
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Could not launch emergency call'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
         const SizedBox(height: 16),

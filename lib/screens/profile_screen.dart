@@ -4,6 +4,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:mydpar/screens/map_screen.dart';
 import 'package:mydpar/screens/community_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -97,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildEmergencyContactsSection(BuildContext context, dynamic colors) {
     const contacts = [
-      ContactItem('Name 1', 'Relationship', '+1 234-567-8901'),
+      ContactItem('Khoo JC', 'Relationship', '+60 12-756 1683'),
       ContactItem('Name 2', 'Relationship', '+1 234-567-8902'),
       ContactItem('Name 3', 'Relationship', '+1 234-567-8903'),
     ];
@@ -182,8 +183,23 @@ class ProfileScreen extends StatelessWidget {
             children: [
               IconButton(
                 icon: Icon(Icons.phone, color: colors.accent200),
-                onPressed: () {
-                  // TODO: Implement phone call functionality
+                onPressed: () async {
+                  final Uri phoneUri = Uri(
+                    scheme: 'tel',
+                    path: phone.replaceAll(RegExp(r'[^\d+]'), ''),
+                  );
+                  if (await canLaunchUrl(phoneUri)) {
+                    await launchUrl(phoneUri);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Could not launch phone call'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
                 },
               ),
               IconButton(

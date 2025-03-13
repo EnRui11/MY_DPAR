@@ -5,6 +5,7 @@ import 'package:mydpar/screens/knowledge_base_screen.dart';
 import 'package:mydpar/screens/map_screen.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/report_incident_screen.dart';
+import 'package:mydpar/screens/community_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -80,12 +81,12 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 64),
-          _buildSOSButton(context, colors),
-          const SizedBox(height: 24),
           _buildQuickActions(context, colors),
           const SizedBox(height: 24),
+          _buildSOSButton(context, colors),
+          const SizedBox(height: 24),
           _buildRecentAlertsSection(context, colors),
-          const SizedBox(height: 80), // Space for bottom navigation
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -335,7 +336,11 @@ class HomeScreen extends StatelessWidget {
                 _buildNavItem(Icons.home, true, () {}, colors),
                 _buildNavItem(Icons.map_outlined, false,
                     () => _navigateTo(context, const MapScreen()), colors),
-                _buildNavItem(Icons.message_outlined, false, () {}, colors),
+                _buildNavItem(
+                    Icons.people_outline,
+                    false,
+                    () => _navigateTo(context, const CommunityScreen()),
+                    colors),
                 _buildNavItem(Icons.person_outline, false,
                     () => _navigateTo(context, const ProfileScreen()), colors),
               ],

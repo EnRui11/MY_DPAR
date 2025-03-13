@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:mydpar/screens/profile_screen.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/report_incident_screen.dart';
+import 'package:mydpar/screens/community_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -335,7 +336,11 @@ class _MapScreenState extends State<MapScreen> {
                 _buildNavItem(Icons.home, false,
                     () => _navigateTo(context, const HomeScreen()), colors),
                 _buildNavItem(Icons.map_outlined, true, () {}, colors),
-                _buildNavItem(Icons.message_outlined, false, () {}, colors),
+                _buildNavItem(
+                    Icons.people_outline,
+                    false,
+                    () => _navigateTo(context, const CommunityScreen()),
+                    colors),
                 _buildNavItem(Icons.person_outline, false,
                     () => _navigateTo(context, const ProfileScreen()), colors),
               ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:mydpar/screens/map_screen.dart';
+import 'package:mydpar/screens/community_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -265,9 +266,8 @@ class ProfileScreen extends StatelessWidget {
               false,
               () => _navigateTo(context, const MapScreen(), replace: true),
               colors),
-          _buildNavItem(Icons.message_outlined, false, () {
-            // TODO: Implement messaging functionality
-          }, colors),
+          _buildNavItem(Icons.people_outline, false,
+              () => _navigateTo(context, const CommunityScreen()), colors),
           _buildNavItem(Icons.person, true, () {}, colors),
         ],
       ),

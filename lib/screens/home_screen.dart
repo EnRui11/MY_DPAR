@@ -6,6 +6,7 @@ import 'package:mydpar/screens/map_screen.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/report_incident_screen.dart';
 import 'package:mydpar/screens/community_screen.dart';
+import 'package:mydpar/screens/sos_emergency_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -113,9 +114,10 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           child: MaterialButton(
-            onPressed: () {
-              // TODO: Implement SOS functionality
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SOSEmergencyScreen()),
+            ),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             padding: const EdgeInsets.symmetric(vertical: 16),

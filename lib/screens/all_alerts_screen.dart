@@ -44,16 +44,19 @@ class Alert {
 
   // Convert to JSON for Firebase writes
   Map<String, dynamic> toJson() => {
-    'title': title,
-    'description': description,
-    'severity': severity,
-    'location': location,
-    'time': time,
-    'disasterType': disasterType,
-    'coordinates': coordinates != null
-        ? {'latitude': coordinates!.latitude, 'longitude': coordinates!.longitude}
-        : null,
-  };
+        'title': title,
+        'description': description,
+        'severity': severity,
+        'location': location,
+        'time': time,
+        'disasterType': disasterType,
+        'coordinates': coordinates != null
+            ? {
+                'latitude': coordinates!.latitude,
+                'longitude': coordinates!.longitude
+              }
+            : null,
+      };
 }
 
 class AlertsScreen extends StatefulWidget {
@@ -175,143 +178,161 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
   /// Builds the header with back button and title
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-    height: 56,
-    padding: const EdgeInsets.symmetric(horizontal: _paddingValue),
-    decoration: BoxDecoration(
-      color: colors.bg100,
-      border: Border(bottom: BorderSide(color: colors.primary200.withOpacity(0.2))),
-    ),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.accent200),
-          onPressed: () => Navigator.pop(context),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: _paddingValue),
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          border: Border(
+              bottom: BorderSide(color: colors.primary200.withOpacity(0.2))),
         ),
-        Text(
-          'All Alerts',
-          style: TextStyle(
-            color: colors.accent200,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: colors.accent200),
+              onPressed: () => Navigator.pop(context),
+            ),
+            Text(
+              'All Alerts',
+              style: TextStyle(
+                color: colors.accent200,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   /// Builds the filter and sort section
   Widget _buildFilterSection(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.all(_paddingValue),
-    decoration: BoxDecoration(
-      color: colors.bg100,
-      border: Border(bottom: BorderSide(color: colors.primary200.withOpacity(0.2))),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Filter by Disaster Type',
-          style: TextStyle(
-            color: colors.accent200,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+        padding: const EdgeInsets.all(_paddingValue),
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          border: Border(
+              bottom: BorderSide(color: colors.primary200.withOpacity(0.2))),
         ),
-        const SizedBox(height: _spacingSmall),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: _disasterTypes.map((type) {
-              final bool isSelected = type == _selectedType;
-              return Padding(
-                padding: const EdgeInsets.only(right: _spacingSmall),
-                child: FilterChip(
-                  label: Text(type),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() => _selectedType = selected ? type : 'All Types');
-                  },
-                  backgroundColor: colors.bg100,
-                  selectedColor: colors.primary100,
-                  labelStyle: TextStyle(
-                    color: isSelected ? colors.accent200 : colors.text200,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: isSelected ? colors.accent100 : colors.primary200,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: _spacingLarge),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'Filter by Disaster Type',
+              style: TextStyle(
+                color: colors.accent200,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: _spacingSmall),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _disasterTypes.map((type) {
+                  final bool isSelected = type == _selectedType;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: _spacingSmall),
+                    child: FilterChip(
+                      avatar: Icon(
+                        type == 'All Types'
+                            ? Icons.filter_list
+                            : _getDisasterIcon(type),
+                        size: 18,
+                        color: isSelected ? colors.accent200 : colors.text200,
+                      ),
+                      label: Text(type),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() =>
+                            _selectedType = selected ? type : 'All Types');
+                      },
+                      backgroundColor: colors.bg100,
+                      selectedColor: colors.primary100,
+                      labelStyle: TextStyle(
+                        color: isSelected ? colors.accent200 : colors.text200,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color:
+                              isSelected ? colors.accent100 : colors.primary200,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: _spacingLarge),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Sort Alerts By',
-                  style: TextStyle(
-                    color: colors.accent200,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Sort Alerts By',
+                      style: TextStyle(
+                        color: colors.accent200,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: _spacingMedium),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.bg100,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: colors.accent100),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: _spacingMedium),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedSort,
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'time', child: Text('Time')),
+                            DropdownMenuItem(
+                                value: 'severity', child: Text('Severity')),
+                            DropdownMenuItem(
+                                value: 'distance', child: Text('Distance')),
+                          ],
+                          onChanged: (newValue) {
+                            setState(() => _selectedSort = newValue!);
+                          },
+                          style: TextStyle(color: colors.accent200),
+                          dropdownColor: colors.bg100,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: _spacingMedium),
                 Container(
                   decoration: BoxDecoration(
                     color: colors.bg100,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: colors.accent100),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: _spacingMedium),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedSort,
-                      items: const [
-                        DropdownMenuItem(value: 'time', child: Text('Time')),
-                        DropdownMenuItem(value: 'severity', child: Text('Severity')),
-                        DropdownMenuItem(value: 'distance', child: Text('Distance')),
-                      ],
-                      onChanged: (newValue) {
-                        setState(() => _selectedSort = newValue!);
-                      },
-                      style: TextStyle(color: colors.accent200),
-                      dropdownColor: colors.bg100,
+                  child: IconButton(
+                    icon: Icon(
+                      _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: colors.accent200,
                     ),
+                    onPressed: () =>
+                        setState(() => _isAscending = !_isAscending),
                   ),
                 ),
               ],
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: colors.bg100,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.accent100),
-              ),
-              child: IconButton(
-                icon: Icon(
-                  _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                  color: colors.accent200,
-                ),
-                onPressed: () => setState(() => _isAscending = !_isAscending),
-              ),
-            ),
           ],
         ),
-      ],
-    ),
-  );
+      );
 
   /// Builds the scrollable content with sorted and filtered alerts
   Widget _buildContent(AppColorTheme colors) {
     List<Alert> filteredAlerts = _selectedType == 'All Types'
         ? List.from(_alerts)
-        : _alerts.where((alert) => alert.disasterType == _selectedType).toList();
+        : _alerts
+            .where((alert) => alert.disasterType == _selectedType)
+            .toList();
 
     switch (_selectedSort) {
       case 'time':
@@ -320,31 +341,39 @@ class _AlertsScreenState extends State<AlertsScreen> {
             : DateTime.parse(b.time).compareTo(DateTime.parse(a.time)));
         break;
       case 'severity':
-        const Map<String, int> severityOrder = {'High': 3, 'Medium': 2, 'Low': 1};
+        const Map<String, int> severityOrder = {
+          'High': 3,
+          'Medium': 2,
+          'Low': 1
+        };
         filteredAlerts.sort((a, b) => _isAscending
-            ? (severityOrder[a.severity] ?? 0).compareTo(severityOrder[b.severity] ?? 0)
-            : (severityOrder[b.severity] ?? 0).compareTo(severityOrder[a.severity] ?? 0));
+            ? (severityOrder[a.severity] ?? 0)
+                .compareTo(severityOrder[b.severity] ?? 0)
+            : (severityOrder[b.severity] ?? 0)
+                .compareTo(severityOrder[a.severity] ?? 0));
         break;
       case 'distance':
         if (_currentPosition != null) {
           filteredAlerts.sort((a, b) {
             final double distanceA = a.coordinates != null
                 ? Geolocator.distanceBetween(
-              _currentPosition!.latitude,
-              _currentPosition!.longitude,
-              a.coordinates!.latitude,
-              a.coordinates!.longitude,
-            )
+                    _currentPosition!.latitude,
+                    _currentPosition!.longitude,
+                    a.coordinates!.latitude,
+                    a.coordinates!.longitude,
+                  )
                 : double.infinity;
             final double distanceB = b.coordinates != null
                 ? Geolocator.distanceBetween(
-              _currentPosition!.latitude,
-              _currentPosition!.longitude,
-              b.coordinates!.latitude,
-              b.coordinates!.longitude,
-            )
+                    _currentPosition!.latitude,
+                    _currentPosition!.longitude,
+                    b.coordinates!.latitude,
+                    b.coordinates!.longitude,
+                  )
                 : double.infinity;
-            return _isAscending ? distanceA.compareTo(distanceB) : distanceB.compareTo(distanceA);
+            return _isAscending
+                ? distanceA.compareTo(distanceB)
+                : distanceB.compareTo(distanceA);
           });
         }
         break;
@@ -441,7 +470,18 @@ class _AlertsScreenState extends State<AlertsScreen> {
                     Expanded(
                       child: Row(
                         children: [
-                          Icon(Icons.warning_amber, color: severityColor, size: 20),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: severityColor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Icon(
+                              _getDisasterIcon(disasterType),
+                              color: colors.bg100,
+                              size: 20,
+                            ),
+                          ),
                           const SizedBox(width: _spacingSmall),
                           Expanded(
                             child: Column(
@@ -478,7 +518,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
                       ),
                       child: Text(
                         severity,
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                   ],
@@ -502,7 +543,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         ),
                         children: [
                           TileLayer(
-                            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            urlTemplate:
+                                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                             subdomains: const ['a', 'b', 'c'],
                           ),
                           MarkerLayer(
@@ -573,5 +615,32 @@ class _AlertsScreenState extends State<AlertsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: backgroundColor),
     );
+  }
+}
+
+/// Helper method to get icon based on disaster type
+IconData _getDisasterIcon(String type) {
+  const IconData flood = IconData(0xf07a3, fontFamily: 'MaterialIcons');
+  const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
+
+  switch (type.toLowerCase()) {
+    case 'flood':
+      return flood;
+    case 'fire':
+      return Icons.local_fire_department;
+    case 'earthquake':
+      return Icons.terrain;
+    case 'landslide':
+      return Icons.landslide;
+    case 'tsunami':
+      return tsunami;
+    case 'haze':
+      return Icons.air;
+    case 'typhoon':
+      return Icons.cyclone;
+    case 'other':
+      return Icons.warning_amber_rounded;
+    default:
+      return Icons.error_outline;
   }
 }

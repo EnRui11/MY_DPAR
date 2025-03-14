@@ -9,15 +9,26 @@ import 'package:mydpar/screens/sos_emergency_screen.dart';
 import 'package:mydpar/screens/all_alerts_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:latlong2/latlong.dart';
 
 // Model for alert data, Firebase-ready
 class Alert {
   final String topic;
   final String description;
+  final String severity;
+  final String location;
+  final String time;
+  final String disasterType;
+  final LatLng? coordinates;
 
   const Alert({
     required this.topic,
     required this.description,
+    required this.severity,
+    required this.location,
+    required this.time,
+    required this.disasterType,
+    this.coordinates,
   });
 
   // Factory for Firebase data parsing (uncomment when integrating)
@@ -30,6 +41,16 @@ class Alert {
   Map<String, dynamic> toJson() => {
         'topic': topic,
         'description': description,
+        'severity': severity,
+        'location': location,
+        'time': time,
+        'disasterType': disasterType,
+        'coordinates': coordinates != null
+            ? {
+                'latitude': coordinates!.latitude,
+                'longitude': coordinates!.longitude
+              }
+            : null,
       };
 }
 
@@ -264,6 +285,10 @@ class HomeScreen extends StatelessWidget {
   Widget _buildAlertCard({
     required String topic,
     required String description,
+    required String severity,
+    required String location,
+    required String time,
+    required String disasterType,
     required AppColorTheme colors,
   }) =>
       Container(
@@ -277,23 +302,92 @@ class HomeScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.warning_amber_rounded, color: colors.warning, size: 24),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _getSeverityColor(severity, colors),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(_getDisasterIcon(disasterType),
+                  color: colors.bg100, size: 24),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Text(
+                        disasterType,
+                        style: TextStyle(
+                          color: colors.accent200,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getSeverityColor(severity, colors)
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          severity,
+                          style: TextStyle(
+                            color: _getSeverityColor(severity, colors),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     topic,
                     style: TextStyle(
                       color: colors.primary300,
                       fontWeight: FontWeight.w500,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: TextStyle(color: colors.text200, fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined,
+                          color: colors.text200, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        location,
+                        style: TextStyle(
+                          color: colors.text200,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.access_time, color: colors.text200, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        time,
+                        style: TextStyle(
+                          color: colors.text200,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -301,6 +395,48 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       );
+
+  /// Helper method to get color based on severity
+  Color _getSeverityColor(String severity, AppColorTheme colors) {
+    switch (severity.toLowerCase()) {
+      case 'high':
+        return colors.warning;
+      case 'medium':
+        return Color(0xFFFF8C00);
+      case 'low':
+        return Color(0xFF71C4EF);
+        ;
+      default:
+        return colors.text200;
+    }
+  }
+
+  /// Helper method to get icon based on disaster type
+  IconData _getDisasterIcon(String type) {
+    const IconData flood = IconData(0xf07a3, fontFamily: 'MaterialIcons');
+    const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
+
+    switch (type.toLowerCase()) {
+      case 'flood':
+        return flood;
+      case 'fire':
+        return Icons.local_fire_department;
+      case 'earthquake':
+        return Icons.terrain;
+      case 'landslide':
+        return Icons.landslide;
+      case 'tsunami':
+        return tsunami;
+      case 'haze':
+        return Icons.air;
+      case 'typhoon':
+        return Icons.cyclone;
+      case 'weather':
+        return Icons.thunderstorm;
+      default:
+        return Icons.warning_amber_rounded;
+    }
+  }
 
   /// Builds the scrollable list of alerts
   Widget _buildAlertsList(AppColorTheme colors) {
@@ -310,15 +446,30 @@ class HomeScreen extends StatelessWidget {
         topic: 'Flash Flood Warning',
         description:
             'Heavy rainfall expected in Klang Valley area. Please stay alert and avoid flood-prone areas.',
+        severity: 'High',
+        location: 'Klang Valley',
+        time: '2 hours ago',
+        disasterType: 'Flood',
+        coordinates: null,
       ),
       Alert(
         topic: 'Earthquake Alert',
         description:
             'Magnitude 5.2 earthquake detected. Stay away from damaged buildings.',
+        severity: 'Medium',
+        location: 'Sabah',
+        time: '4 hours ago',
+        disasterType: 'Earthquake',
+        coordinates: null,
       ),
       Alert(
         topic: 'Weather Advisory',
         description: 'Strong winds and thunderstorms expected in the evening.',
+        severity: 'Low',
+        location: 'Kuala Lumpur',
+        time: '5 hours ago',
+        disasterType: 'Weather',
+        coordinates: null,
       ),
     ];
 
@@ -332,6 +483,10 @@ class HomeScreen extends StatelessWidget {
               .map((alert) => _buildAlertCard(
                     topic: alert.topic,
                     description: alert.description,
+                    severity: alert.severity,
+                    location: alert.location,
+                    time: alert.time,
+                    disasterType: alert.disasterType,
                     colors: colors,
                   ))
               .toList(),

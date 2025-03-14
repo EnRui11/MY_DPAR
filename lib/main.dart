@@ -3,6 +3,7 @@ import 'package:mydpar/screens/login_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/screens/home_screen.dart';
 
 void main() {
   runApp(
@@ -59,7 +60,7 @@ class MyApp extends StatelessWidget {
             cardColor: colors.bg200,
             // Customize more Material3 properties as needed
           ),
-          home: const LoginScreen(),
+          home: const HomeScreen(),
         );
       },
     );

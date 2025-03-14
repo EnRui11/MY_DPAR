@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mydpar/screens/emergency_contacts_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
@@ -55,14 +56,14 @@ class KnowledgeBaseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme; // Updated type
+    final AppColorTheme colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
         child: Stack(
           children: [
-            _buildContent(colors),
+            _buildContent(context, colors),
             _buildHeader(context, colors),
           ],
         ),
@@ -74,10 +75,12 @@ class KnowledgeBaseScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
     decoration: BoxDecoration(
       color: colors.bg100.withOpacity(0.7),
-      border: Border(bottom: BorderSide(color: colors.bg100.withOpacity(0.2))),
+      border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
     ),
-    padding:
-    const EdgeInsets.symmetric(horizontal: _paddingValue * 1.5, vertical: _paddingValue),
+    padding: const EdgeInsets.symmetric(
+      horizontal: _paddingValue,
+      vertical: _paddingValue - 4,
+    ),
     child: Row(
       children: [
         IconButton(
@@ -98,103 +101,121 @@ class KnowledgeBaseScreen extends StatelessWidget {
   );
 
   /// Builds the scrollable content area
-  Widget _buildContent(AppColorTheme colors) => SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(
-        _paddingValue * 1.5, 70, _paddingValue * 1.5, _paddingValue),
-    child: Column(
-      children: [
-        _buildSearchBar(colors),
-        const SizedBox(height: _spacingLarge),
-        _buildFeaturedGuide(colors),
-        const SizedBox(height: _spacingLarge),
-        _buildQuickAccessCategories(colors),
-        const SizedBox(height: _spacingLarge * 1.5), // 32px
-        _buildRecentGuides(colors),
-      ],
-    ),
-  );
+  Widget _buildContent(BuildContext context, AppColorTheme colors) =>
+      SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          _paddingValue,
+          60, // Adjusted to align with header height
+          _paddingValue,
+          _paddingValue,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSearchBar(context, colors),
+            const SizedBox(height: _spacingLarge),
+            _buildFeaturedGuide(context, colors),
+            const SizedBox(height: _spacingLarge),
+            _buildQuickAccessCategories(context, colors),
+            const SizedBox(height: _spacingLarge * 1.5),
+            _buildRecentGuides(context, colors),
+          ],
+        ),
+      );
 
   /// Builds the search bar
-  Widget _buildSearchBar(AppColorTheme colors) => Container(
+  Widget _buildSearchBar(BuildContext context, AppColorTheme colors) => Container(
     decoration: BoxDecoration(
       color: colors.bg100.withOpacity(0.7),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: colors.bg100.withOpacity(0.2)),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: colors.bg300.withOpacity(0.2)),
     ),
-    padding: const EdgeInsets.symmetric(horizontal: _paddingValue, vertical: _spacingMedium),
-    child: Row(
-      children: [
-        Icon(Icons.search, color: colors.text200),
-        const SizedBox(width: _spacingMedium),
-        Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Search guides and resources...',
-              hintStyle: TextStyle(color: colors.text200),
-              border: InputBorder.none,
-            ),
-          ),
+    child: TextField(
+      style: TextStyle(color: colors.text200),
+      decoration: InputDecoration(
+        hintText: 'Search guides and resources...',
+        hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
+        prefixIcon: Icon(Icons.search, color: colors.text200),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: _paddingValue,
+          vertical: _spacingMedium,
         ),
-      ],
+      ),
+      onSubmitted: (value) {
+        _showSnackBar(context, 'Search not yet implemented', Colors.orange);
+      },
     ),
   );
 
   /// Builds the featured guide section
-  Widget _buildFeaturedGuide(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [colors.accent200, colors.accent100],
-      ),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    padding: const EdgeInsets.all(_paddingValue * 1.5),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.bolt, color: colors.bg100),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'Featured Guide',
-              style: TextStyle(color: colors.bg100, fontWeight: FontWeight.w600),
+  Widget _buildFeaturedGuide(BuildContext context, AppColorTheme colors) =>
+      GestureDetector(
+        onTap: () {
+          _showSnackBar(context, 'Guide navigation not yet implemented', Colors.orange);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [colors.accent200, colors.accent100],
             ),
-          ],
-        ),
-        const SizedBox(height: _spacingMedium),
-        Text(
-          'Emergency Preparedness 101',
-          style: TextStyle(
-            color: colors.bg100,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(_paddingValue),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.bolt, color: colors.bg100),
+                  const SizedBox(width: _spacingSmall),
+                  Text(
+                    'Featured Guide',
+                    style: TextStyle(
+                      color: colors.bg100,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: _spacingMedium),
+              Text(
+                'Emergency Preparedness 101',
+                style: TextStyle(
+                  color: colors.bg100,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: _spacingSmall),
+              Text(
+                'Essential steps to prepare for any disaster situation',
+                style: TextStyle(color: colors.bg100.withOpacity(0.8)),
+              ),
+              const SizedBox(height: _spacingLarge),
+              ElevatedButton(
+                onPressed: () {
+                  _showSnackBar(context, 'Guide navigation not yet implemented', Colors.orange);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.bg100,
+                  foregroundColor: colors.accent200,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
+                ),
+                child: const Text('Learn More'),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: _spacingSmall),
-        Text(
-          'Essential steps to prepare for any disaster situation',
-          style: TextStyle(color: colors.primary100),
-        ),
-        const SizedBox(height: _spacingLarge),
-        ElevatedButton(
-          onPressed: () {
-            // TODO: Navigate to detailed guide
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colors.bg100,
-            foregroundColor: colors.accent200,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          child: const Text('Learn More'),
-        ),
-      ],
-    ),
-  );
+      );
 
   /// Builds the quick access categories grid
-  Widget _buildQuickAccessCategories(AppColorTheme colors) {
+  Widget _buildQuickAccessCategories(BuildContext context, AppColorTheme colors) {
     const List<Category> categories = [
       Category(
         icon: Icons.assignment_outlined,
@@ -218,26 +239,42 @@ class KnowledgeBaseScreen extends StatelessWidget {
       ),
     ];
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: _spacingLarge,
-      crossAxisSpacing: _spacingLarge,
-      childAspectRatio: 1.1,
-      children: categories
-          .map((category) => _buildCategoryCard(
-        icon: category.icon,
-        title: category.title,
-        description: category.description,
-        colors: colors,
-      ))
-          .toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Access',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: colors.primary300,
+          ),
+        ),
+        const SizedBox(height: _spacingMedium),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: _spacingLarge,
+          crossAxisSpacing: _spacingLarge,
+          childAspectRatio: 1.1,
+          children: categories
+              .map((category) => _buildCategoryCard(
+            context: context,
+            icon: category.icon,
+            title: category.title,
+            description: category.description,
+            colors: colors,
+          ))
+              .toList(),
+        ),
+      ],
     );
   }
 
   /// Builds an individual category card
   Widget _buildCategoryCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String description,
@@ -245,13 +282,20 @@ class KnowledgeBaseScreen extends StatelessWidget {
   }) =>
       GestureDetector(
         onTap: () {
-          // TODO: Navigate to category detail
+          if (title == 'Emergency Contacts') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()),
+            );
+          } else {
+            _showSnackBar(context, '$title not yet implemented', Colors.orange);
+          }
         },
         child: Container(
           decoration: BoxDecoration(
             color: colors.bg100.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.bg100.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.bg300.withOpacity(0.2)),
           ),
           padding: const EdgeInsets.all(_paddingValue),
           child: Column(
@@ -283,17 +327,17 @@ class KnowledgeBaseScreen extends StatelessWidget {
       );
 
   /// Builds the recent guides section
-  Widget _buildRecentGuides(AppColorTheme colors) {
+  Widget _buildRecentGuides(BuildContext context, AppColorTheme colors) {
     // Hardcoded guides for now, replace with Firebase later
     const List<Guide> guides = [
       Guide(
-        title: 'Guide Topic',
-        description: 'Description',
+        title: 'Flood Safety Tips',
+        description: 'Learn how to stay safe during heavy rainfall and floods.',
         readTime: '5 min read',
       ),
       Guide(
-        title: 'Guide Topic',
-        description: 'Description',
+        title: 'Earthquake Preparedness',
+        description: 'Steps to protect yourself during an earthquake.',
         readTime: '3 min read',
       ),
     ];
@@ -314,7 +358,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Navigate to all guides
+                _showSnackBar(context, 'View all guides not yet implemented', Colors.orange);
               },
               child: Text(
                 'View All',
@@ -323,7 +367,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: _spacingLarge),
+        const SizedBox(height: _spacingMedium),
         ...guides.map((guide) => Padding(
           padding: const EdgeInsets.only(bottom: _spacingMedium),
           child: _buildGuideCard(
@@ -331,6 +375,9 @@ class KnowledgeBaseScreen extends StatelessWidget {
             description: guide.description,
             readTime: guide.readTime,
             colors: colors,
+            onTap: () {
+              _showSnackBar(context, 'Guide navigation not yet implemented', Colors.orange);
+            },
           ),
         )),
       ],
@@ -343,16 +390,15 @@ class KnowledgeBaseScreen extends StatelessWidget {
     required String description,
     required String readTime,
     required AppColorTheme colors,
+    required VoidCallback onTap,
   }) =>
       GestureDetector(
-        onTap: () {
-          // TODO: Navigate to guide detail
-        },
+        onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
             color: colors.bg100.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.bg100.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.bg300.withOpacity(0.2)),
           ),
           padding: const EdgeInsets.all(_paddingValue),
           child: Row(
@@ -385,11 +431,11 @@ class KnowledgeBaseScreen extends StatelessWidget {
                           readTime,
                           style: TextStyle(color: colors.text200, fontSize: 12),
                         ),
-                        const SizedBox(width: _spacingLarge),
+                        const Spacer(),
                         Icon(Icons.bookmark_border, size: 16, color: colors.text200),
                         const SizedBox(width: 4),
                         Text(
-                          'Save for later',
+                          'Save',
                           style: TextStyle(color: colors.text200, fontSize: 12),
                         ),
                       ],
@@ -401,4 +447,15 @@ class KnowledgeBaseScreen extends StatelessWidget {
           ),
         ),
       );
+
+  /// Displays a snackbar with a message using the provided context
+  void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 }

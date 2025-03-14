@@ -14,7 +14,7 @@ abstract class AppColorTheme {
   Color get warning;
 }
 
-class LightAppColors implements AppColorTheme {
+class DarkAppColors implements AppColorTheme {
   @override
   final Color primary100 = const Color(0xFF1F3A5F);
   @override
@@ -38,10 +38,10 @@ class LightAppColors implements AppColorTheme {
   @override
   final Color warning = const Color(0xFFFF3D3D);
 
-  LightAppColors();
+  DarkAppColors();
 }
 
-class DarkAppColors implements AppColorTheme {
+class LightAppColors implements AppColorTheme {
   @override
   final Color primary100 = const Color(0xFFD4EAF7);
   @override
@@ -65,7 +65,7 @@ class DarkAppColors implements AppColorTheme {
   @override
   final Color warning = const Color(0xFFFF3D3D);
 
-  DarkAppColors();
+  LightAppColors();
 }
 
 class AppColors {

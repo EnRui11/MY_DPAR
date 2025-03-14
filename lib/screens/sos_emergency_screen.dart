@@ -238,7 +238,7 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   /// Builds the countdown timer widget
   Widget _buildCountdownTimer(AppColorTheme colors) => GestureDetector(
     onTapDown: (_) {
-      if (!_isCancelling && _isAlertSent) {
+      if (!_isCancelling && (_isAlertSent || _alertCountdown > 0)) {
         _startCancelCountdown();
       }
     },

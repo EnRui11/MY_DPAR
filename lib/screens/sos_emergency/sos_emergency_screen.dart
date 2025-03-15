@@ -8,7 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:vibration/vibration.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:mydpar/screens/home_screen.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';

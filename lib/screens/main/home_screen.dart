@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/profile_screen.dart';
-import 'package:mydpar/screens/knowledge_base_screen.dart';
-import 'package:mydpar/screens/map_screen.dart';
-import 'package:mydpar/screens/report_incident_screen.dart';
-import 'package:mydpar/screens/community_screen.dart';
-import 'package:mydpar/screens/sos_emergency_screen.dart';
-import 'package:mydpar/screens/all_alerts_screen.dart';
+import 'package:mydpar/screens/main/profile_screen.dart';
+import 'package:mydpar/screens/knowledge_base/knowledge_base_screen.dart';
+import 'package:mydpar/screens/main/map_screen.dart';
+import 'package:mydpar/screens/report_incident/report_incident_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
+import 'package:mydpar/screens/sos_emergency/sos_emergency_screen.dart';
+import 'package:mydpar/screens/incident_infomation/all_incidents_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:latlong2/latlong.dart';
 
 // Model for alert data, Firebase-ready
-class Alert {
+class Incident {
   final String topic;
   final String description;
   final String severity;
@@ -21,7 +21,7 @@ class Alert {
   final String disasterType;
   final LatLng? coordinates;
 
-  const Alert({
+  const Incident({
     required this.topic,
     required this.description,
     required this.severity,
@@ -32,7 +32,7 @@ class Alert {
   });
 
   // Factory for Firebase data parsing (uncomment when integrating)
-  // factory Alert.fromJson(Map<String, dynamic> json) => Alert(
+  // factory Incident.fromJson(Map<String, dynamic> json) => Incident(
   //   topic: json['topic'] as String,
   //   description: json['description'] as String,
   // );
@@ -137,7 +137,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: _spacingLarge),
             _buildSOSButton(context, colors),
             const SizedBox(height: _spacingLarge),
-            _buildRecentAlertsSection(context, colors),
+            _buildRecentIncidentsSection(context, colors),
             const SizedBox(height: 80), // Space for bottom nav
           ],
         ),
@@ -249,7 +249,7 @@ class HomeScreen extends StatelessWidget {
       );
 
   /// Builds the recent alerts section with a header and list
-  Widget _buildRecentAlertsSection(
+  Widget _buildRecentIncidentsSection(
           BuildContext context, AppColorTheme colors) =>
       Column(
         children: [
@@ -257,7 +257,7 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recent Alerts',
+                'Recent Incidents',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -265,7 +265,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => _navigateTo(context, const AlertsScreen()),
+                onPressed: () => _navigateTo(context, const IncidentsScreen()),
                 child: Text(
                   'View All',
                   style: TextStyle(
@@ -277,12 +277,12 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: _spacingMedium),
-          _buildAlertsList(colors),
+          _buildIncidentsList(colors),
         ],
       );
 
   /// Builds an individual alert card
-  Widget _buildAlertCard({
+  Widget _buildIncidentCard({
     required String topic,
     required String description,
     required String severity,
@@ -439,10 +439,10 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Builds the scrollable list of alerts
-  Widget _buildAlertsList(AppColorTheme colors) {
-    // Hardcoded alerts for now, replace with Firebase later
-    const List<Alert> alerts = [
-      Alert(
+  Widget _buildIncidentsList(AppColorTheme colors) {
+    // Hardcoded incidents for now, replace with Firebase later
+    const List<Incident> incidents = [
+      Incident(
         topic: 'Flash Flood Warning',
         description:
             'Heavy rainfall expected in Klang Valley area. Please stay alert and avoid flood-prone areas.',
@@ -452,7 +452,7 @@ class HomeScreen extends StatelessWidget {
         disasterType: 'Flood',
         coordinates: null,
       ),
-      Alert(
+      Incident(
         topic: 'Earthquake Alert',
         description:
             'Magnitude 5.2 earthquake detected. Stay away from damaged buildings.',
@@ -462,7 +462,7 @@ class HomeScreen extends StatelessWidget {
         disasterType: 'Earthquake',
         coordinates: null,
       ),
-      Alert(
+      Incident(
         topic: 'Weather Advisory',
         description: 'Strong winds and thunderstorms expected in the evening.',
         severity: 'Low',
@@ -479,14 +479,14 @@ class HomeScreen extends StatelessWidget {
         thickness: 6,
         radius: const Radius.circular(3),
         child: ListView(
-          children: alerts
-              .map((alert) => _buildAlertCard(
-                    topic: alert.topic,
-                    description: alert.description,
-                    severity: alert.severity,
-                    location: alert.location,
-                    time: alert.time,
-                    disasterType: alert.disasterType,
+          children: incidents
+              .map((incident) => _buildIncidentCard(
+                    topic: incident.topic,
+                    description: incident.description,
+                    severity: incident.severity,
+                    location: incident.location,
+                    time: incident.time,
+                    disasterType: incident.disasterType,
                     colors: colors,
                   ))
               .toList(),
@@ -502,8 +502,7 @@ class HomeScreen extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: colors.bg100,
-            border:
-                Border(top: BorderSide(color: colors.bg100)),
+            border: Border(top: BorderSide(color: colors.bg100)),
           ),
           child: SafeArea(
             top: false,

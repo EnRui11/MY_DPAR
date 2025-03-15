@@ -5,10 +5,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:mydpar/screens/home_screen.dart';
-import 'package:mydpar/screens/profile_screen.dart';
-import 'package:mydpar/screens/community_screen.dart';
-import 'package:mydpar/screens/report_incident_screen.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
+import 'package:mydpar/screens/main/profile_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
+import 'package:mydpar/screens/report_incident/report_incident_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 

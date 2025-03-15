@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/home_screen.dart';
-import 'package:mydpar/screens/map_screen.dart';
-import 'package:mydpar/screens/community_screen.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
+import 'package:mydpar/screens/main/map_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';

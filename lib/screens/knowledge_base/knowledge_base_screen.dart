@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/emergency_contacts_screen.dart';
+import 'package:mydpar/screens/knowledge_base/emergency_contacts_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/screens/first_aid_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide_screen.dart';
 
 // Model for guide data, Firebase-ready
 class Guide {
@@ -75,8 +75,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
   /// Builds the header with back button and title
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
         decoration: BoxDecoration(
-          color: colors.bg100,
-          border: Border(bottom: BorderSide(color: colors.bg300)),
+          color: colors.bg100.withOpacity(0.7),
+          border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.7))),
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: _paddingValue,

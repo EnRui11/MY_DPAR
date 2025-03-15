@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/register_screen.dart';
-import 'package:mydpar/screens/home_screen.dart';
+import 'package:mydpar/screens/account/register_screen.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 

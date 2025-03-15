@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/fonts/Inter/
     - assets/sounds/loud-emergency-alarm.mp3
+    - assets/sounds/stayin-alive.mp3
 
   fonts:
     - family: Inter

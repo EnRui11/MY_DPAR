@@ -6,8 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
-// Model for alert data, Firebase-ready
-class Alert {
+// Model for incident data, Firebase-ready
+class Incident {
   final String title;
   final String description;
   final String severity;
@@ -16,7 +16,7 @@ class Alert {
   final String disasterType;
   final LatLng? coordinates;
 
-  const Alert({
+  const Incident({
     required this.title,
     required this.description,
     required this.severity,
@@ -26,23 +26,6 @@ class Alert {
     this.coordinates,
   });
 
-  // Factory for Firebase data parsing (uncomment when integrating)
-  // factory Alert.fromJson(Map<String, dynamic> json) => Alert(
-  //   title: json['title'] as String,
-  //   description: json['description'] as String,
-  //   severity: json['severity'] as String,
-  //   location: json['location'] as String,
-  //   time: json['time'] as String,
-  //   disasterType: json['disasterType'] as String,
-  //   coordinates: json['coordinates'] != null
-  //       ? LatLng(
-  //           json['coordinates']['latitude'] as double,
-  //           json['coordinates']['longitude'] as double,
-  //         )
-  //       : null,
-  // );
-
-  // Convert to JSON for Firebase writes
   Map<String, dynamic> toJson() => {
         'title': title,
         'description': description,
@@ -59,20 +42,19 @@ class Alert {
       };
 }
 
-class AlertsScreen extends StatefulWidget {
-  const AlertsScreen({super.key});
+class IncidentsScreen extends StatefulWidget {
+  const IncidentsScreen({super.key});
 
   @override
-  State<AlertsScreen> createState() => _AlertsScreenState();
+  State<IncidentsScreen> createState() => _IncidentsScreenState();
 }
 
-class _AlertsScreenState extends State<AlertsScreen> {
+class _IncidentsScreenState extends State<IncidentsScreen> {
   String _selectedSort = 'time';
   bool _isAscending = true;
   String _selectedType = 'All Types';
   Position? _currentPosition;
 
-  // Constants for consistency and easy tweaking
   static const List<String> _disasterTypes = [
     'All Types',
     'Flood',
@@ -88,9 +70,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
 
-  // Hardcoded alerts for now, replace with Firebase later
-  final List<Alert> _alerts = const [
-    Alert(
+  final List<Incident> _incidents = const [
+    Incident(
       title: 'Flash Flood Warning',
       description: 'Severe flooding reported in Klang Valley area...',
       severity: 'High',
@@ -99,7 +80,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
       coordinates: LatLng(3.1390, 101.6869),
       disasterType: 'Flood',
     ),
-    Alert(
+    Incident(
       title: 'Landslide Risk',
       description: 'Potential landslide risk in highland areas...',
       severity: 'Medium',
@@ -108,7 +89,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
       coordinates: LatLng(4.4718, 101.3750),
       disasterType: 'Landslide',
     ),
-    Alert(
+    Incident(
       title: 'Heavy Rain Advisory',
       description: 'Expected heavy rainfall in the evening...',
       severity: 'Low',
@@ -125,7 +106,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
     _getCurrentLocation();
   }
 
-  /// Fetches the user's current location
   Future<void> _getCurrentLocation() async {
     try {
       final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -160,7 +140,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
   @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme; // Updated type
+    final AppColorTheme colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -176,7 +156,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
     );
   }
 
-  /// Builds the header with back button and title
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
         height: 56,
         padding: const EdgeInsets.symmetric(horizontal: _paddingValue),
@@ -192,7 +171,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             Text(
-              'All Alerts',
+              'All Incidents',
               style: TextStyle(
                 color: colors.accent200,
                 fontSize: 18,
@@ -203,7 +182,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
         ),
       );
 
-  /// Builds the filter and sort section
   Widget _buildFilterSection(AppColorTheme colors) => Container(
         padding: const EdgeInsets.all(_paddingValue),
         decoration: BoxDecoration(
@@ -268,7 +246,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 Row(
                   children: [
                     Text(
-                      'Sort Alerts By',
+                      'Sort Incidents By',
                       style: TextStyle(
                         color: colors.accent200,
                         fontSize: 14,
@@ -326,17 +304,16 @@ class _AlertsScreenState extends State<AlertsScreen> {
         ),
       );
 
-  /// Builds the scrollable content with sorted and filtered alerts
   Widget _buildContent(AppColorTheme colors) {
-    List<Alert> filteredAlerts = _selectedType == 'All Types'
-        ? List.from(_alerts)
-        : _alerts
-            .where((alert) => alert.disasterType == _selectedType)
+    List<Incident> filteredIncidents = _selectedType == 'All Types'
+        ? List.from(_incidents)
+        : _incidents
+            .where((incident) => incident.disasterType == _selectedType)
             .toList();
 
     switch (_selectedSort) {
       case 'time':
-        filteredAlerts.sort((a, b) => _isAscending
+        filteredIncidents.sort((a, b) => _isAscending
             ? DateTime.parse(a.time).compareTo(DateTime.parse(b.time))
             : DateTime.parse(b.time).compareTo(DateTime.parse(a.time)));
         break;
@@ -346,7 +323,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           'Medium': 2,
           'Low': 1
         };
-        filteredAlerts.sort((a, b) => _isAscending
+        filteredIncidents.sort((a, b) => _isAscending
             ? (severityOrder[a.severity] ?? 0)
                 .compareTo(severityOrder[b.severity] ?? 0)
             : (severityOrder[b.severity] ?? 0)
@@ -354,7 +331,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
         break;
       case 'distance':
         if (_currentPosition != null) {
-          filteredAlerts.sort((a, b) {
+          filteredIncidents.sort((a, b) {
             final double distanceA = a.coordinates != null
                 ? Geolocator.distanceBetween(
                     _currentPosition!.latitude,
@@ -379,10 +356,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
         break;
     }
 
-    if (filteredAlerts.isEmpty) {
+    if (filteredIncidents.isEmpty) {
       return Center(
         child: Text(
-          'No alerts match your filters',
+          'No incidents match your filters',
           style: TextStyle(color: colors.text200),
         ),
       );
@@ -390,41 +367,40 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(_paddingValue),
-      itemCount: filteredAlerts.length + 1,
+      itemCount: filteredIncidents.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return Padding(
             padding: const EdgeInsets.only(bottom: _spacingLarge),
             child: Text(
-              'Active Alerts (${filteredAlerts.length})',
+              'Active Incidents (${filteredIncidents.length})',
               style: TextStyle(
                 color: colors.accent200,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
           );
         }
-        final Alert alert = filteredAlerts[index - 1];
+        final Incident incident = filteredIncidents[index - 1];
         return Padding(
           padding: const EdgeInsets.only(bottom: _spacingSmall),
-          child: _buildAlertCard(
+          child: _buildIncidentCard(
             colors: colors,
-            title: alert.title,
-            description: alert.description,
-            severity: alert.severity,
-            location: alert.location,
-            time: alert.time,
-            disasterType: alert.disasterType,
-            coordinates: alert.coordinates,
+            title: incident.title,
+            description: incident.description,
+            severity: incident.severity,
+            location: incident.location,
+            time: incident.time,
+            disasterType: incident.disasterType,
+            coordinates: incident.coordinates,
           ),
         );
       },
     );
   }
 
-  /// Builds an individual alert card
-  Widget _buildAlertCard({
+  Widget _buildIncidentCard({
     required AppColorTheme colors,
     required String title,
     required String description,
@@ -436,7 +412,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }) {
     final Color severityColor = _getSeverityColor(severity, colors);
 
-    // Calculate distance if coordinates and current position are available
     String distanceText = '';
     if (_currentPosition != null && coordinates != null) {
       final double distanceInMeters = Geolocator.distanceBetween(
@@ -596,21 +571,19 @@ class _AlertsScreenState extends State<AlertsScreen> {
     );
   }
 
-  /// Determines the color based on severity
   Color _getSeverityColor(String severity, AppColorTheme colors) {
     switch (severity.toLowerCase()) {
       case 'high':
         return colors.warning;
       case 'medium':
-        return const Color(0xFFFF8C00); // Orange
+        return const Color(0xFFFF8C00);
       case 'low':
-        return const Color(0xFF71C4EF); // Light blue
+        return const Color(0xFF71C4EF);
       default:
         return colors.text200;
     }
   }
 
-  /// Displays a snackbar with a message
   void _showSnackBar(String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: backgroundColor),
@@ -618,7 +591,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }
 }
 
-/// Helper method to get icon based on disaster type
 IconData _getDisasterIcon(String type) {
   const IconData flood = IconData(0xf07a3, fontFamily: 'MaterialIcons');
   const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
 
 // Model for first aid data (optional, Firebase-ready if needed)
 class FirstAidItem {
@@ -46,32 +47,32 @@ class FirstAidGuideScreen extends StatelessWidget {
 
   /// Builds the header with back button and title
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg100,
-      border: Border(bottom: BorderSide(color: colors.bg300)),
-    ),
-    padding: const EdgeInsets.symmetric(
-      horizontal: _paddingValue,
-      vertical: _paddingValue - 4,
-    ),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.primary300),
-          onPressed: () => Navigator.pop(context),
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.7))),
         ),
-        const SizedBox(width: _spacingSmall),
-        Text(
-          'First Aid Guide',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: colors.primary300,
-          ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: _paddingValue,
+          vertical: _paddingValue - 4,
         ),
-      ],
-    ),
-  );
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: colors.primary300),
+              onPressed: () => Navigator.pop(context),
+            ),
+            const SizedBox(width: _spacingSmall),
+            Text(
+              'First Aid Guide',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300,
+              ),
+            ),
+          ],
+        ),
+      );
 
   /// Builds the scrollable content area
   Widget _buildContent(BuildContext context, AppColorTheme colors) =>
@@ -142,17 +143,19 @@ class FirstAidGuideScreen extends StatelessWidget {
             const SizedBox(height: _spacingLarge),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: () => _makeEmergencyCall(context),
+                icon: const Icon(Icons.phone_forwarded),
+                label: const Text('Call 999'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.bg100,
                   foregroundColor: colors.warning,
+
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
                 ),
-                child: const Text('Call 999'),
               ),
             ),
           ],
@@ -187,6 +190,12 @@ class FirstAidGuideScreen extends StatelessWidget {
                 title: 'CPR Guide',
                 description: 'Step-by-step CPR instructions',
                 colors: colors,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CPRGuideScreen(),
+                  ),
+                ),
               ),
               _buildQuickResponseCard(
                 context: context,
@@ -207,9 +216,15 @@ class FirstAidGuideScreen extends StatelessWidget {
     required String title,
     required String description,
     required AppColorTheme colors,
+    VoidCallback? onTap,
   }) =>
       GestureDetector(
-        onTap: () => _showSnackBar(context, '$title guide not yet implemented', Colors.orange),
+        onTap: onTap ??
+            () => _showSnackBar(
+                  context,
+                  '$title guide not yet implemented',
+                  Colors.orange,
+                ),
         child: Container(
           decoration: BoxDecoration(
             color: colors.bg100.withOpacity(0.7),
@@ -291,7 +306,8 @@ class FirstAidGuideScreen extends StatelessWidget {
     required AppColorTheme colors,
   }) =>
       GestureDetector(
-        onTap: () => _showSnackBar(context, '$title guide not yet implemented', Colors.orange),
+        onTap: () => _showSnackBar(
+            context, '$title guide not yet implemented', Colors.orange),
         child: Container(
           decoration: BoxDecoration(
             color: colors.bg100.withOpacity(0.7),
@@ -358,8 +374,8 @@ class FirstAidGuideScreen extends StatelessWidget {
             _buildChecklistItem('Medical tape', colors),
             const SizedBox(height: _spacingSmall),
             TextButton(
-              onPressed: () =>
-                  _showSnackBar(context, 'Full list not yet implemented', Colors.orange),
+              onPressed: () => _showSnackBar(
+                  context, 'Full list not yet implemented', Colors.orange),
               child: Text(
                 'View Full List',
                 style: TextStyle(color: colors.accent200),
@@ -371,20 +387,20 @@ class FirstAidGuideScreen extends StatelessWidget {
 
   /// Builds a checklist item
   Widget _buildChecklistItem(String text, AppColorTheme colors) => Padding(
-    padding: const EdgeInsets.only(bottom: _spacingSmall),
-    child: Row(
-      children: [
-        Icon(Icons.check, color: colors.accent200, size: 16),
-        const SizedBox(width: _spacingSmall),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(color: colors.text200, fontSize: 14),
-          ),
+        padding: const EdgeInsets.only(bottom: _spacingSmall),
+        child: Row(
+          children: [
+            Icon(Icons.check, color: colors.accent200, size: 16),
+            const SizedBox(width: _spacingSmall),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(color: colors.text200, fontSize: 14),
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   /// Initiates an emergency call with error handling
   Future<void> _makeEmergencyCall(BuildContext context) async {
@@ -401,7 +417,8 @@ class FirstAidGuideScreen extends StatelessWidget {
   }
 
   /// Displays a snackbar with a message
-  void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
+  void _showSnackBar(
+      BuildContext context, String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

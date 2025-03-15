@@ -192,7 +192,7 @@ class _CPRGuideScreenState extends State<CPRGuideScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _makeEmergencyCall(context),
-                icon: const Icon(Icons.phone_forwarded),
+                icon: const Icon(Icons.phone),
                 label: const Text('Call 999'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.bg100,

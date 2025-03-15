@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/bleeding_guide_screen.dart';
 
 // Model for first aid data (optional, Firebase-ready if needed)
 class FirstAidItem {
@@ -145,7 +146,7 @@ class FirstAidGuideScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _makeEmergencyCall(context),
-                icon: const Icon(Icons.phone_forwarded),
+                icon: const Icon(Icons.phone),
                 label: const Text('Call 999'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.bg100,
@@ -203,6 +204,12 @@ class FirstAidGuideScreen extends StatelessWidget {
                 title: 'Bleeding',
                 description: 'Wound care and bleeding control',
                 colors: colors,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BleedingGuideScreen(),
+                  ),
+                ),
               ),
             ],
           ),

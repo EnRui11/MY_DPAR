@@ -11,6 +11,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:mydpar/screens/home_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SOSEmergencyScreen extends StatefulWidget {
   const SOSEmergencyScreen({super.key});
@@ -64,7 +65,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   /// Initializes the emergency alert audio
   Future<void> _initAudio() async {
     try {
-      await _audioPlayer.setSource(AssetSource('sounds/loud-emergency-alarm.mp3'));
+      await _audioPlayer
+          .setSource(AssetSource('sounds/loud-emergency-alarm.mp3'));
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
     } catch (e) {
       _showSnackBar('Failed to initialize audio: $e', Colors.red);
@@ -92,7 +94,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _currentAddress = 'Location permissions permanently denied');
+        setState(
+            () => _currentAddress = 'Location permissions permanently denied');
         _showSnackBar('Location permission permanently denied', Colors.red);
         return;
       }
@@ -115,7 +118,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
         final Placemark place = placemarks[0];
         setState(() {
           _currentAddress = '${place.street ?? ''}, ${place.locality ?? ''}, '
-              '${place.administrativeArea ?? ''} ${place.postalCode ?? ''}'.trim();
+                  '${place.administrativeArea ?? ''} ${place.postalCode ?? ''}'
+              .trim();
           if (_currentAddress.isEmpty) _currentAddress = 'Unnamed Location';
         });
       }
@@ -215,8 +219,9 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
     return AnimatedBuilder(
       animation: _flickerController,
       builder: (context, child) => Scaffold(
-        backgroundColor:
-        _isAlertSent ? (_flickerAnimation.value ?? colors.warning) : colors.bg200,
+        backgroundColor: _isAlertSent
+            ? (_flickerAnimation.value ?? colors.warning)
+            : colors.bg200,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(_paddingValue),
@@ -237,162 +242,165 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
   /// Builds the countdown timer widget
   Widget _buildCountdownTimer(AppColorTheme colors) => GestureDetector(
-    onTapDown: (_) {
-      if (!_isCancelling && (_isAlertSent || _alertCountdown > 0)) {
-        _startCancelCountdown();
-      }
-    },
-    onTapUp: (_) {
-      setState(() {
-        _isCancelling = false;
-        _cancelCountdown = 5;
-      });
-    },
-    child: AnimatedBuilder(
-      animation: _flickerController,
-      builder: (context, child) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(_paddingValue),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: _isAlertSent
-                ? [
-              _flickerAnimation.value ?? colors.warning,
-              (_flickerAnimation.value ?? colors.warning).withOpacity(0.8),
-            ]
-                : [
-              colors.warning,
-              colors.warning.withOpacity(0.8),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: colors.warning.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              _isAlertSent ? 'Emergency Alert Sent' : 'Automatic Alert in',
-              style: TextStyle(
-                color: colors.bg100,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+        onTapDown: (_) {
+          if (!_isCancelling && (_isAlertSent || _alertCountdown > 0)) {
+            _startCancelCountdown();
+          }
+        },
+        onTapUp: (_) {
+          setState(() {
+            _isCancelling = false;
+            _cancelCountdown = 5;
+          });
+        },
+        child: AnimatedBuilder(
+          animation: _flickerController,
+          builder: (context, child) => Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(_paddingValue),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _isAlertSent
+                    ? [
+                        _flickerAnimation.value ?? colors.warning,
+                        (_flickerAnimation.value ?? colors.warning)
+                            .withOpacity(0.8),
+                      ]
+                    : [
+                        colors.warning,
+                        colors.warning.withOpacity(0.8),
+                      ],
               ),
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              _isCancelling ? _cancelCountdown.toString() : _alertCountdown.toString(),
-              style: TextStyle(
-                color: colors.bg100,
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              _isCancelling
-                  ? 'Cancelling in $_cancelCountdown'
-                  : 'Press and hold to cancel',
-              style: TextStyle(color: colors.bg100, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-
-  /// Builds the location section with map and address
-  Widget _buildLocationSection(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.all(_paddingValue - 8),
-    decoration: BoxDecoration(
-      color: colors.bg100.withOpacity(0.7),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: colors.bg100.withOpacity(0.2)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your Location',
-          style: TextStyle(
-            color: colors.primary300,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: _spacingMedium),
-        SizedBox(
-          height: 150,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                center: _currentPosition != null
-                    ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
-                    : _defaultLocation,
-                zoom: 15,
-                interactiveFlags: InteractiveFlag.none,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: const ['a', 'b', 'c'],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.warning.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
-                MarkerLayer(
-                  markers: [
-                    if (_currentPosition != null)
-                      Marker(
-                        point:
-                        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-                        builder: (_) => Icon(
-                          Icons.location_pin,
-                          color: colors.warning,
-                          size: 40,
-                        ),
-                      ),
-                  ],
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  _isAlertSent ? 'Emergency Alert Sent' : 'Automatic Alert in',
+                  style: TextStyle(
+                    color: colors.bg100,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: _spacingSmall),
+                Text(
+                  _alertCountdown.toString(),
+                  style: TextStyle(
+                    color: colors.bg100,
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: _spacingSmall),
+                Text(
+                  _isCancelling
+                      ? 'Cancelling in $_cancelCountdown'
+                      : 'Press and hold to cancel',
+                  style: TextStyle(color: colors.bg100, fontSize: 14),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: _spacingMedium),
-        Text(
-          _currentAddress,
-          style: TextStyle(color: colors.text200, fontSize: 14),
+      );
+
+  /// Builds the location section with map and address
+  Widget _buildLocationSection(AppColorTheme colors) => Container(
+        padding: const EdgeInsets.all(_paddingValue - 8),
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.bg100.withOpacity(0.2)),
         ),
-      ],
-    ),
-  );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your Location',
+              style: TextStyle(
+                color: colors.primary300,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: _spacingMedium),
+            SizedBox(
+              height: 150,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    center: _currentPosition != null
+                        ? LatLng(_currentPosition!.latitude,
+                            _currentPosition!.longitude)
+                        : _defaultLocation,
+                    zoom: 15,
+                    interactiveFlags: InteractiveFlag.none,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      subdomains: const ['a', 'b', 'c'],
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        if (_currentPosition != null)
+                          Marker(
+                            point: LatLng(_currentPosition!.latitude,
+                                _currentPosition!.longitude),
+                            builder: (_) => Icon(
+                              Icons.location_pin,
+                              color: colors.warning,
+                              size: 40,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: _spacingMedium),
+            Text(
+              _currentAddress,
+              style: TextStyle(color: colors.text200, fontSize: 14),
+            ),
+          ],
+        ),
+      );
 
   /// Builds the emergency contacts section
   Widget _buildEmergencyContacts(AppColorTheme colors) => Column(
-    children: [
-      _buildEmergencyButton(
-        icon: Icons.phone,
-        title: 'Emergency Services',
-        subtitle: 'Call 999',
-        colors: colors,
-        onTap: _callEmergencyServices,
-      ),
-      const SizedBox(height: _spacingLarge),
-      _buildEmergencyButton(
-        icon: Icons.people,
-        title: 'Emergency Contacts',
-        subtitle: 'Alert your emergency contacts',
-        colors: colors,
-        onTap: _alertEmergencyContacts,
-      ),
-    ],
-  );
+        children: [
+          _buildEmergencyButton(
+            icon: Icons.phone,
+            title: 'Emergency Services',
+            subtitle: 'Call 999',
+            colors: colors,
+            onTap: _callEmergencyServices,
+          ),
+          const SizedBox(height: _spacingLarge),
+          _buildEmergencyButton(
+            icon: Icons.people,
+            title: 'Emergency Contacts',
+            subtitle: 'Alert your emergency contacts',
+            colors: colors,
+            onTap: _alertEmergencyContacts,
+          ),
+        ],
+      );
 
   /// Builds an individual emergency button
   Widget _buildEmergencyButton({
@@ -401,41 +409,67 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
     required String subtitle,
     required AppColorTheme colors,
     required VoidCallback onTap,
-  }) =>
-      InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(_paddingValue - 8),
-          decoration: BoxDecoration(
-            color: colors.bg100.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.bg100.withOpacity(0.2)),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: colors.warning, size: 24),
-              const SizedBox(width: _spacingMedium),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: colors.primary300,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(color: colors.text200, fontSize: 14),
-                  ),
-                ],
-              ),
-            ],
-          ),
+  }) {
+    // Add isPulsing check for emergency number
+    final bool isPulsing = subtitle == 'Call 999';
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(_paddingValue - 8),
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.bg100.withOpacity(0.2)),
         ),
-      );
+        child: Row(
+          children: [
+            Icon(icon, color: colors.warning, size: 24),
+            const SizedBox(width: _spacingMedium),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: colors.primary300,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: colors.text200,
+                    fontSize: 14,
+                    fontWeight: isPulsing ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ).animate(
+        onPlay: (controller) =>
+            isPulsing ? controller.repeat(reverse: true) : null,
+        effects: [
+          if (isPulsing) ...[
+            ScaleEffect(
+              begin: const Offset(1.0, 1.0),
+              end: const Offset(1.02, 1.02),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+            ),
+            ShimmerEffect(
+              color: colors.warning.withOpacity(0.3),
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeInOut,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   /// Initiates a call to emergency services
   Future<void> _callEmergencyServices() async {
@@ -454,11 +488,13 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   /// Alerts emergency contacts (placeholder for implementation)
   void _alertEmergencyContacts() {
     // TODO: Implement emergency contacts alert (e.g., SMS, Firebase notification)
-    _showSnackBar('Emergency contacts alert not yet implemented', Colors.orange);
+    _showSnackBar(
+        'Emergency contacts alert not yet implemented', Colors.orange);
   }
 
   /// Default map location if no position is available
-  static const LatLng _defaultLocation = LatLng(3.1390, 101.6869); // Kuala Lumpur
+  static const LatLng _defaultLocation =
+      LatLng(3.1390, 101.6869); // Kuala Lumpur
 
   /// Displays a snackbar with a message
   void _showSnackBar(String message, Color backgroundColor) {

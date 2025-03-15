@@ -501,9 +501,9 @@ class HomeScreen extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         child: Container(
           decoration: BoxDecoration(
-            color: colors.bg100.withOpacity(0.7),
+            color: colors.bg100,
             border:
-                Border(top: BorderSide(color: colors.bg100.withOpacity(0.2))),
+                Border(top: BorderSide(color: colors.bg100)),
           ),
           child: SafeArea(
             top: false,

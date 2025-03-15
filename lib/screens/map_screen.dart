@@ -377,8 +377,8 @@ class _MapScreenState extends State<MapScreen> {
     alignment: Alignment.bottomCenter,
     child: Container(
       decoration: BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        border: Border(top: BorderSide(color: colors.bg100.withOpacity(0.2))),
+        color: colors.bg100,
+        border: Border(top: BorderSide(color: colors.bg100)),
       ),
       child: SafeArea(
         top: false,

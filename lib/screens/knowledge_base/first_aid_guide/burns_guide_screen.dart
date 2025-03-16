@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/cpr_guide_screen.dart';
 
 class BurnsGuideScreen extends StatefulWidget {
   const BurnsGuideScreen({super.key});

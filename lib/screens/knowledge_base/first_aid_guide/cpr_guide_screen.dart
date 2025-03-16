@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
 import 'package:mydpar/services/cpr_audio_service.dart';
 
 class CPRGuideScreen extends StatefulWidget {

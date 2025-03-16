@@ -22,12 +22,12 @@ class EmergencyContact {
   });
 
   Map<String, dynamic> toJson() => {
-    'title': title,
-    'subtitle': subtitle,
-    'phoneNumber': phoneNumber,
-    'website': website,
-    'icon': icon.codePoint,
-  };
+        'title': title,
+        'subtitle': subtitle,
+        'phoneNumber': phoneNumber,
+        'website': website,
+        'icon': icon.codePoint,
+      };
 }
 
 class EmergencyContactsScreen extends StatelessWidget {
@@ -59,32 +59,33 @@ class EmergencyContactsScreen extends StatelessWidget {
 
   /// Builds the header with back button and title
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg100.withOpacity(0.7),
-      border: Border.all(color: colors.bg300.withOpacity(0.2)), // Fixed Border
-    ),
-    padding: const EdgeInsets.symmetric(
-      horizontal: _paddingValue,
-      vertical: _paddingValue - 8,
-    ),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.primary300),
-          onPressed: () => Navigator.pop(context),
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          border:
+              Border.all(color: colors.bg300.withOpacity(0.2)), // Fixed Border
         ),
-        const SizedBox(width: _spacingSmall),
-        Text(
-          'Emergency Contacts',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: colors.primary300,
-          ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: _paddingValue,
+          vertical: _paddingValue - 8,
         ),
-      ],
-    ),
-  );
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: colors.primary300),
+              onPressed: () => Navigator.pop(context),
+            ),
+            const SizedBox(width: _spacingSmall),
+            Text(
+              'Emergency Contacts',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300,
+              ),
+            ),
+          ],
+        ),
+      );
 
   /// Builds the scrollable content area
   Widget _buildContent(BuildContext context, AppColorTheme colors) =>
@@ -142,13 +143,13 @@ class EmergencyContactsScreen extends StatelessWidget {
 
   /// Builds a section title
   Widget _buildSectionTitle(String title, AppColorTheme colors) => Text(
-    title,
-    style: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      color: colors.primary300,
-    ),
-  );
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: colors.primary300,
+        ),
+      );
 
   /// Builds an emergency button with optional pulsing animation
   Widget _buildEmergencyButton({
@@ -158,7 +159,8 @@ class EmergencyContactsScreen extends StatelessWidget {
     required Color color,
     required bool isPulsing,
   }) {
-    final AppColorTheme colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final AppColorTheme colors =
+        Provider.of<ThemeProvider>(context).currentTheme;
     return GestureDetector(
       onTap: () => _makePhoneCall(context, number),
       child: Container(
@@ -175,7 +177,8 @@ class EmergencyContactsScreen extends StatelessWidget {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.phone, color: colors.text200, size: 32), // Adjusted color
+              child: Icon(Icons.phone,
+                  color: colors.text200, size: 32), // Adjusted color
             ),
             const SizedBox(width: _spacingMedium),
             Expanded(
@@ -206,12 +209,14 @@ class EmergencyContactsScreen extends StatelessWidget {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.phone_in_talk, color: colors.text200), // Adjusted color
+              child: Icon(Icons.phone_in_talk,
+                  color: colors.text200), // Adjusted color
             ),
           ],
         ),
       ).animate(
-        onPlay: (controller) => isPulsing ? controller.repeat(reverse: true) : null,
+        onPlay: (controller) =>
+            isPulsing ? controller.repeat(reverse: true) : null,
         effects: [
           if (isPulsing)
             ScaleEffect(
@@ -246,7 +251,8 @@ class EmergencyContactsScreen extends StatelessWidget {
                 color: colors.accent100,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(contact.icon, color: Colors.white), // Kept white for contrast
+              child: Icon(contact.icon,
+                  color: Colors.white), // Kept white for contrast
             ),
             const SizedBox(width: _spacingMedium),
             Expanded(
@@ -306,7 +312,6 @@ class EmergencyContactsScreen extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final colors = Provider.of<ThemeProvider>(context).currentTheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -315,7 +320,8 @@ class EmergencyContactsScreen extends StatelessWidget {
           color: color,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 20), // Kept white for contrast
+        child: Icon(icon,
+            color: Colors.white, size: 20), // Kept white for contrast
       ),
     );
   }
@@ -350,7 +356,8 @@ class EmergencyContactsScreen extends StatelessWidget {
   }
 
   /// Displays a snackbar with a message
-  void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
+  void _showSnackBar(
+      BuildContext context, String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/screens/knowledge_base/emergency_contacts_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/screens/knowledge_base/first_aid_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/first_aid_guide_screen.dart';
 
 // Model for guide data, Firebase-ready
 class Guide {

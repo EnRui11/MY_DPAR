@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
-import 'package:mydpar/screens/knowledge_base/bleeding_guide_screen.dart';
-import 'package:mydpar/screens/knowledge_base/burns_guide_screen.dart';
-import 'package:mydpar/screens/knowledge_base/fractures_guide_screen.dart';
-import 'package:mydpar/screens/knowledge_base/bites_stings_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/cpr_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/bleeding_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/burns_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/fractures_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/bites_stings_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/first_aid_guide/first_aid_kit_screen.dart';
 
 // Model for first aid data (optional, Firebase-ready if needed)
 class FirstAidItem {
@@ -404,8 +405,12 @@ class FirstAidGuideScreen extends StatelessWidget {
             _buildChecklistItem('Medical tape', colors),
             const SizedBox(height: _spacingSmall),
             TextButton(
-              onPressed: () => _showSnackBar(
-                  context, 'Full list not yet implemented', Colors.orange),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FirstAidKitScreen(),
+                ),
+              ),
               child: Text(
                 'View Full List',
                 style: TextStyle(color: colors.accent200),

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
+/// Represents an item in the first aid kit with a name, checked status, and quantity.
 class FirstAidKitItem {
   final String name;
   bool checked;
@@ -28,6 +29,7 @@ class FirstAidKitItem {
   );
 }
 
+/// A screen displaying a first aid kit checklist with progress tracking.
 class FirstAidKitScreen extends StatefulWidget {
   const FirstAidKitScreen({super.key});
 
@@ -36,6 +38,7 @@ class FirstAidKitScreen extends StatefulWidget {
 }
 
 class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
+  // Constants for consistent spacing and padding
   static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
@@ -49,6 +52,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
   };
 
   bool _isLoading = false;
+  int _totalItems = 0;
+  int _completedItems = 0;
 
   @override
   void initState() {
@@ -56,6 +61,13 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     _loadItems();
   }
 
+  /// Updates the total and completed item counts for progress tracking.
+  void _updateProgress() {
+    _totalItems = _categories.values.fold(0, (sum, items) => sum + items.length);
+    _completedItems = _categories.values.fold(0, (sum, items) => sum + items.where((item) => item.checked).length);
+  }
+
+  /// Loads items from SharedPreferences and initializes progress.
   Future<void> _loadItems() async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
@@ -90,11 +102,12 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
       await prefs.setBool('first_aid_kit_initialized', true);
     }
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    _updateProgress();
+
+    if (mounted) setState(() => _isLoading = false);
   }
 
+  /// Saves all items to SharedPreferences.
   Future<void> _saveItems() async {
     final prefs = await SharedPreferences.getInstance();
     for (final category in _categories.keys) {
@@ -105,6 +118,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     }
   }
 
+  /// Resets the checklist to default items with user confirmation.
   Future<void> _resetToDefaults() async {
     final shouldReset = await showDialog<bool>(
       context: context,
@@ -142,6 +156,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     }
   }
 
+  /// Initializes default items for each category.
   void _initializeDefaultItems() {
     _categories['Bandages & Dressings'] = [
       FirstAidKitItem(name: 'Adhesive Bandages (various sizes)'),
@@ -180,8 +195,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -196,7 +211,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     );
   }
 
-  /// Builds the header with back button, title, and reset button
+  /// Builds the header with back button, title, and reset button.
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
     decoration: BoxDecoration(
       color: colors.bg100.withOpacity(0.7),
@@ -225,7 +240,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     ),
   );
 
-  /// Builds the main content area
+  /// Builds the main content area with progress and categories.
   Widget _buildContent(AppColorTheme colors) => _isLoading
       ? Center(child: CircularProgressIndicator(color: colors.accent200))
       : SingleChildScrollView(
@@ -235,6 +250,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
       children: [
         const SizedBox(height: _spacingLarge),
         _buildMaintenanceCard(colors),
+        const SizedBox(height: _spacingLarge),
+        _buildProgressBar(colors),
         const SizedBox(height: _spacingLarge),
         ..._categories.entries.map(
               (entry) => Column(
@@ -248,7 +265,200 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     ),
   );
 
-  /// Maps category names to icons
+  /// Builds the overall progress bar for the kit.
+  Widget _buildProgressBar(AppColorTheme colors) => Container(
+    margin: const EdgeInsets.symmetric(horizontal: _paddingValue),
+    padding: const EdgeInsets.all(_paddingValue),
+    decoration: _buildCardDecoration(colors),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Kit Completion',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.primary300),
+            ),
+            Text(
+              '$_completedItems/$_totalItems Items',
+              style: TextStyle(color: colors.accent200, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: _spacingMedium),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: _totalItems > 0 ? (_completedItems / _totalItems).toDouble() : 0.0,
+            backgroundColor: colors.primary100,
+            valueColor: AlwaysStoppedAnimation<Color>(colors.accent200),
+            minHeight: 8,
+          ),
+        ),
+      ],
+    ),
+  );
+
+  /// Builds a category card with items and progress indicator.
+  Widget _buildCategoryCard(AppColorTheme colors, String title, IconData icon, List<FirstAidKitItem> items) {
+    final itemCount = items.length;
+    final completedCount = items.where((item) => item.checked).length;
+    final progress = itemCount > 0 ? (completedCount / itemCount).toDouble() : 0.0;
+
+    return Container(
+      decoration: _buildCardDecoration(colors),
+      padding: const EdgeInsets.all(_paddingValue),
+      child: Column(
+        children: [
+          ExpansionTile(
+            leading: Icon(icon, color: colors.accent200),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: colors.primary300, fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: _spacingSmall),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: colors.bg300.withOpacity(0.2),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      progress == 1.0 ? colors.accent200 : colors.accent200.withOpacity(0.5),
+                    ),
+                    minHeight: 4,
+                  ),
+                ),
+              ],
+            ),
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(top: _spacingMedium),
+            children: items.isEmpty
+                ? [Text('No items available', style: TextStyle(color: colors.text200))]
+                : items.asMap().entries.map((entry) => _buildChecklistItem(colors, title, entry.key, entry.value)).toList(),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(_paddingValue, 0, _paddingValue, _spacingSmall),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  '$completedCount/$itemCount items completed',
+                  style: TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a checklist item with a tappable checkbox and description.
+  Widget _buildChecklistItem(AppColorTheme colors, String category, int index, FirstAidKitItem item) {
+    final controller = TextEditingController(text: item.quantity > 0 ? item.quantity.toString() : '');
+    return InkWell(
+      onTap: () {
+        setState(() {
+          item.checked = !item.checked; // Toggle the state
+          if (!item.checked) {
+            item.quantity = 0;
+            controller.text = '';
+          }
+          _updateProgress();
+          _saveItems();
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: _spacingSmall),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: item.checked,
+                activeColor: colors.accent200,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                onChanged: (value) {
+                  setState(() {
+                    item.checked = value ?? false;
+                    if (!item.checked) {
+                      item.quantity = 0;
+                      controller.text = '';
+                    }
+                    _updateProgress();
+                    _saveItems();
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: _spacingMedium),
+            Expanded(
+              child: Text(
+                item.name,
+                style: TextStyle(
+                  color: colors.text200,
+                  decoration: item.checked ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 60,
+              child: TextField(
+                enabled: item.checked,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  hintText: 'Qty',
+                  hintStyle: TextStyle(color: colors.bg300),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300.withOpacity(0.5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.accent200),
+                  ),
+                ),
+                controller: controller,
+                onChanged: (value) {
+                  setState(() {
+                    item.quantity = (int.tryParse(value) ?? 0).clamp(0, 999);
+                    controller.text = item.quantity.toString();
+                    _saveItems();
+                  });
+                },
+                onTap: () {
+                  if (!item.checked) {
+                    setState(() {
+                      item.checked = true;
+                      _updateProgress();
+                      _saveItems();
+                    });
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Maps category names to icons.
   IconData _getCategoryIcon(String category) {
     switch (category) {
       case 'Bandages & Dressings':
@@ -264,7 +474,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     }
   }
 
-  /// Builds the maintenance tips card
+  /// Builds the maintenance tips card.
   Widget _buildMaintenanceCard(AppColorTheme colors) => Container(
     decoration: BoxDecoration(
       gradient: LinearGradient(
@@ -307,7 +517,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     ),
   );
 
-  /// Builds a maintenance item
+  /// Builds a maintenance tip item.
   Widget _buildMaintenanceItem(AppColorTheme colors, IconData icon, String text) => Padding(
     padding: const EdgeInsets.only(bottom: _spacingSmall),
     child: Row(
@@ -319,97 +529,7 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     ),
   );
 
-  /// Builds a category card with expandable checklist items
-  Widget _buildCategoryCard(AppColorTheme colors, String title, IconData icon, List<FirstAidKitItem> items) => Container(
-    decoration: _buildCardDecoration(colors),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: ExpansionTile(
-      leading: Icon(icon, color: colors.accent200),
-      title: Text(
-        title,
-        style: TextStyle(color: colors.primary300, fontSize: 18, fontWeight: FontWeight.w600),
-      ),
-      tilePadding: EdgeInsets.zero,
-      childrenPadding: const EdgeInsets.only(top: _spacingMedium),
-      children: items.isEmpty
-          ? [Text('No items available', style: TextStyle(color: colors.text200))]
-          : items.asMap().entries.map((entry) => _buildChecklistItem(colors, title, entry.key, entry.value)).toList(),
-    ),
-  );
-
-  /// Builds a checklist item with checkbox and conditional quantity input
-  Widget _buildChecklistItem(AppColorTheme colors, String category, int index, FirstAidKitItem item) {
-    final controller = TextEditingController(text: item.quantity > 0 ? item.quantity.toString() : '');
-    return Padding(
-      padding: const EdgeInsets.only(bottom: _spacingSmall),
-      child: Row(
-        children: [
-          Checkbox(
-            value: item.checked,
-            activeColor: colors.accent200,
-            onChanged: (value) {
-              setState(() {
-                item.checked = value ?? false;
-                if (!item.checked) {
-                  item.quantity = 0; // Reset quantity when unchecked
-                  controller.text = ''; // Clear the text field
-                }
-                _saveItems();
-              });
-            },
-          ),
-          Expanded(
-            child: Text(
-              item.name,
-              style: TextStyle(
-                color: colors.text200,
-                decoration: item.checked ? TextDecoration.lineThrough : null,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 60,
-            child: TextField(
-              enabled: item.checked, // Disable when not checked
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                hintText: 'Qty',
-                hintStyle: TextStyle(color: colors.bg300),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.bg300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.bg300),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.bg300.withOpacity(0.5)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.accent200),
-                ),
-              ),
-              controller: controller,
-              onChanged: (value) {
-                setState(() {
-                  item.quantity = (int.tryParse(value) ?? 0).clamp(0, 999);
-                  controller.text = item.quantity.toString();
-                  _saveItems();
-                });
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Returns a reusable card decoration
+  /// Returns a reusable card decoration for consistent styling.
   BoxDecoration _buildCardDecoration(AppColorTheme colors) => BoxDecoration(
     color: colors.bg100.withOpacity(0.85),
     borderRadius: BorderRadius.circular(12),

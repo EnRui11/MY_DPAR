@@ -4,6 +4,7 @@ import 'package:mydpar/screens/knowledge_base/emergency_contacts_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/first_aid_guide/first_aid_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/home_safety_checklist_screen.dart';
 
 // Model for guide data, Firebase-ready
 class Guide {
@@ -76,7 +77,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
-          border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.7))),
+          border:
+              Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.7))),
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: _paddingValue,
@@ -215,9 +217,9 @@ class KnowledgeBaseScreen extends StatelessWidget {
         description: 'Medical emergency basics',
       ),
       Category(
-        icon: Icons.school_outlined,
-        title: 'Training',
-        description: 'Disaster response training resources',
+        icon: Icons.home_outlined,
+        title: 'Home Safety Checklist',
+        description: 'Ensure your home is safety',
       ),
     ];
 
@@ -274,6 +276,12 @@ class KnowledgeBaseScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const FirstAidGuideScreen()),
+            );
+          } else if (title == 'Home Safety Checklist') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const HomeSafetyChecklistScreen()),
             );
           } else {
             _showSnackBar(context, '$title not yet implemented', Colors.orange);

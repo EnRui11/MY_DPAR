@@ -7,6 +7,7 @@ import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/bleeding_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/burns_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/fractures_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/bites_stings_guide_screen.dart';
 
 // Model for first aid data (optional, Firebase-ready if needed)
 class FirstAidItem {
@@ -314,6 +315,12 @@ class FirstAidGuideScreen extends StatelessWidget {
             title: 'Bites & Stings',
             description: 'Treatment for insect and animal bites',
             colors: colors,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BitesStingsGuideScreen(),
+              ),
+            ),
           ),
         ],
       );

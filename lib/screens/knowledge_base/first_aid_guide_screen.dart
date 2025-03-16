@@ -6,6 +6,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/bleeding_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/burns_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/fractures_guide_screen.dart';
 
 // Model for first aid data (optional, Firebase-ready if needed)
 class FirstAidItem {
@@ -299,6 +300,12 @@ class FirstAidGuideScreen extends StatelessWidget {
             title: 'Fractures & Sprains',
             description: 'Immediate care for bone and joint injuries',
             colors: colors,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const FracturesGuideScreen(),
+              ),
+            ),
           ),
           const SizedBox(height: _spacingMedium),
           _buildEmergencyCard(
@@ -318,7 +325,7 @@ class FirstAidGuideScreen extends StatelessWidget {
     required String title,
     required String description,
     required AppColorTheme colors,
-    VoidCallback? onTap,  // Add this parameter
+    VoidCallback? onTap, // Add this parameter
   }) =>
       GestureDetector(
         onTap: onTap ??

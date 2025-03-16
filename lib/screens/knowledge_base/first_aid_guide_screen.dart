@@ -5,6 +5,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/cpr_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/bleeding_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/burns_guide_screen.dart';
 
 // Model for first aid data (optional, Firebase-ready if needed)
 class FirstAidItem {
@@ -50,7 +51,8 @@ class FirstAidGuideScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
-          border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.7))),
+          border:
+              Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.7))),
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: _paddingValue,
@@ -151,7 +153,6 @@ class FirstAidGuideScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.bg100,
                   foregroundColor: colors.warning,
-
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -284,6 +285,12 @@ class FirstAidGuideScreen extends StatelessWidget {
             title: 'Burns Treatment',
             description: 'First aid for different types of burns',
             colors: colors,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BurnsGuideScreen(),
+              ),
+            ),
           ),
           const SizedBox(height: _spacingMedium),
           _buildEmergencyCard(
@@ -311,10 +318,12 @@ class FirstAidGuideScreen extends StatelessWidget {
     required String title,
     required String description,
     required AppColorTheme colors,
+    VoidCallback? onTap,  // Add this parameter
   }) =>
       GestureDetector(
-        onTap: () => _showSnackBar(
-            context, '$title guide not yet implemented', Colors.orange),
+        onTap: onTap ??
+            () => _showSnackBar(
+                context, '$title guide not yet implemented', Colors.orange),
         child: Container(
           decoration: BoxDecoration(
             color: colors.bg100.withOpacity(0.7),

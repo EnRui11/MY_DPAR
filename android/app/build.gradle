@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.mydpar"
     compileSdk = flutter.compileSdkVersion // Usually 34
-    ndkVersion = flutter.ndkVersion // Use Flutter's default unless needed
+    ndkVersion = "27.0.12077973" // Explicitly set to match plugin requirements
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

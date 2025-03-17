@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mydpar/screens/account/register_screen.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
-// Model for login data, Firebase-ready
 class LoginData {
   final String email;
   final String password;
@@ -15,10 +15,9 @@ class LoginData {
     required this.password,
   });
 
-  // Convert to JSON if needed (e.g., for custom backend)
   Map<String, dynamic> toJson() => {
     'email': email,
-    'password': password, // In practice, hash or use Firebase Auth
+    'password': password,
   };
 }
 
@@ -30,29 +29,31 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Controllers initialized in initState for proper lifecycle management
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
-  // Password visibility state
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-  // Constants for consistency and easy tweaking
   static const double _paddingValue = 24.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 16.0;
   static const double _spacingLarge = 32.0;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+
+    _emailController.addListener(() => setState(() {}));
+    _passwordController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    // Dispose controllers to prevent memory leaks
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -61,34 +62,42 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme; // Updated type
+    final AppColorTheme colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(_paddingValue),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-              _buildHeader(colors),
-              const SizedBox(height: _spacingLarge),
-              _buildEmailField(colors),
-              const SizedBox(height: _spacingMedium),
-              _buildPasswordField(colors),
-              const SizedBox(height: 24),
-              _buildSignInButton(context, colors),
-              const SizedBox(height: _spacingLarge),
-              _buildSignUpLink(context, colors),
-            ],
-          ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(_paddingValue),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 40),
+                  _buildHeader(colors),
+                  const SizedBox(height: _spacingLarge),
+                  _buildEmailField(colors),
+                  const SizedBox(height: _spacingMedium),
+                  _buildPasswordField(colors),
+                  const SizedBox(height: 24),
+                  _buildSignInButton(context, colors),
+                  const SizedBox(height: _spacingLarge),
+                  _buildSignUpLink(context, colors),
+                ],
+              ),
+            ),
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  /// Builds the header with app name and welcome message
   Widget _buildHeader(AppColorTheme colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -108,7 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
     ],
   );
 
-  /// Email field with basic validation
   Widget _buildEmailField(AppColorTheme colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -125,13 +133,13 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
         decoration: _inputDecoration(colors, 'Enter your email'),
-        validator: (value) =>
-        value!.isEmpty || !value.contains('@') ? 'Invalid email' : null,
+        validator: (value) => value!.isEmpty || !value.contains('@')
+            ? 'Invalid email'
+            : null,
       ),
     ],
   );
 
-  /// Password field with visibility toggle
   Widget _buildPasswordField(AppColorTheme colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -147,7 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
       TextFormField(
         controller: _passwordController,
         obscureText: !_isPasswordVisible,
-        decoration: _inputDecoration(colors, 'Enter your password').copyWith(
+        decoration: _inputDecoration(colors, 'Enter your password')
+            .copyWith(
           suffixIcon: IconButton(
             icon: Icon(
               _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -163,7 +172,6 @@ class _LoginScreenState extends State<LoginScreen> {
     ],
   );
 
-  /// Consistent input decoration for text fields
   InputDecoration _inputDecoration(AppColorTheme colors, String hintText) =>
       InputDecoration(
         hintText: hintText,
@@ -177,10 +185,10 @@ class _LoginScreenState extends State<LoginScreen> {
         contentPadding: const EdgeInsets.all(16),
       );
 
-  /// Sign-in button with action handler
   Widget _buildSignInButton(BuildContext context, AppColorTheme colors) =>
       ElevatedButton(
-        onPressed: _isFormValid() ? () => _handleSignIn(context) : null,
+        onPressed:
+        _isFormValid() && !_isLoading ? () => _handleSignIn(context) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.accent200,
           minimumSize: const Size(double.infinity, 56),
@@ -193,18 +201,32 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
 
-  /// Link to the registration screen
-  Widget _buildSignUpLink(BuildContext context, AppColorTheme colors) => Row(
-    mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildSignUpLink(BuildContext context, AppColorTheme colors) => Column(
     children: [
-      Text(
-        'Don\'t have an account? ',
-        style: TextStyle(color: colors.text200),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Don\'t have an account? ',
+            style: TextStyle(color: colors.text200),
+          ),
+          GestureDetector(
+            onTap: () => _navigateTo(context, const RegisterScreen()),
+            child: Text(
+              'Sign Up',
+              style: TextStyle(
+                color: colors.accent200,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
+      const SizedBox(height: _spacingSmall),
       GestureDetector(
-        onTap: () => _navigateTo(context, const RegisterScreen()),
+        onTap: () => _handleForgotPassword(context),
         child: Text(
-          'Sign Up',
+          'Forgot Password?',
           style: TextStyle(
             color: colors.accent200,
             fontWeight: FontWeight.w600,
@@ -214,36 +236,135 @@ class _LoginScreenState extends State<LoginScreen> {
     ],
   );
 
-  /// Checks if the form is valid for submission
   bool _isFormValid() =>
-      _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+      _emailController.text.trim().isNotEmpty &&
+          _passwordController.text.isNotEmpty;
 
-  /// Handles sign-in logic, prepped for Firebase Auth
-  void _handleSignIn(BuildContext context) {
+  Future<void> _handleSignIn(BuildContext context) async {
     final loginData = LoginData(
-      email: _emailController.text,
+      email: _emailController.text.trim(),
       password: _passwordController.text,
     );
 
-    // TODO: Replace with Firebase Auth logic
-    // Example:
-    // try {
-    //   await FirebaseAuth.instance.signInWithEmailAndPassword(
-    //     email: loginData.email,
-    //     password: loginData.password,
-    //   );
-    //   _navigateTo(context, const HomeScreen(), replace: true);
-    // } catch (e) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Login failed: $e')),
-    //   );
-    // }
+    setState(() => _isLoading = true);
 
-    // Temporary navigation for testing
-    _navigateTo(context, const HomeScreen(), replace: true);
+    try {
+      final UserCredential credential =
+      await _auth.signInWithEmailAndPassword(
+        email: loginData.email,
+        password: loginData.password,
+      );
+
+      debugPrint('User signed in with UID: ${credential.user?.uid}');
+
+      if (mounted) {
+        _navigateTo(context, const HomeScreen(), replace: true);
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-credential':
+          errorMessage =
+          'Invalid email or password. Please check your credentials.';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No account exists with this email.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Incorrect password. Please try again.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This account has been disabled.';
+          break;
+        case 'too-many-requests':
+          errorMessage = 'Too many login attempts. Please try again later.';
+          break;
+        case 'network-request-failed':
+          errorMessage = 'Network error. Please check your connection.';
+          break;
+        default:
+          errorMessage = 'Login failed: ${e.message} (Code: ${e.code})';
+      }
+      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Unexpected error: $e\nStack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  /// Navigates to a new screen, optionally replacing the current one
+  Future<void> _handleForgotPassword(BuildContext context) async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      debugPrint('Attempted to send reset email to: $email');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+              Text('If an account exists, a reset email has been sent.')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        case 'too-many-requests':
+          errorMessage = 'Too many requests. Please try again later.';
+          break;
+        case 'network-request-failed':
+          errorMessage = 'Network error. Please check your connection.';
+          break;
+        default:
+          errorMessage = 'Error: ${e.message} (Code: ${e.code})';
+      }
+      debugPrint('FirebaseAuthException in reset: ${e.code} - ${e.message}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Unexpected error in reset: $e\nStack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   void _navigateTo(BuildContext context, Widget screen, {bool replace = false}) {
     if (replace) {
       Navigator.pushReplacement(

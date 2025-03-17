@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart'; // Unused in this file, consider removing if not needed
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
-import 'package:mydpar/screens/account/login_screen.dart'; // Unused here, consider removing unless dynamically routed
+import 'package:mydpar/screens/account/login_screen.dart';
 import 'package:mydpar/services/cpr_audio_service.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 void main() async {
-  // Ensure Flutter bindings are initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -41,7 +40,6 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             useMaterial3: true,
             fontFamily: 'Inter',
-            // Core theme properties
             primaryColor: colors.primary100,
             scaffoldBackgroundColor: colors.bg200,
             colorScheme: ColorScheme.fromSwatch(
@@ -53,7 +51,6 @@ class MyApp extends StatelessWidget {
               surface: colors.bg100,
               onSurface: colors.text200,
             ),
-            // Text theme
             textTheme: TextTheme(
               headlineLarge: TextStyle(
                 color: colors.primary300,
@@ -63,9 +60,7 @@ class MyApp extends StatelessWidget {
               bodyLarge: TextStyle(color: colors.text100, fontSize: 16),
               bodyMedium: TextStyle(color: colors.text200, fontSize: 14),
             ),
-            // Icon theme
             iconTheme: IconThemeData(color: colors.accent200),
-            // Button theme
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent200,
@@ -77,8 +72,33 @@ class MyApp extends StatelessWidget {
             ),
           ),
           builder: (context, child) => _AppOverlayBuilder(child: child),
-          home: const LoginScreen(),
+          home: const AuthWrapper(), // Replace LoginScreen with AuthWrapper
         );
+      },
+    );
+  }
+}
+
+/// Wrapper to handle authentication state and route to appropriate screen
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasData) {
+          // User is signed in
+          return const HomeScreen();
+        }
+        // User is not signed in
+        return const LoginScreen();
       },
     );
   }

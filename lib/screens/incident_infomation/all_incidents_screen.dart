@@ -62,7 +62,6 @@ class _IncidentsScreenState extends State<IncidentsScreen> {
     'Fire',
     'Landslide',
     'Haze',
-    'Typhoon',
     'Other',
   ];
   static const double _paddingValue = 16.0;

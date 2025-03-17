@@ -76,7 +76,6 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     'Fire',
     'Landslide',
     'Haze',
-    'Typhoon',
     'Other',
   ];
   static const List<String> _severities = ['Low', 'Medium', 'High'];

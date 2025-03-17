@@ -31,79 +31,79 @@ class EmergencyContact {
   const EmergencyContact({required this.label, required this.number, required this.icon, required this.description});
 }
 
-// Centralized data tailored to Malaysia's flood context
+// Centralized data tailored to Malaysia's haze context
 const _guideSections = [
   GuideSection(
-    title: 'Before the Flood',
+    title: 'Before Haze',
     cards: [
       GuideCardData(
         icon: Icons.checklist_rounded,
         title: 'Preparation',
         items: [
-          'Check flood risk via JUPEM maps or local authorities',
-          'Prepare an emergency kit (food, water, torch, etc.)',
-          'Store copies of IC, passport, and insurance in a waterproof bag',
-          'Plan evacuation routes with family or kampung members',
-        ],
-      ),
-      GuideCardData(
-        icon: Icons.home,
-        title: 'Home Protection',
-        items: [
-          'Clear drains, longkang, and gutters around your property',
-          'Install sandbags or flood barriers at entry points',
-          'Elevate appliances and furniture above flood levels',
-          'Secure fuel tanks or gas cylinders to prevent floating',
-        ],
-      ),
-    ],
-  ),
-  GuideSection(
-    title: 'During the Flood',
-    cards: [
-      GuideCardData(
-        icon: Icons.shield,
-        title: 'Safety Actions',
-        items: [
-          'Monitor MET Malaysia (www.met.gov.my) or NADMA alerts',
-          'Evacuate immediately if ordered by PDRM or Bomba',
-          'Move to higher ground or upper floors if trapped',
-          'Avoid contact with floodwater—it may be contaminated',
-        ],
-      ),
-      GuideCardData(
-        icon: Icons.bolt,
-        title: 'Power & Utilities',
-        items: [
-          'Turn off electricity at the main breaker if safe',
-          'Unplug appliances to avoid short circuits',
-          'Avoid using gas or electrical devices in flooded areas',
-          'Report outages to TNB (15454) promptly',
-        ],
-      ),
-    ],
-  ),
-  GuideSection(
-    title: 'After the Flood',
-    cards: [
-      GuideCardData(
-        icon: Icons.check_circle,
-        title: 'Return Safely',
-        items: [
-          'Wait for NADMA’s "all clear" before returning home',
-          'Check for structural damage or landslides',
-          'Photograph damage for insurance or relief claims',
-          'Avoid downed power lines and report to TNB',
+          'Stock N95 masks (not surgical masks) for all family members',
+          'Seal windows and doors with tape or damp cloths',
+          'Prepare air purifiers or fans with wet filters',
+          'Plan to stay with relatives if haze worsens',
         ],
       ),
       GuideCardData(
         icon: Icons.favorite,
-        title: 'Health & Safety',
+        title: 'Health Check',
         items: [
-          'Wear gloves and boots during cleanup to avoid infection',
-          'Disinfect all wet surfaces to prevent leptospirosis',
-          'Discard food or water exposed to floodwater',
-          'Dry out home quickly to stop mold and mosquito breeding',
+          'Visit a clinic if you have asthma or allergies',
+          'Stock up on inhalers or medications',
+          'Know your nearest klinik kesihatan or hospital',
+          'Check API via DOE website or APIMS app',
+        ],
+      ),
+    ],
+  ),
+  GuideSection(
+    title: 'During Haze',
+    cards: [
+      GuideCardData(
+        icon: Icons.shield,
+        title: 'Protection Measures',
+        items: [
+          'Stay indoors when API exceeds 100',
+          'Wear N95 masks properly if outdoors',
+          'Limit outdoor activities, especially for kids',
+          'Drink water frequently to stay hydrated',
+        ],
+      ),
+      GuideCardData(
+        icon: Icons.warning_amber_rounded,
+        title: 'Health Warning Signs',
+        items: [
+          'Coughing or throat irritation',
+          'Difficulty breathing or wheezing',
+          'Eye redness or itchiness',
+          'Headaches or dizziness',
+        ],
+      ),
+    ],
+  ),
+  GuideSection(
+    title: 'API Levels Guide',
+    cards: [
+      GuideCardData(
+        icon: Icons.show_chart,
+        title: 'Activity Guidelines',
+        items: [
+          '0-50: Safe for all activities',
+          '51-100: Moderate; limit outdoor exertion',
+          '101-200: Unhealthy; stay indoors if possible',
+          '>200: Very unhealthy; avoid all outdoor exposure',
+        ],
+      ),
+      GuideCardData(
+        icon: Icons.groups,
+        title: 'At-Risk Groups',
+        items: [
+          'Children and elderly (warga emas)',
+          'Pregnant women',
+          'Those with asthma or lung issues',
+          'Heart disease patients',
         ],
       ),
     ],
@@ -118,27 +118,21 @@ const _emergencyContacts = [
     description: 'Nationwide Emergency Services (24/7)',
   ),
   EmergencyContact(
+    label: 'DOE Hotline',
+    number: '1-800-88-2727',
+    icon: Icons.support_agent,
+    description: 'Department of Environment Hotline',
+  ),
+  EmergencyContact(
     label: 'Fire & Rescue (Bomba)',
     number: '994',
     icon: Icons.fire_truck,
     description: 'Fire Department Emergency',
   ),
-  EmergencyContact(
-    label: 'NADMA Hotline',
-    number: '03-80642400',
-    icon: Icons.support_agent,
-    description: 'National Disaster Management Agency',
-  ),
-  EmergencyContact(
-    label: 'Tenaga Nasional (TNB)',
-    number: '15454',
-    icon: Icons.electrical_services,
-    description: 'Report Power Outages',
-  ),
 ];
 
-class FloodGuideScreen extends StatelessWidget {
-  const FloodGuideScreen({super.key});
+class HazeGuideScreen extends StatelessWidget {
+  const HazeGuideScreen({super.key});
 
   // Spacing constants
   static const double _padding = 16.0;
@@ -189,14 +183,14 @@ class FloodGuideScreen extends StatelessWidget {
         ),
         const SizedBox(width: _spacingSmall),
         Text(
-          'Flood Safety Guide',
+          'Haze Safety Guide',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
         ),
       ],
     ),
   );
 
-  /// Builds a warning banner with a Malaysia-specific flood message.
+  /// Builds a warning banner with a Malaysia-specific haze message.
   Widget _buildWarningBanner(AppColorTheme colors) => Container(
     decoration: BoxDecoration(
       color: colors.warning,
@@ -211,14 +205,14 @@ class FloodGuideScreen extends StatelessWidget {
             Icon(Icons.warning_amber_rounded, color: colors.bg100),
             const SizedBox(width: _spacingSmall),
             Text(
-              'Flood Warning',
+              'Haze Warning',
               style: TextStyle(color: colors.bg100, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: _spacingSmall),
         Text(
-          'Floods can strike fast! Avoid floodwater—15 cm can sweep you away. Stay safe, stay high!',
+          'API > 100 is unhealthy—stay indoors and wear N95 masks if you must go out!',
           style: TextStyle(color: colors.bg100, fontSize: 14),
         ),
       ],
@@ -293,7 +287,7 @@ class FloodGuideScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.phone, color: colors.accent200, size: 24),
+            Icon(Icons.emergency, color: colors.accent200, size: 24),
             const SizedBox(width: _spacingSmall),
             Text(
               'Emergency Contacts',
@@ -390,7 +384,7 @@ class FloodGuideScreen extends StatelessWidget {
     );
   }
 
-  /// Provides a reusable card decoration.
+  /// Provides a reusable card decoration with a subtle shadow.
   BoxDecoration _cardDecoration(AppColorTheme colors, {double opacity = 0.7}) => BoxDecoration(
     color: colors.bg100.withOpacity(opacity),
     borderRadius: BorderRadius.circular(12),

@@ -6,6 +6,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/first_aid_guide/first_aid_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/home_safety_checklist_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/preparation_guides_screen.dart';
+import 'package:mydpar/screens/knowledge_base/prepareration_guide/flood_guide_screen.dart';
 
 // Model for guide data, Firebase-ready
 class Guide {
@@ -120,8 +121,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
             _buildFeaturedGuide(context, colors),
             const SizedBox(height: _spacingLarge),
             _buildQuickAccessCategories(context, colors),
-            const SizedBox(height: _spacingLarge * 1.5),
-            _buildRecentGuides(context, colors),
           ],
         ),
       );
@@ -161,7 +160,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
               ),
               const SizedBox(height: _spacingMedium),
               Text(
-                'Emergency Preparedness 101',
+                'Emergency Preparedness For Flood',
                 style: TextStyle(
                   color: colors.bg100,
                   fontSize: 24,
@@ -170,17 +169,15 @@ class KnowledgeBaseScreen extends StatelessWidget {
               ),
               const SizedBox(height: _spacingSmall),
               Text(
-                'Essential steps to prepare for any disaster situation',
+                'Essential steps to prepare for flood',
                 style: TextStyle(color: colors.bg100.withOpacity(0.8)),
               ),
               const SizedBox(height: _spacingLarge),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    _showSnackBar(context,
-                        'Guide navigation not yet implemented', Colors.orange);
-                  },
+                  onPressed: () =>
+                      _navigateTo(context, const FloodGuideScreen()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.bg100,
                     foregroundColor: colors.accent200,
@@ -330,132 +327,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
         ),
       );
 
-  /// Builds the recent guides section
-  Widget _buildRecentGuides(BuildContext context, AppColorTheme colors) {
-    // Hardcoded guides for now, replace with Firebase later
-    const List<Guide> guides = [
-      Guide(
-        title: 'Flood Safety Tips',
-        description: 'Learn how to stay safe during heavy rainfall and floods.',
-        readTime: '5 min read',
-      ),
-      Guide(
-        title: 'Earthquake Preparedness',
-        description: 'Steps to protect yourself during an earthquake.',
-        readTime: '3 min read',
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Guides',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: colors.primary300,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                _showSnackBar(context, 'View all guides not yet implemented',
-                    Colors.orange);
-              },
-              child: Text(
-                'View All',
-                style: TextStyle(color: colors.accent200),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingMedium),
-        ...guides.map((guide) => Padding(
-              padding: const EdgeInsets.only(bottom: _spacingMedium),
-              child: _buildGuideCard(
-                title: guide.title,
-                description: guide.description,
-                readTime: guide.readTime,
-                colors: colors,
-                onTap: () {
-                  _showSnackBar(context, 'Guide navigation not yet implemented',
-                      Colors.orange);
-                },
-              ),
-            )),
-      ],
-    );
-  }
-
-  /// Builds an individual guide card
-  Widget _buildGuideCard({
-    required String title,
-    required String description,
-    required String readTime,
-    required AppColorTheme colors,
-    required VoidCallback onTap,
-  }) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: colors.bg100.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.bg300.withOpacity(0.2)),
-          ),
-          padding: const EdgeInsets.all(_paddingValue),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.article_outlined, color: colors.accent200),
-              const SizedBox(width: _spacingMedium),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: colors.primary300,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(color: colors.text200, fontSize: 14),
-                    ),
-                    const SizedBox(height: _spacingSmall),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time,
-                            size: 16, color: colors.text200),
-                        const SizedBox(width: 4),
-                        Text(
-                          readTime,
-                          style: TextStyle(color: colors.text200, fontSize: 12),
-                        ),
-                        const Spacer(),
-                        Icon(Icons.bookmark_border,
-                            size: 16, color: colors.text200),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Save',
-                          style: TextStyle(color: colors.text200, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-
   /// Displays a snackbar with a message using the provided context
   void _showSnackBar(
       BuildContext context, String message, Color backgroundColor) {
@@ -465,6 +336,14 @@ class KnowledgeBaseScreen extends StatelessWidget {
         backgroundColor: backgroundColor,
         duration: const Duration(seconds: 2),
       ),
+    );
+  }
+
+  /// Navigates to the specified screen using MaterialPageRoute
+  void _navigateTo(BuildContext context, Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
     );
   }
 }

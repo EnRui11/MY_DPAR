@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
 
 // User model for registration data, Firebase-ready
 class UserRegistrationData {
@@ -19,13 +22,12 @@ class UserRegistrationData {
     this.emergencyContact,
   });
 
-  // Convert to JSON for Firebase Firestore
   Map<String, dynamic> toJson() => {
     'firstName': firstName,
     'lastName': lastName,
     'email': email,
-    'password': password, // In practice, hash this before storing
     'emergencyContact': emergencyContact?.toJson(),
+    'createdAt': FieldValue.serverTimestamp(),
   };
 }
 
@@ -57,8 +59,9 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Controllers initialized in initState for proper lifecycle management
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
@@ -68,7 +71,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   late final TextEditingController _emergencyRelationController;
   late final TextEditingController _emergencyPhoneController;
 
-  // Password visibility and validation states
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _hasMinLength = false;
@@ -77,8 +79,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _hasNumber = false;
   bool _hasSpecialChar = false;
   bool _passwordsMatch = false;
+  bool _isLoading = false;
 
-  // Constants for consistency and easy tweaking
   static const int _minPasswordLength = 8;
   static const double _paddingValue = 24.0;
   static const double _spacingSmall = 8.0;
@@ -97,14 +99,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emergencyRelationController = TextEditingController();
     _emergencyPhoneController = TextEditingController();
 
-    // Add listeners for password validation to reduce rebuilds
     _passwordController.addListener(_updatePasswordRequirements);
     _confirmPasswordController.addListener(_updatePasswordRequirements);
   }
 
   @override
   void dispose() {
-    // Dispose controllers to prevent memory leaks
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -116,7 +116,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  /// Updates password validation states based on input
   void _updatePasswordRequirements() {
     final String password = _passwordController.text;
     final String confirmPassword = _confirmPasswordController.text;
@@ -133,35 +132,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme; // Updated type
+    final AppColorTheme colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(_paddingValue),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildPersonalInfoSection(colors),
-                _buildPasswordSection(colors),
-                _buildEmergencyContactSection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildSubmitButton(colors),
-                _buildSignInLink(colors),
-              ],
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(_paddingValue),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(colors),
+                    const SizedBox(height: _spacingLarge),
+                    _buildPersonalInfoSection(colors),
+                    _buildPasswordSection(colors),
+                    _buildEmergencyContactSection(colors),
+                    const SizedBox(height: _spacingLarge),
+                    _buildSubmitButton(colors),
+                    _buildSignInLink(colors),
+                  ],
+                ),
+              ),
             ),
-          ),
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  /// Builds the header section with title and subtitle
   Widget _buildHeader(AppColorTheme colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -182,7 +189,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ],
   );
 
-  /// Personal info section with first name, last name, and email fields
   Widget _buildPersonalInfoSection(AppColorTheme colors) => Column(
     children: [
       Row(
@@ -223,7 +229,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ],
   );
 
-  /// Password section with password, confirm password, and requirements
   Widget _buildPasswordSection(AppColorTheme colors) => Column(
     children: [
       _buildPasswordField(
@@ -250,7 +255,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ],
   );
 
-  /// Displays password strength requirements
   Widget _buildPasswordRequirements(AppColorTheme colors) => Padding(
     padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
     child: Column(
@@ -268,7 +272,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ),
   );
 
-  /// Emergency contact section, optional fields
   Widget _buildEmergencyContactSection(AppColorTheme colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -314,9 +317,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ],
   );
 
-  /// Submit button with dynamic enabling based on form validity
   Widget _buildSubmitButton(AppColorTheme colors) => ElevatedButton(
-    onPressed: _isFormValid() ? _handleSubmit : null,
+    onPressed: _isFormValid() && !_isLoading ? _handleSubmit : null,
     style: ElevatedButton.styleFrom(
       backgroundColor: colors.accent200,
       minimumSize: const Size(double.infinity, 56),
@@ -329,7 +331,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ),
   );
 
-  /// Link to sign-in screen
   Widget _buildSignInLink(AppColorTheme colors) => Padding(
     padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
     child: Row(
@@ -351,7 +352,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ),
   );
 
-  /// Reusable text field widget with validation option
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -396,7 +396,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       );
 
-  /// Reusable password field widget
   Widget _buildPasswordField({
     required TextEditingController controller,
     required String label,
@@ -440,7 +439,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       );
 
-  /// Consistent text field decoration
   InputDecoration _textFieldDecoration(String hint, AppColorTheme colors) =>
       InputDecoration(
         hintText: hint,
@@ -454,7 +452,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         contentPadding: const EdgeInsets.all(16),
       );
 
-  /// Reusable requirement indicator
   Widget _buildRequirement(String text, bool isMet, AppColorTheme colors) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -480,7 +477,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
 
-  /// Checks if the form is valid for submission
   bool _isFormValid() =>
       _firstNameController.text.isNotEmpty &&
           _lastNameController.text.isNotEmpty &&
@@ -492,9 +488,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _hasSpecialChar &&
           _passwordsMatch;
 
-  /// Handles form submission, prepped for Firebase
-  void _handleSubmit() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate() || !_isFormValid()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
       final emergencyContact = _emergencyNameController.text.isNotEmpty &&
           _emergencyRelationController.text.isNotEmpty &&
           _emergencyPhoneController.text.isNotEmpty
@@ -506,33 +505,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
           : null;
 
       final userData = UserRegistrationData(
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
-        email: _emailController.text,
-        password: _passwordController.text, // Hash in production
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
         emergencyContact: emergencyContact,
       );
 
-      // TODO: Replace with Firebase Auth and Firestore logic
-      // Example:
-      // try {
-      //   final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      //     email: userData.email,
-      //     password: userData.password,
-      //   );
-      //   await FirebaseFirestore.instance
-      //       .collection('users')
-      //       .doc(credential.user!.uid)
-      //       .set(userData.toJson());
-      //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
-      // } catch (e) {
-      //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-      // }
+      // Log input data for debugging
+      debugPrint('Registering user with email: ${userData.email}');
 
-      // Temporary success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
+      // Register user with Firebase Authentication
+      final UserCredential credential = await _auth.createUserWithEmailAndPassword(
+        email: userData.email,
+        password: userData.password,
       );
+
+      debugPrint('User created with UID: ${credential.user?.uid}');
+
+      // Store user data in Firestore
+      await _firestore.collection('users').doc(credential.user!.uid).set(
+        userData.toJson(),
+      );
+
+      debugPrint('User data stored in Firestore');
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = 'This email is already registered.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is invalid.';
+          break;
+        case 'weak-password':
+          errorMessage = 'The password is too weak.';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled.';
+          break;
+        case 'network-request-failed':
+          errorMessage = 'Network error. Please check your connection.';
+          break;
+        default:
+          errorMessage = 'Authentication error: ${e.message} (Code: ${e.code})';
+      }
+      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Unexpected error: $e\nStack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }

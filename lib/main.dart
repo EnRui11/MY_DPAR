@@ -6,11 +6,15 @@ import 'package:mydpar/screens/account/login_screen.dart'; // Unused here, consi
 import 'package:mydpar/services/cpr_audio_service.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
   // Ensure Flutter bindings are initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
-
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(
     MultiProvider(
       providers: [
@@ -39,7 +43,7 @@ class MyApp extends StatelessWidget {
             fontFamily: 'Inter',
             // Core theme properties
             primaryColor: colors.primary100,
-            scaffoldBackgroundColor: colors.bg200, // Changed to bg200 for consistency
+            scaffoldBackgroundColor: colors.bg200,
             colorScheme: ColorScheme.fromSwatch(
               primarySwatch: createMaterialColor(colors.primary100),
               backgroundColor: colors.bg200,
@@ -73,7 +77,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           builder: (context, child) => _AppOverlayBuilder(child: child),
-          home: const HomeScreen(),
+          home: const LoginScreen(),
         );
       },
     );
@@ -93,7 +97,8 @@ class _AppOverlayBuilder extends StatelessWidget {
         children: [
           child!,
           if (audioService.isOverlayVisible)
-            CPRRhythmOverlay(colors: Provider.of<ThemeProvider>(context).currentTheme),
+            CPRRhythmOverlay(
+                colors: Provider.of<ThemeProvider>(context).currentTheme),
         ],
       ),
     );

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "599954332302",
+    "project_id": "mydpar-c5a48",
+    "storage_bucket": "mydpar-c5a48.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599954332302:android:e8f7033fe7d364293e47df",
+        "android_client_info": {
+          "package_name": "com.example.disaster_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhU8docANt6iqGpwziHdiBJdqP4DGhUys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599954332302:android:6baf75714c33dfdb3e47df",
+        "android_client_info": {
+          "package_name": "com.example.mydpar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhU8docANt6iqGpwziHdiBJdqP4DGhUys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

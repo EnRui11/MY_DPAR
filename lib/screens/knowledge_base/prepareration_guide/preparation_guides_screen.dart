@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/screens/knowledge_base/prepareration_guide/emergency_kit_screen.dart';
 
 class PreparationGuidesScreen extends StatelessWidget {
   const PreparationGuidesScreen({super.key});
@@ -121,9 +122,11 @@ class PreparationGuidesScreen extends StatelessWidget {
             const SizedBox(height: _spacingMedium),
             ElevatedButton(
               onPressed: () {
-                // TODO: Implement checklist navigation (e.g., to FirstAidKitScreen)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Checklist coming soon')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EmergencyKitScreen(),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(

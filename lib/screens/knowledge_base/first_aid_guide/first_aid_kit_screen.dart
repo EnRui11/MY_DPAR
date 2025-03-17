@@ -17,16 +17,17 @@ class FirstAidKitItem {
   });
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'checked': checked,
-    'quantity': quantity,
-  };
+        'name': name,
+        'checked': checked,
+        'quantity': quantity,
+      };
 
-  factory FirstAidKitItem.fromJson(Map<String, dynamic> json) => FirstAidKitItem(
-    name: json['name'] as String,
-    checked: json['checked'] as bool,
-    quantity: json['quantity'] as int,
-  );
+  factory FirstAidKitItem.fromJson(Map<String, dynamic> json) =>
+      FirstAidKitItem(
+        name: json['name'] as String,
+        checked: json['checked'] as bool,
+        quantity: json['quantity'] as int,
+      );
 }
 
 /// A screen displaying a first aid kit checklist with progress tracking.
@@ -63,8 +64,10 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
 
   /// Updates the total and completed item counts for progress tracking.
   void _updateProgress() {
-    _totalItems = _categories.values.fold(0, (sum, items) => sum + items.length);
-    _completedItems = _categories.values.fold(0, (sum, items) => sum + items.where((item) => item.checked).length);
+    _totalItems =
+        _categories.values.fold(0, (sum, items) => sum + items.length);
+    _completedItems = _categories.values.fold(
+        0, (sum, items) => sum + items.where((item) => item.checked).length);
   }
 
   /// Loads items from SharedPreferences and initializes progress.
@@ -81,8 +84,10 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
           _categories[category] = itemsJson.map((item) {
             final parts = Map.fromEntries(item.split('|').map((e) {
               final split = e.split(':');
-              if (split[0] == 'checked') return MapEntry(split[0], split[1] == 'true');
-              if (split[0] == 'quantity') return MapEntry(split[0], int.parse(split[1]));
+              if (split[0] == 'checked')
+                return MapEntry(split[0], split[1] == 'true');
+              if (split[0] == 'quantity')
+                return MapEntry(split[0], int.parse(split[1]));
               return MapEntry(split[0], split[1]);
             }));
             return FirstAidKitItem.fromJson(parts);
@@ -112,7 +117,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
     final prefs = await SharedPreferences.getInstance();
     for (final category in _categories.keys) {
       final itemsJson = _categories[category]!
-          .map((item) => 'name:${item.name}|checked:${item.checked}|quantity:${item.quantity}')
+          .map((item) =>
+              'name:${item.name}|checked:${item.checked}|quantity:${item.quantity}')
           .toList();
       await prefs.setStringList('first_aid_kit_$category', itemsJson);
     }
@@ -124,7 +130,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Reset Confirmation'),
-        content: const Text('Are you sure you want to reset to default items? This will clear all your current changes.'),
+        content: const Text(
+            'Are you sure you want to reset to default items? This will clear all your current changes.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -213,98 +220,112 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
 
   /// Builds the header with back button, title, and reset button.
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg100.withOpacity(0.7),
-      border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
-    ),
-    padding: const EdgeInsets.symmetric(horizontal: _paddingValue, vertical: _paddingValue - 4),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.primary300),
-          onPressed: () => Navigator.pop(context),
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          border:
+              Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
         ),
-        const SizedBox(width: _spacingSmall),
-        Expanded(
-          child: Text(
-            'First Aid Kit Checklist',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
-          ),
+        padding: const EdgeInsets.symmetric(
+            horizontal: _paddingValue, vertical: _paddingValue - 4),
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: colors.primary300),
+              onPressed: () => Navigator.pop(context),
+            ),
+            const SizedBox(width: _spacingSmall),
+            Expanded(
+              child: Text(
+                'First Aid Kit Checklist',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary300),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.restore, color: colors.primary300),
+              onPressed: _resetToDefaults,
+              tooltip: 'Reset to defaults',
+            ),
+          ],
         ),
-        IconButton(
-          icon: Icon(Icons.restore, color: colors.primary300),
-          onPressed: _resetToDefaults,
-          tooltip: 'Reset to defaults',
-        ),
-      ],
-    ),
-  );
+      );
 
   /// Builds the main content area with progress and categories.
   Widget _buildContent(AppColorTheme colors) => _isLoading
       ? Center(child: CircularProgressIndicator(color: colors.accent200))
       : SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(_paddingValue, 70, _paddingValue, _paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: _spacingLarge),
-        _buildMaintenanceCard(colors),
-        const SizedBox(height: _spacingLarge),
-        _buildProgressBar(colors),
-        const SizedBox(height: _spacingLarge),
-        ..._categories.entries.map(
-              (entry) => Column(
+          padding: const EdgeInsets.fromLTRB(
+              _paddingValue, 70, _paddingValue, _paddingValue),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCategoryCard(colors, entry.key, _getCategoryIcon(entry.key), entry.value),
               const SizedBox(height: _spacingLarge),
+              _buildMaintenanceCard(colors),
+              const SizedBox(height: _spacingLarge),
+              _buildProgressBar(colors),
+              const SizedBox(height: _spacingLarge),
+              ..._categories.entries.map(
+                (entry) => Column(
+                  children: [
+                    _buildCategoryCard(colors, entry.key,
+                        _getCategoryIcon(entry.key), entry.value),
+                    const SizedBox(height: _spacingLarge),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-      ],
-    ),
-  );
+        );
 
   /// Builds the overall progress bar for the kit.
   Widget _buildProgressBar(AppColorTheme colors) => Container(
-    margin: const EdgeInsets.symmetric(horizontal: _paddingValue),
-    padding: const EdgeInsets.all(_paddingValue),
-    decoration: _buildCardDecoration(colors),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        padding: const EdgeInsets.all(_paddingValue),
+        decoration: _buildCardDecoration(colors),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Kit Completion',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.primary300),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Kit Completion',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colors.primary300),
+                ),
+                Text(
+                  '$_completedItems/$_totalItems Items',
+                  style: TextStyle(
+                      color: colors.accent200, fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
-            Text(
-              '$_completedItems/$_totalItems Items',
-              style: TextStyle(color: colors.accent200, fontWeight: FontWeight.w600),
+            const SizedBox(height: _spacingMedium),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: _totalItems > 0
+                    ? (_completedItems / _totalItems).toDouble()
+                    : 0.0,
+                backgroundColor: colors.primary100,
+                valueColor: AlwaysStoppedAnimation<Color>(colors.accent200),
+                minHeight: 8,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: _spacingMedium),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: _totalItems > 0 ? (_completedItems / _totalItems).toDouble() : 0.0,
-            backgroundColor: colors.primary100,
-            valueColor: AlwaysStoppedAnimation<Color>(colors.accent200),
-            minHeight: 8,
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 
   /// Builds a category card with items and progress indicator.
-  Widget _buildCategoryCard(AppColorTheme colors, String title, IconData icon, List<FirstAidKitItem> items) {
+  Widget _buildCategoryCard(AppColorTheme colors, String title, IconData icon,
+      List<FirstAidKitItem> items) {
     final itemCount = items.length;
     final completedCount = items.where((item) => item.checked).length;
-    final progress = itemCount > 0 ? (completedCount / itemCount).toDouble() : 0.0;
+    final progress =
+        itemCount > 0 ? (completedCount / itemCount).toDouble() : 0.0;
 
     return Container(
       decoration: _buildCardDecoration(colors),
@@ -318,7 +339,10 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(color: colors.primary300, fontSize: 18, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      color: colors.primary300,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: _spacingSmall),
                 ClipRRect(
@@ -327,7 +351,9 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
                     value: progress,
                     backgroundColor: colors.bg300.withOpacity(0.2),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      progress == 1.0 ? colors.accent200 : colors.accent200.withOpacity(0.5),
+                      progress == 1.0
+                          ? colors.accent200
+                          : colors.accent200.withOpacity(0.5),
                     ),
                     minHeight: 4,
                   ),
@@ -337,17 +363,27 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
             tilePadding: EdgeInsets.zero,
             childrenPadding: const EdgeInsets.only(top: _spacingMedium),
             children: items.isEmpty
-                ? [Text('No items available', style: TextStyle(color: colors.text200))]
-                : items.asMap().entries.map((entry) => _buildChecklistItem(colors, title, entry.key, entry.value)).toList(),
+                ? [
+                    Text('No items available',
+                        style: TextStyle(color: colors.text200))
+                  ]
+                : items
+                    .asMap()
+                    .entries
+                    .map((entry) => _buildChecklistItem(
+                        colors, title, entry.key, entry.value))
+                    .toList(),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(_paddingValue, 0, _paddingValue, _spacingSmall),
+            padding: const EdgeInsets.fromLTRB(
+                _paddingValue, 0, _paddingValue, _spacingSmall),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
                   '$completedCount/$itemCount items completed',
-                  style: TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 12),
+                  style: TextStyle(
+                      color: colors.text200.withOpacity(0.7), fontSize: 12),
                 ),
               ],
             ),
@@ -358,8 +394,10 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
   }
 
   /// Builds a checklist item with a tappable checkbox and description.
-  Widget _buildChecklistItem(AppColorTheme colors, String category, int index, FirstAidKitItem item) {
-    final controller = TextEditingController(text: item.quantity > 0 ? item.quantity.toString() : '');
+  Widget _buildChecklistItem(
+      AppColorTheme colors, String category, int index, FirstAidKitItem item) {
+    final controller = TextEditingController(
+        text: item.quantity > 0 ? item.quantity.toString() : '');
     return InkWell(
       onTap: () {
         setState(() {
@@ -382,7 +420,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
               child: Checkbox(
                 value: item.checked,
                 activeColor: colors.accent200,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
                 onChanged: (value) {
                   setState(() {
                     item.checked = value ?? false;
@@ -413,7 +452,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   hintText: 'Qty',
                   hintStyle: TextStyle(color: colors.bg300),
                   border: OutlineInputBorder(
@@ -426,7 +466,8 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
                   ),
                   disabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: colors.bg300.withOpacity(0.5)),
+                    borderSide:
+                        BorderSide(color: colors.bg300.withOpacity(0.5)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -476,70 +517,79 @@ class _FirstAidKitScreenState extends State<FirstAidKitScreen> {
 
   /// Builds the maintenance tips card.
   Widget _buildMaintenanceCard(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [colors.accent200, colors.accent100],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [colors.accent200, colors.accent100],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(_paddingValue),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.warning_amber_rounded, color: colors.bg100, size: 28),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'Essential Kit Maintenance',
-              style: TextStyle(color: colors.bg100, fontSize: 18, fontWeight: FontWeight.w600),
+            Row(
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: colors.bg100, size: 28),
+                const SizedBox(width: _spacingMedium),
+                Text(
+                  'Essential Kit Maintenance',
+                  style: TextStyle(
+                      color: colors.bg100,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: _spacingLarge),
+            Container(
+              padding: const EdgeInsets.all(_paddingValue),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildMaintenanceItem(colors, Icons.inventory_2,
+                      'Check items you have and enter quantities'),
+                  _buildMaintenanceItem(colors, Icons.event,
+                      'Regularly check expiration dates and replace items'),
+                  _buildMaintenanceItem(colors, Icons.wb_sunny,
+                      'Store in a cool, dry place away from sunlight'),
+                ],
+              ),
             ),
           ],
         ),
-        const SizedBox(height: _spacingLarge),
-        Container(
-          padding: const EdgeInsets.all(_paddingValue),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              _buildMaintenanceItem(colors, Icons.inventory_2, 'Check items you have and enter quantities'),
-              _buildMaintenanceItem(colors, Icons.event, 'Regularly check expiration dates and replace items'),
-              _buildMaintenanceItem(colors, Icons.wb_sunny, 'Store in a cool, dry place away from sunlight'),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 
   /// Builds a maintenance tip item.
-  Widget _buildMaintenanceItem(AppColorTheme colors, IconData icon, String text) => Padding(
-    padding: const EdgeInsets.only(bottom: _spacingSmall),
-    child: Row(
-      children: [
-        Icon(icon, color: colors.bg100, size: 20),
-        const SizedBox(width: _spacingMedium),
-        Expanded(child: Text(text, style: TextStyle(color: colors.bg100))),
-      ],
-    ),
-  );
+  Widget _buildMaintenanceItem(
+          AppColorTheme colors, IconData icon, String text) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: _spacingSmall),
+        child: Row(
+          children: [
+            Icon(icon, color: colors.bg100, size: 20),
+            const SizedBox(width: _spacingMedium),
+            Expanded(child: Text(text, style: TextStyle(color: colors.bg100))),
+          ],
+        ),
+      );
 
   /// Returns a reusable card decoration for consistent styling.
   BoxDecoration _buildCardDecoration(AppColorTheme colors) => BoxDecoration(
-    color: colors.bg100.withOpacity(0.85),
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: colors.accent200.withOpacity(0.1)),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ],
-  );
+        color: colors.bg100.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.accent200.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
 }

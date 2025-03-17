@@ -71,11 +71,10 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
   // Constants for consistency and easy tweaking
   static const List<String> _incidentTypes = [
+    'Heavy Rain',
     'Flood',
     'Fire',
-    'Earthquake',
     'Landslide',
-    'Tsunami',
     'Haze',
     'Typhoon',
     'Other',
@@ -666,6 +665,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
 
     switch (type.toLowerCase()) {
+      case 'heavy rain':
+        return Icons.thunderstorm_outlined; // Heavy rain icon
       case 'flood':
         return flood; // Water waves icon
       case 'fire':

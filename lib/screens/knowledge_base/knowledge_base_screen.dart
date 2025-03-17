@@ -5,6 +5,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/first_aid_guide/first_aid_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/home_safety_checklist_screen.dart';
+import 'package:mydpar/screens/knowledge_base/prepareration_guide/preparation_guides_screen.dart';
 
 // Model for guide data, Firebase-ready
 class Guide {
@@ -282,6 +283,13 @@ class KnowledgeBaseScreen extends StatelessWidget {
               context,
               MaterialPageRoute(
                   builder: (_) => const HomeSafetyChecklistScreen()),
+            );
+          } else if (title == 'Preparation Guides') {
+            // Add this condition
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const PreparationGuidesScreen()),
             );
           } else {
             _showSnackBar(context, '$title not yet implemented', Colors.orange);

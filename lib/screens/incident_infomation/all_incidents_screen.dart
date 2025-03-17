@@ -57,10 +57,10 @@ class _IncidentsScreenState extends State<IncidentsScreen> {
 
   static const List<String> _disasterTypes = [
     'All Types',
+    'Heavy Rain',
     'Flood',
     'Fire',
     'Landslide',
-    'Earthquake',
     'Haze',
     'Typhoon',
     'Other',
@@ -596,6 +596,8 @@ IconData _getDisasterIcon(String type) {
   const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
 
   switch (type.toLowerCase()) {
+    case 'heavy rain':
+      return Icons.thunderstorm_outlined;
     case 'flood':
       return flood;
     case 'fire':

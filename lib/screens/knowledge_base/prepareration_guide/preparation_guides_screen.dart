@@ -4,6 +4,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/emergency_kit_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/heavy_rain_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/prepareration_guide/flood_guide_screen.dart';
 
 class PreparationGuidesScreen extends StatelessWidget {
   const PreparationGuidesScreen({super.key});
@@ -167,8 +168,11 @@ class PreparationGuidesScreen extends StatelessWidget {
           icon: flood,
           title: 'Flood',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Flood guide coming soon')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const FloodGuideScreen(),
+              ),
             );
           },
         ),

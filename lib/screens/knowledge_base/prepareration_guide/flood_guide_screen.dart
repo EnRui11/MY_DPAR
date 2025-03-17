@@ -31,82 +31,79 @@ class EmergencyContact {
   const EmergencyContact({required this.label, required this.number, required this.icon, required this.description});
 }
 
-// Centralized data tailored to Malaysia
+// Centralized data tailored to Malaysia's flood context
 const _guideSections = [
   GuideSection(
-    title: 'Before Heavy Rain',
+    title: 'Before the Flood',
     cards: [
+      GuideCardData(
+        icon: Icons.checklist_rounded,
+        title: 'Preparation',
+        items: [
+          'Check flood risk via JUPEM maps or local authorities',
+          'Prepare an emergency kit (food, water, torch, etc.)',
+          'Store copies of IC, passport, and insurance in a waterproof bag',
+          'Plan evacuation routes with family or kampung members',
+        ],
+      ),
       GuideCardData(
         icon: Icons.home,
-        title: 'Home Preparation',
+        title: 'Home Protection',
         items: [
-          'Clear drains, gutters, and longkang (canals) to prevent clogging',
-          'Secure outdoor items like furniture, pots, and zinc sheets',
-          'Prepare sandbags or barriers for flood-prone areas',
-          'Store valuables and electronics on higher shelves or upstairs',
-          'Check roof for leaks and reinforce weak spots',
-        ],
-      ),
-      GuideCardData(
-        icon: Icons.radio,
-        title: 'Stay Informed',
-        items: [
-          'Follow MET Malaysia updates (www.met.gov.my) or MyCuaca app',
-          'Register for NADMA SMS alerts or local council notices',
-          'Identify flood-prone zones via JUPEM maps or local knowledge',
-          'Plan evacuation routes and inform family or kampung members',
+          'Clear drains, longkang, and gutters around your property',
+          'Install sandbags or flood barriers at entry points',
+          'Elevate appliances and furniture above flood levels',
+          'Secure fuel tanks or gas cylinders to prevent floating',
         ],
       ),
     ],
   ),
   GuideSection(
-    title: 'During Heavy Rain',
+    title: 'During the Flood',
     cards: [
       GuideCardData(
-        icon: Icons.shield_outlined,
-        title: 'Indoor Safety',
+        icon: Icons.shield,
+        title: 'Safety Actions',
         items: [
-          'Stay indoors, away from windows during thunderstorms',
-          'Switch off and unplug appliances to avoid lightning damage',
-          'Avoid bathing or using taps during lightning strikes',
-          'Monitor rising water levels near rivers or drains',
-          'Prepare to move to higher floors if flooding begins',
+          'Monitor MET Malaysia (www.met.gov.my) or NADMA alerts',
+          'Evacuate immediately if ordered by PDRM or Bomba',
+          'Move to higher ground or upper floors if trapped',
+          'Avoid contact with floodwater—it may be contaminated',
         ],
       ),
       GuideCardData(
-        icon: Icons.directions_car,
-        title: 'If Outside',
+        icon: Icons.bolt,
+        title: 'Power & Utilities',
         items: [
-          'Avoid driving through flooded roads—15 cm of water can disable a car',
-          'Don’t walk in floodwater; it may hide potholes or debris',
-          'Stay clear of trees, poles, and metal during lightning',
-          'Move to higher ground if flash floods approach',
+          'Turn off electricity at the main breaker if safe',
+          'Unplug appliances to avoid short circuits',
+          'Avoid using gas or electrical devices in flooded areas',
+          'Report outages to TNB (15454) promptly',
         ],
       ),
     ],
   ),
   GuideSection(
-    title: 'After Heavy Rain',
+    title: 'After the Flood',
     cards: [
       GuideCardData(
-        icon: Icons.check_circle_outline,
-        title: 'Safety Checks',
+        icon: Icons.check_circle,
+        title: 'Return Safely',
         items: [
-          'Inspect home for water damage, cracks, or landslides',
-          'Report fallen power lines to TNB (15454) immediately',
-          'Take photos of damage for insurance or aid claims',
-          'Follow NADMA or PDRM updates for safe return instructions',
+          'Wait for NADMA’s "all clear" before returning home',
+          'Check for structural damage or landslides',
+          'Photograph damage for insurance or relief claims',
+          'Avoid downed power lines and report to TNB',
         ],
       ),
       GuideCardData(
-        icon: Icons.favorite_border,
-        title: 'Recovery',
+        icon: Icons.favorite,
+        title: 'Health & Safety',
         items: [
-          'Avoid floodwater—it may contain sewage or leptospirosis',
-          'Boil or use bottled water until supply is confirmed safe',
-          'Help neighbors, especially elderly or OKU (disabled) residents',
-          'Dry out home quickly to prevent mold and mosquito breeding',
-          'Dispose of debris safely to avoid clogging drains',
+          'Wear gloves and boots during cleanup to avoid infection',
+          'Disinfect all wet surfaces to prevent leptospirosis',
+          'Discard food or water exposed to floodwater',
+          'Dry out home quickly to stop mold and mosquito breeding',
         ],
       ),
     ],
@@ -140,8 +137,8 @@ const _emergencyContacts = [
   ),
 ];
 
-class HeavyRainGuideScreen extends StatelessWidget {
-  const HeavyRainGuideScreen({super.key});
+class FloodGuideScreen extends StatelessWidget {
+  const FloodGuideScreen({super.key});
 
   // Spacing constants
   static const double _padding = 16.0;
@@ -163,7 +160,6 @@ class HeavyRainGuideScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: _spacingLarge),
                   _buildWarningBanner(colors),
                   const SizedBox(height: _spacingLarge),
                   ..._guideSections.map((section) => _buildSection(colors, section)),
@@ -192,14 +188,14 @@ class HeavyRainGuideScreen extends StatelessWidget {
         ),
         const SizedBox(width: _spacingSmall),
         Text(
-          'Heavy Rain Safety Guide',
+          'Flood Safety Guide',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
         ),
       ],
     ),
   );
 
-  /// Builds a warning banner with a Malaysia-specific safety message.
+  /// Builds a warning banner with a Malaysia-specific flood message.
   Widget _buildWarningBanner(AppColorTheme colors) => Container(
     decoration: BoxDecoration(
       color: colors.warning,
@@ -214,14 +210,14 @@ class HeavyRainGuideScreen extends StatelessWidget {
             Icon(Icons.warning_amber_rounded, color: colors.bg100),
             const SizedBox(width: _spacingSmall),
             Text(
-              'Safety Alert',
+              'Flood Warning',
               style: TextStyle(color: colors.bg100, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: _spacingSmall),
         Text(
-          'Heavy rain can trigger flash floods and landslides in minutes. Move to safety if water rises or thunder roars!',
+          'Floods can strike fast! Avoid floodwater—15 cm can sweep you away. Stay safe, stay high!',
           style: TextStyle(color: colors.bg100, fontSize: 14),
         ),
       ],
@@ -296,7 +292,7 @@ class HeavyRainGuideScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.emergency, color: colors.accent200, size: 24),
+            Icon(Icons.phone, color: colors.accent200, size: 24),
             const SizedBox(width: _spacingSmall),
             Text(
               'Emergency Contacts',

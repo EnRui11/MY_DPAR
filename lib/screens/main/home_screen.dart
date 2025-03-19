@@ -10,6 +10,7 @@ import 'package:mydpar/screens/incident_infomation/all_incidents_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mydpar/services/user_information_service.dart';
 
 // Model for alert data, Firebase-ready
 class Incident {
@@ -99,28 +100,30 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         padding: const EdgeInsets.all(_paddingValue),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Hello, Username', // TODO: Replace with Firebase Auth user name
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: colors.bg100,
+        child: Consumer<UserInformationService>(
+          builder: (context, userService, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Hello, ${userService.lastName ?? 'User'}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: colors.bg100,
+                ),
               ),
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              'Welcome to MY_DPAR',
-              style: TextStyle(fontSize: 16, color: colors.primary100),
-            ),
-            Text(
-              'Your Disaster Preparedness and Response Assistant',
-              style: TextStyle(fontSize: 16, color: colors.primary100),
-            ),
-          ],
+              const SizedBox(height: _spacingSmall),
+              Text(
+                'Welcome to MY_DPAR',
+                style: TextStyle(fontSize: 16, color: colors.primary100),
+              ),
+              Text(
+                'Your Disaster Preparedness and Response Assistant',
+                style: TextStyle(fontSize: 16, color: colors.primary100),
+              ),
+            ],
+          ),
         ),
       );
 

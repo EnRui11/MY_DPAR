@@ -8,7 +8,7 @@ import 'package:mydpar/services/cpr_audio_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
-import 'firebase_options.dart';
+import 'services/firebase_options.dart';
 
 /// Entry point of the MyDPAR application.
 Future<void> main() async {

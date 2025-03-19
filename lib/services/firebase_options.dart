@@ -59,4 +59,5 @@ class DefaultFirebaseOptions {
     projectId: 'mydpar-c5a48',
     storageBucket: 'mydpar-c5a48.firebasestorage.app',
   );
+
 }

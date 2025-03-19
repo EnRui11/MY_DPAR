@@ -10,6 +10,7 @@ class UserInformationService with ChangeNotifier {
   String? _lastName;
   String? _photoUrl;
   String? _email;
+  String? _phoneNumber;
   List<EmergencyContact> _contacts = [];
   bool _isInitialized = false;
 
@@ -23,6 +24,7 @@ class UserInformationService with ChangeNotifier {
   String? get lastName => _lastName;
   String? get photoUrl => _photoUrl;
   String? get email => _email;
+  String? get phoneNumber => _phoneNumber;
   List<EmergencyContact> get contacts =>
       List.unmodifiable(_contacts); // Immutable list for safety
   bool get isInitialized => _isInitialized;
@@ -63,6 +65,7 @@ class UserInformationService with ChangeNotifier {
       if (doc.exists) {
         final data = doc.data()!;
         _lastName = data['lastName'] as String? ?? 'User';
+        _phoneNumber = data['phoneNumber'] as String?;
         _contacts = (data['emergencyContacts'] as List<dynamic>? ?? [])
             .map((item) =>
                 EmergencyContact.fromJson(item as Map<String, dynamic>))
@@ -72,6 +75,7 @@ class UserInformationService with ChangeNotifier {
         await _firestore.collection('users').doc(_userId).set({
           'lastName': _lastName ?? 'User',
           'email': _email,
+          'phoneNumber': _phoneNumber,
           'emergencyContacts': [],
         }, SetOptions(merge: true));
         _lastName ??= 'User';
@@ -237,8 +241,27 @@ class UserInformationService with ChangeNotifier {
     _lastName = null;
     _photoUrl = null;
     _email = null;
+    _phoneNumber = null;
     _contacts = [];
     _isInitialized = false;
+  }
+
+  /// Updates the phone number in Firestore.
+  Future<void> updatePhoneNumber(String phoneNumber) async {
+    // Add this method
+    if (_userId == null) throw Exception('No user signed in');
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .update({'phoneNumber': phoneNumber});
+      _phoneNumber = phoneNumber;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error updating phone number: $e');
+      throw Exception('Failed to update phone number: $e');
+    }
   }
 
   // Add public method to initialize user

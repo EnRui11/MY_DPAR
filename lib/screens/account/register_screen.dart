@@ -12,6 +12,7 @@ class UserRegistrationData {
   final String lastName;
   final String email;
   final String password;
+  final String phoneNumber;
   final EmergencyContact? emergencyContact;
 
   const UserRegistrationData({
@@ -19,16 +20,18 @@ class UserRegistrationData {
     required this.lastName,
     required this.email,
     required this.password,
+    required this.phoneNumber,
     this.emergencyContact,
   });
 
   Map<String, dynamic> toJson() => {
-    'firstName': firstName,
-    'lastName': lastName,
-    'email': email,
-    'emergencyContact': emergencyContact?.toJson(),
-    'createdAt': FieldValue.serverTimestamp(),
-  };
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'emergencyContact': emergencyContact?.toJson(),
+        'createdAt': FieldValue.serverTimestamp(),
+      };
 }
 
 // Emergency contact model, nullable for optional input
@@ -44,10 +47,10 @@ class EmergencyContact {
   });
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'relation': relation,
-    'phone': phone,
-  };
+        'name': name,
+        'relation': relation,
+        'phone': phone,
+      };
 }
 
 class RegisterScreen extends StatefulWidget {
@@ -67,6 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
   late final TextEditingController _confirmPasswordController;
+  late final TextEditingController _phoneNumberController;
   late final TextEditingController _emergencyNameController;
   late final TextEditingController _emergencyRelationController;
   late final TextEditingController _emergencyPhoneController;
@@ -95,6 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+    _phoneNumberController = TextEditingController();
     _emergencyNameController = TextEditingController();
     _emergencyRelationController = TextEditingController();
     _emergencyPhoneController = TextEditingController();
@@ -110,6 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _phoneNumberController.dispose();
     _emergencyNameController.dispose();
     _emergencyRelationController.dispose();
     _emergencyPhoneController.dispose();
@@ -125,7 +131,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _hasLowerCase = password.contains(RegExp(r'[a-z]'));
       _hasNumber = password.contains(RegExp(r'[0-9]'));
       _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-      _passwordsMatch = password == confirmPassword && confirmPassword.isNotEmpty;
+      _passwordsMatch =
+          password == confirmPassword && confirmPassword.isNotEmpty;
     });
   }
 
@@ -170,187 +177,200 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildHeader(AppColorTheme colors) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SizedBox(height: 40),
-      Text(
-        'Get Started',
-        style: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: colors.primary300,
-        ),
-      ),
-      const SizedBox(height: _spacingSmall),
-      Text(
-        'Create your account to continue',
-        style: TextStyle(fontSize: 16, color: colors.text200),
-      ),
-    ],
-  );
-
-  Widget _buildPersonalInfoSection(AppColorTheme colors) => Column(
-    children: [
-      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: _buildTextField(
-              controller: _firstNameController,
-              label: 'First Name',
-              hint: 'First name',
-              colors: colors,
-              isRequired: true,
+          const SizedBox(height: 40),
+          Text(
+            'Get Started',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: colors.primary300,
             ),
           ),
-          const SizedBox(width: _spacingMedium),
-          Expanded(
-            child: _buildTextField(
-              controller: _lastNameController,
-              label: 'Last Name',
-              hint: 'Last name',
-              colors: colors,
-              isRequired: true,
-            ),
+          const SizedBox(height: _spacingSmall),
+          Text(
+            'Create your account to continue',
+            style: TextStyle(fontSize: 16, color: colors.text200),
           ),
         ],
-      ),
-      const SizedBox(height: _spacingMedium),
-      _buildTextField(
-        controller: _emailController,
-        label: 'Email',
-        hint: 'Enter your email',
-        colors: colors,
-        keyboardType: TextInputType.emailAddress,
-        isRequired: true,
-        validator: (value) =>
-        value!.isEmpty || !value.contains('@') ? 'Invalid email' : null,
-      ),
-      const SizedBox(height: _spacingMedium),
-    ],
-  );
+      );
+
+  Widget _buildPersonalInfoSection(AppColorTheme colors) => Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: _firstNameController,
+                  label: 'First Name',
+                  hint: 'First name',
+                  colors: colors,
+                  isRequired: true,
+                ),
+              ),
+              const SizedBox(width: _spacingMedium),
+              Expanded(
+                child: _buildTextField(
+                  controller: _lastNameController,
+                  label: 'Last Name',
+                  hint: 'Last name',
+                  colors: colors,
+                  isRequired: true,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildTextField(
+            controller: _emailController,
+            label: 'Email',
+            hint: 'Enter your email',
+            colors: colors,
+            keyboardType: TextInputType.emailAddress,
+            isRequired: true,
+            validator: (value) =>
+                value!.isEmpty || !value.contains('@') ? 'Invalid email' : null,
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildTextField(
+            controller: _phoneNumberController,
+            label: 'Phone Number',
+            hint: 'Enter your phone number',
+            colors: colors,
+            keyboardType: TextInputType.phone,
+            isRequired: true,
+            validator: (value) => value!.isEmpty || value.length < 10
+                ? 'Please enter a valid phone number'
+                : null,
+          ),
+          const SizedBox(height: _spacingMedium),
+        ],
+      );
 
   Widget _buildPasswordSection(AppColorTheme colors) => Column(
-    children: [
-      _buildPasswordField(
-        controller: _passwordController,
-        label: 'Password',
-        hint: 'Create a password',
-        colors: colors,
-        isVisible: _isPasswordVisible,
-        toggleVisibility: () =>
-            setState(() => _isPasswordVisible = !_isPasswordVisible),
-      ),
-      _buildPasswordRequirements(colors),
-      _buildPasswordField(
-        controller: _confirmPasswordController,
-        label: 'Confirm Password',
-        hint: 'Re-enter your password',
-        colors: colors,
-        isVisible: _isConfirmPasswordVisible,
-        toggleVisibility: () => setState(
+        children: [
+          _buildPasswordField(
+            controller: _passwordController,
+            label: 'Password',
+            hint: 'Create a password',
+            colors: colors,
+            isVisible: _isPasswordVisible,
+            toggleVisibility: () =>
+                setState(() => _isPasswordVisible = !_isPasswordVisible),
+          ),
+          _buildPasswordRequirements(colors),
+          _buildPasswordField(
+            controller: _confirmPasswordController,
+            label: 'Confirm Password',
+            hint: 'Re-enter your password',
+            colors: colors,
+            isVisible: _isConfirmPasswordVisible,
+            toggleVisibility: () => setState(
                 () => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
-      ),
-      if (_confirmPasswordController.text.isNotEmpty)
-        _buildRequirement('Passwords match', _passwordsMatch, colors),
-    ],
-  );
+          ),
+          if (_confirmPasswordController.text.isNotEmpty)
+            _buildRequirement('Passwords match', _passwordsMatch, colors),
+        ],
+      );
 
   Widget _buildPasswordRequirements(AppColorTheme colors) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
-    child: Column(
-      children: [
-        _buildRequirement(
-            'At least $_minPasswordLength characters', _hasMinLength, colors),
-        _buildRequirement(
-            'At least one uppercase letter', _hasUpperCase, colors),
-        _buildRequirement(
-            'At least one lowercase letter', _hasLowerCase, colors),
-        _buildRequirement('At least one number', _hasNumber, colors),
-        _buildRequirement(
-            'At least one special character', _hasSpecialChar, colors),
-      ],
-    ),
-  );
+        padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
+        child: Column(
+          children: [
+            _buildRequirement('At least $_minPasswordLength characters',
+                _hasMinLength, colors),
+            _buildRequirement(
+                'At least one uppercase letter', _hasUpperCase, colors),
+            _buildRequirement(
+                'At least one lowercase letter', _hasLowerCase, colors),
+            _buildRequirement('At least one number', _hasNumber, colors),
+            _buildRequirement(
+                'At least one special character', _hasSpecialChar, colors),
+          ],
+        ),
+      );
 
   Widget _buildEmergencyContactSection(AppColorTheme colors) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SizedBox(height: _spacingLarge),
-      Text(
-        'Emergency Contact',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: colors.primary300,
-        ),
-      ),
-      Text(
-        'You can add this field later.',
-        style: TextStyle(
-          fontSize: 14,
-          color: colors.warning,
-          fontStyle: FontStyle.italic,
-        ),
-      ),
-      const SizedBox(height: _spacingMedium),
-      _buildTextField(
-        controller: _emergencyNameController,
-        label: 'Contact Name',
-        hint: 'Emergency contact name',
-        colors: colors,
-      ),
-      const SizedBox(height: _spacingMedium),
-      _buildTextField(
-        controller: _emergencyRelationController,
-        label: 'Relationship',
-        hint: 'Relationship to contact',
-        colors: colors,
-      ),
-      const SizedBox(height: _spacingMedium),
-      _buildTextField(
-        controller: _emergencyPhoneController,
-        label: 'Contact Phone',
-        hint: 'Emergency contact phone',
-        colors: colors,
-        keyboardType: TextInputType.phone,
-      ),
-    ],
-  );
-
-  Widget _buildSubmitButton(AppColorTheme colors) => ElevatedButton(
-    onPressed: _isFormValid() && !_isLoading ? _handleSubmit : null,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: colors.accent200,
-      minimumSize: const Size(double.infinity, 56),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      disabledBackgroundColor: colors.accent200.withOpacity(0.5),
-    ),
-    child: const Text(
-      'Create Account',
-      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-    ),
-  );
-
-  Widget _buildSignInLink(AppColorTheme colors) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Already have an account? ',
-            style: TextStyle(color: colors.text200)),
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Text(
-            'Sign In',
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: _spacingLarge),
+          Text(
+            'Emergency Contact',
             style: TextStyle(
-              color: colors.accent200,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
+              color: colors.primary300,
             ),
           ),
+          Text(
+            'You can add this field later.',
+            style: TextStyle(
+              fontSize: 14,
+              color: colors.warning,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildTextField(
+            controller: _emergencyNameController,
+            label: 'Contact Name',
+            hint: 'Emergency contact name',
+            colors: colors,
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildTextField(
+            controller: _emergencyRelationController,
+            label: 'Relationship',
+            hint: 'Relationship to contact',
+            colors: colors,
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildTextField(
+            controller: _emergencyPhoneController,
+            label: 'Contact Phone',
+            hint: 'Emergency contact phone',
+            colors: colors,
+            keyboardType: TextInputType.phone,
+          ),
+        ],
+      );
+
+  Widget _buildSubmitButton(AppColorTheme colors) => ElevatedButton(
+        onPressed: _isFormValid() && !_isLoading ? _handleSubmit : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colors.accent200,
+          minimumSize: const Size(double.infinity, 56),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          disabledBackgroundColor: colors.accent200.withOpacity(0.5),
         ),
-      ],
-    ),
-  );
+        child: const Text(
+          'Create Account',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      );
+
+  Widget _buildSignInLink(AppColorTheme colors) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Already have an account? ',
+                style: TextStyle(color: colors.text200)),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Text(
+                'Sign In',
+                style: TextStyle(
+                  color: colors.accent200,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -374,11 +394,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               children: isRequired
                   ? [
-                TextSpan(
-                  text: ' *',
-                  style: TextStyle(color: colors.warning),
-                )
-              ]
+                      TextSpan(
+                        text: ' *',
+                        style: TextStyle(color: colors.warning),
+                      )
+                    ]
                   : null,
             ),
           ),
@@ -388,8 +408,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: keyboardType,
             validator: validator ??
                 (isRequired
-                    ? (value) =>
-                value!.isEmpty ? '$label is required' : null
+                    ? (value) => value!.isEmpty ? '$label is required' : null
                     : null),
             decoration: _textFieldDecoration(hint, colors),
           ),
@@ -433,8 +452,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onPressed: toggleVisibility,
               ),
             ),
-            validator: (value) =>
-            value!.isEmpty ? '$label is required' : null,
+            validator: (value) => value!.isEmpty ? '$label is required' : null,
           ),
         ],
       );
@@ -479,14 +497,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isFormValid() =>
       _firstNameController.text.isNotEmpty &&
-          _lastNameController.text.isNotEmpty &&
-          _emailController.text.isNotEmpty &&
-          _hasMinLength &&
-          _hasUpperCase &&
-          _hasLowerCase &&
-          _hasNumber &&
-          _hasSpecialChar &&
-          _passwordsMatch;
+      _lastNameController.text.isNotEmpty &&
+      _emailController.text.isNotEmpty &&
+      _phoneNumberController.text.isNotEmpty &&
+      _hasMinLength &&
+      _hasUpperCase &&
+      _hasLowerCase &&
+      _hasNumber &&
+      _hasSpecialChar &&
+      _passwordsMatch;
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate() || !_isFormValid()) return;
@@ -495,13 +514,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final emergencyContact = _emergencyNameController.text.isNotEmpty &&
-          _emergencyRelationController.text.isNotEmpty &&
-          _emergencyPhoneController.text.isNotEmpty
+              _emergencyRelationController.text.isNotEmpty &&
+              _emergencyPhoneController.text.isNotEmpty
           ? EmergencyContact(
-        name: _emergencyNameController.text,
-        relation: _emergencyRelationController.text,
-        phone: _emergencyPhoneController.text,
-      )
+              name: _emergencyNameController.text,
+              relation: _emergencyRelationController.text,
+              phone: _emergencyPhoneController.text,
+            )
           : null;
 
       final userData = UserRegistrationData(
@@ -509,6 +528,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        phoneNumber: _phoneNumberController.text.trim(),
         emergencyContact: emergencyContact,
       );
 
@@ -516,7 +536,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       debugPrint('Registering user with email: ${userData.email}');
 
       // Register user with Firebase Authentication
-      final UserCredential credential = await _auth.createUserWithEmailAndPassword(
+      final UserCredential credential =
+          await _auth.createUserWithEmailAndPassword(
         email: userData.email,
         password: userData.password,
       );
@@ -525,8 +546,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       // Store user data in Firestore
       await _firestore.collection('users').doc(credential.user!.uid).set(
-        userData.toJson(),
-      );
+            userData.toJson(),
+          );
 
       debugPrint('User data stored in Firestore');
 

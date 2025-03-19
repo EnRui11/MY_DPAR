@@ -23,17 +23,18 @@ class EmergencyContact {
     required this.phone,
   });
 
-  factory EmergencyContact.fromJson(Map<String, dynamic> json) => EmergencyContact(
-    name: json['name'] as String? ?? 'Unknown',
-    relation: json['relation'] as String? ?? 'Not specified',
-    phone: json['phone'] as String? ?? '',
-  );
+  factory EmergencyContact.fromJson(Map<String, dynamic> json) =>
+      EmergencyContact(
+        name: json['name'] as String? ?? 'Unknown',
+        relation: json['relation'] as String? ?? 'Not specified',
+        phone: json['phone'] as String? ?? '',
+      );
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'relation': relation,
-    'phone': phone,
-  };
+        'name': name,
+        'relation': relation,
+        'phone': phone,
+      };
 }
 
 // Model for settings items
@@ -84,149 +85,185 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Builds the header with theme toggle and settings icon.
-  Widget _buildHeader(ThemeProvider themeProvider, AppColorTheme colors) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: _padding, vertical: _spacingSmall),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          icon: Icon(
-            themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-            color: colors.accent200,
-          ),
-          onPressed: themeProvider.toggleTheme,
-          tooltip: 'Toggle theme',
-        ),
-        IconButton(
-          icon: Icon(Icons.settings, color: colors.primary300),
-          onPressed: () => _navigateTo(const Placeholder()), // Placeholder for settings
-          tooltip: 'Settings',
-        ),
-      ],
-    ),
-  );
-
-  /// Builds the scrollable content area with refresh functionality.
-  Widget _buildContent(UserInformationService userInfomation, AppColorTheme colors) => Expanded(
-    child: RefreshIndicator(
-      onRefresh: userInfomation.refreshUserData,
-      color: colors.accent200,
-      backgroundColor: colors.bg100,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(_padding),
-        child: Column(
+  Widget _buildHeader(ThemeProvider themeProvider, AppColorTheme colors) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: _padding, vertical: _spacingSmall),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildProfileHeader(userInfomation, colors),
-            const SizedBox(height: _spacingLarge * 2),
-            _buildEmergencyContactsSection(userInfomation, colors),
-            const SizedBox(height: _spacingLarge * 2),
-            _buildSettingsSection(colors),
+            IconButton(
+              icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: colors.accent200,
+              ),
+              onPressed: themeProvider.toggleTheme,
+              tooltip: 'Toggle theme',
+            ),
+            IconButton(
+              icon: Icon(Icons.settings, color: colors.primary300),
+              onPressed: () =>
+                  _navigateTo(const Placeholder()), // Placeholder for settings
+              tooltip: 'Settings',
+            ),
           ],
         ),
-      ),
-    ),
-  );
+      );
 
-  /// Builds the profile header with avatar, name, and email.
-  Widget _buildProfileHeader(UserInformationService userInfomation, AppColorTheme colors) => Column(
-    children: [
-      Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: colors.primary100,
-            backgroundImage: userInfomation.photoUrl != null ? NetworkImage(userInfomation.photoUrl!) : null,
-            child: userInfomation.photoUrl == null ? Icon(Icons.person_outline, size: 48, color: colors.accent200) : null,
-          ),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: colors.accent200,
-            child: IconButton(
-              icon: Icon(Icons.edit, size: 18, color: colors.bg100),
-              onPressed: () => _showPhotoEditDialog(userInfomation, colors),
-              padding: EdgeInsets.zero,
-              tooltip: 'Edit profile photo',
+  /// Builds the scrollable content area with refresh functionality.
+  Widget _buildContent(
+          UserInformationService userInfomation, AppColorTheme colors) =>
+      Expanded(
+        child: RefreshIndicator(
+          onRefresh: userInfomation.refreshUserData,
+          color: colors.accent200,
+          backgroundColor: colors.bg100,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(_padding),
+            child: Column(
+              children: [
+                _buildProfileHeader(userInfomation, colors),
+                const SizedBox(height: _spacingLarge * 2),
+                _buildEmergencyContactsSection(userInfomation, colors),
+                const SizedBox(height: _spacingLarge * 2),
+                _buildSettingsSection(colors),
+              ],
             ),
           ),
+        ),
+      );
+
+  /// Builds the profile header with avatar, name, and email.
+  Widget _buildProfileHeader(
+          UserInformationService userInfomation, AppColorTheme colors) =>
+      Column(
+        children: [
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              CircleAvatar(
+                radius: 48,
+                backgroundColor: colors.primary100,
+                backgroundImage: userInfomation.photoUrl != null
+                    ? NetworkImage(userInfomation.photoUrl!)
+                    : null,
+                child: userInfomation.photoUrl == null
+                    ? Icon(Icons.person_outline,
+                        size: 48, color: colors.accent200)
+                    : null,
+              ),
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: colors.accent200,
+                child: IconButton(
+                  icon: Icon(Icons.edit, size: 18, color: colors.bg100),
+                  onPressed: () => _showPhotoEditDialog(userInfomation, colors),
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Edit profile photo',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: _spacingLarge),
+          Text(
+            userInfomation.lastName ?? 'Loading...',
+            style: TextStyle(
+                color: colors.primary300,
+                fontSize: 24,
+                fontWeight: FontWeight.bold),
+          ),
+          Text(
+            userInfomation.email ?? 'Loading...',
+            style: TextStyle(color: colors.text200),
+          ),
+          Text(
+            userInfomation.phoneNumber ?? 'Loading...',
+            style: TextStyle(color: colors.text200),
+          ),
         ],
-      ),
-      const SizedBox(height: _spacingLarge),
-      Text(
-        userInfomation.lastName ?? 'Loading...',
-        style: TextStyle(color: colors.primary300, fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-      Text(
-        userInfomation.email ?? 'Loading...',
-        style: TextStyle(color: colors.text200),
-      ),
-    ],
-  );
+      );
 
   /// Builds the emergency contacts section.
-  Widget _buildEmergencyContactsSection(UserInformationService userInfomation, AppColorTheme colors) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildEmergencyContactsSection(
+          UserInformationService userInfomation, AppColorTheme colors) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Emergency Contacts',
-            style: TextStyle(color: colors.primary300, fontSize: 18, fontWeight: FontWeight.w600),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Emergency Contacts',
+                style: TextStyle(
+                    color: colors.primary300,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600),
+              ),
+              IconButton(
+                icon: Icon(Icons.add, color: colors.accent200),
+                onPressed: () => _showAddContactDialog(userInfomation, colors),
+                tooltip: 'Add contact',
+              ),
+            ],
           ),
-          IconButton(
-            icon: Icon(Icons.add, color: colors.accent200),
-            onPressed: () => _showAddContactDialog(userInfomation, colors),
-            tooltip: 'Add contact',
-          ),
+          const SizedBox(height: _spacingMedium),
+          userInfomation.contacts.isEmpty
+              ? _buildEmptyContactsCard(colors)
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: userInfomation.contacts.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: _spacingMedium),
+                    child: _buildEmergencyContact(
+                        userInfomation.contacts[index],
+                        index,
+                        userInfomation,
+                        colors),
+                  ),
+                ),
         ],
-      ),
-      const SizedBox(height: _spacingMedium),
-      userInfomation.contacts.isEmpty
-          ? _buildEmptyContactsCard(colors)
-          : ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: userInfomation.contacts.length,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.only(bottom: _spacingMedium),
-          child: _buildEmergencyContact(userInfomation.contacts[index], index, userInfomation, colors),
-        ),
-      ),
-    ],
-  );
+      );
 
   /// Builds a card for when no contacts are available.
   Widget _buildEmptyContactsCard(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.all(_padding),
-    decoration: _cardDecoration(colors),
-    child: Column(
-      children: [
-        Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
-        const SizedBox(height: _spacingMedium),
-        Text(
-          'No Emergency Contacts',
-          style: TextStyle(color: colors.primary300, fontSize: 16, fontWeight: FontWeight.w500),
+        padding: const EdgeInsets.all(_padding),
+        decoration: _cardDecoration(colors),
+        child: Column(
+          children: [
+            Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
+            const SizedBox(height: _spacingMedium),
+            Text(
+              'No Emergency Contacts',
+              style: TextStyle(
+                  color: colors.primary300,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: _spacingSmall),
+            Text(
+              'Add contacts for quick help during emergencies',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.text200),
+            ),
+            const SizedBox(height: _spacingMedium),
+            ElevatedButton(
+              onPressed: () => _showAddContactDialog(
+                  Provider.of<UserInformationService>(context, listen: false),
+                  colors),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.accent200,
+                  foregroundColor: colors.bg100),
+              child: const Text('Add Contact'),
+            ),
+          ],
         ),
-        const SizedBox(height: _spacingSmall),
-        Text(
-          'Add contacts for quick help during emergencies',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: colors.text200),
-        ),
-        const SizedBox(height: _spacingMedium),
-        ElevatedButton(
-          onPressed: () => _showAddContactDialog(Provider.of<UserInformationService>(context, listen: false), colors),
-          style: ElevatedButton.styleFrom(backgroundColor: colors.accent200, foregroundColor: colors.bg100),
-          child: const Text('Add Contact'),
-        ),
-      ],
-    ),
-  );
+      );
 
   /// Builds an individual emergency contact card.
-  Widget _buildEmergencyContact(EmergencyContact contact, int index, UserInformationService userInfomation, AppColorTheme colors) =>
+  Widget _buildEmergencyContact(EmergencyContact contact, int index,
+          UserInformationService userInfomation, AppColorTheme colors) =>
       Container(
         decoration: _cardDecoration(colors),
         padding: const EdgeInsets.all(_padding),
@@ -238,7 +275,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   contact.name,
-                  style: TextStyle(color: colors.primary300, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: colors.primary300, fontWeight: FontWeight.w500),
                 ),
                 Text(
                   contact.relation,
@@ -259,7 +297,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.edit, color: colors.accent200),
-                  onPressed: () => _showEditContactDialog(contact, index, userInfomation, colors),
+                  onPressed: () => _showEditContactDialog(
+                      contact, index, userInfomation, colors),
                   tooltip: 'Edit ${contact.name}',
                 ),
               ],
@@ -289,63 +328,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ];
 
     return Column(
-      children: settings.map((setting) => Padding(
-        padding: const EdgeInsets.only(bottom: _spacingMedium),
-        child: _buildSettingItem(setting, colors),
-      )).toList(),
+      children: settings
+          .map((setting) => Padding(
+                padding: const EdgeInsets.only(bottom: _spacingMedium),
+                child: _buildSettingItem(setting, colors),
+              ))
+          .toList(),
     );
   }
 
   /// Builds an individual setting item.
-  Widget _buildSettingItem(SettingItem setting, AppColorTheme colors) => GestureDetector(
-    onTap: setting.onTap,
-    child: Container(
-      decoration: _cardDecoration(colors),
-      padding: const EdgeInsets.all(_padding),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+  Widget _buildSettingItem(SettingItem setting, AppColorTheme colors) =>
+      GestureDetector(
+        onTap: setting.onTap,
+        child: Container(
+          decoration: _cardDecoration(colors),
+          padding: const EdgeInsets.all(_padding),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(setting.icon, color: colors.accent200),
-              const SizedBox(width: _spacingMedium),
-              Text(
-                setting.title,
-                style: TextStyle(color: colors.primary300),
+              Row(
+                children: [
+                  Icon(setting.icon, color: colors.accent200),
+                  const SizedBox(width: _spacingMedium),
+                  Text(
+                    setting.title,
+                    style: TextStyle(color: colors.primary300),
+                  ),
+                ],
               ),
+              Icon(Icons.chevron_right, color: colors.text200),
             ],
           ),
-          Icon(Icons.chevron_right, color: colors.text200),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 
   /// Builds the bottom navigation bar.
   Widget _buildBottomNavigation(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg100,
-      border: Border(top: BorderSide(color: colors.bg300.withOpacity(0.2))),
-    ),
-    padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildNavItem(Icons.home_outlined, false, () => _navigateTo(const HomeScreen(), replace: true), colors),
-        _buildNavItem(Icons.map_outlined, false, () => _navigateTo(const MapScreen(), replace: true), colors),
-        _buildNavItem(Icons.people_outline, false, () => _navigateTo(const CommunityScreen()), colors),
-        _buildNavItem(Icons.person, true, () {}, colors),
-      ],
-    ),
-  );
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          border: Border(top: BorderSide(color: colors.bg300.withOpacity(0.2))),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(Icons.home_outlined, false,
+                () => _navigateTo(const HomeScreen(), replace: true), colors),
+            _buildNavItem(Icons.map_outlined, false,
+                () => _navigateTo(const MapScreen(), replace: true), colors),
+            _buildNavItem(Icons.people_outline, false,
+                () => _navigateTo(const CommunityScreen()), colors),
+            _buildNavItem(Icons.person, true, () {}, colors),
+          ],
+        ),
+      );
 
   /// Reusable navigation item widget.
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed, AppColorTheme colors) => IconButton(
-    icon: Icon(icon),
-    color: isActive ? colors.accent200 : colors.text200,
-    onPressed: onPressed,
-    tooltip: isActive ? 'Profile (current)' : null,
-  );
+  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed,
+          AppColorTheme colors) =>
+      IconButton(
+        icon: Icon(icon),
+        color: isActive ? colors.accent200 : colors.text200,
+        onPressed: onPressed,
+        tooltip: isActive ? 'Profile (current)' : null,
+      );
 
   /// Launches a phone call with error handling.
   Future<void> _launchPhoneCall(String phone, AppColorTheme colors) async {
@@ -363,8 +410,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Requests permission and picks an image, then updates via userInfomation.
-  Future<void> _pickImage(ImageSource source, UserInformationService userInfomation, AppColorTheme colors) async {
-    final permission = source == ImageSource.camera ? Permission.camera : Permission.photos;
+  Future<void> _pickImage(ImageSource source,
+      UserInformationService userInfomation, AppColorTheme colors) async {
+    final permission =
+        source == ImageSource.camera ? Permission.camera : Permission.photos;
     final status = await permission.request();
 
     if (status.isGranted) {
@@ -387,24 +436,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } else if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
-        _showSnackBar('Permission denied. Enable it in settings.', colors.warning);
+        _showSnackBar(
+            'Permission denied. Enable it in settings.', colors.warning);
       }
     }
   }
 
   /// Shows a dialog to edit the profile photo.
-  void _showPhotoEditDialog(UserInformationService userInfomation, AppColorTheme colors) {
+  void _showPhotoEditDialog(
+      UserInformationService userInfomation, AppColorTheme colors) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Change Profile Photo', style: TextStyle(color: colors.primary300)),
+        title: Text('Change Profile Photo',
+            style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: Icon(Icons.photo_library, color: colors.accent200),
-              title: Text('Choose from Gallery', style: TextStyle(color: colors.text100)),
+              title: Text('Choose from Gallery',
+                  style: TextStyle(color: colors.text100)),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery, userInfomation, colors);
@@ -412,7 +465,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: colors.accent200),
-              title: Text('Take a Photo', style: TextStyle(color: colors.text100)),
+              title:
+                  Text('Take a Photo', style: TextStyle(color: colors.text100)),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera, userInfomation, colors);
@@ -425,7 +479,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Shows a dialog to add a new emergency contact.
-  void _showAddContactDialog(UserInformationService userInfomation, AppColorTheme colors) {
+  void _showAddContactDialog(
+      UserInformationService userInfomation, AppColorTheme colors) {
     final nameController = TextEditingController();
     final relationController = TextEditingController();
     final phoneController = TextEditingController();
@@ -433,17 +488,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Add Emergency Contact', style: TextStyle(color: colors.primary300)),
+        title: Text('Add Emergency Contact',
+            style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
-        content: _buildContactForm(colors, nameController, relationController, phoneController),
+        content: _buildContactForm(
+            colors, nameController, relationController, phoneController),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel', style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
-            onPressed: () => _addContact(userInfomation, nameController, relationController, phoneController, colors),
-            style: ElevatedButton.styleFrom(backgroundColor: colors.accent200, foregroundColor: colors.bg100),
+            onPressed: () => _addContact(userInfomation, nameController,
+                relationController, phoneController, colors),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: colors.accent200,
+                foregroundColor: colors.bg100),
             child: const Text('Add'),
           ),
         ],
@@ -453,13 +513,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Adds a new contact via userInfomation.
   Future<void> _addContact(
-      UserInformationService userInfomation,
-      TextEditingController nameController,
-      TextEditingController relationController,
-      TextEditingController phoneController,
-      AppColorTheme colors,
-      ) async {
-    if (!_validateInputs(nameController, relationController, phoneController, colors)) return;
+    UserInformationService userInfomation,
+    TextEditingController nameController,
+    TextEditingController relationController,
+    TextEditingController phoneController,
+    AppColorTheme colors,
+  ) async {
+    if (!_validateInputs(
+        nameController, relationController, phoneController, colors)) return;
 
     final contact = EmergencyContact(
       name: nameController.text.trim(),
@@ -479,7 +540,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Shows a dialog to edit an existing emergency contact.
-  void _showEditContactDialog(EmergencyContact contact, int index, UserInformationService userInfomation, AppColorTheme colors) {
+  void _showEditContactDialog(EmergencyContact contact, int index,
+      UserInformationService userInfomation, AppColorTheme colors) {
     final nameController = TextEditingController(text: contact.name);
     final relationController = TextEditingController(text: contact.relation);
     final phoneController = TextEditingController(text: contact.phone);
@@ -487,12 +549,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Emergency Contact', style: TextStyle(color: colors.primary300)),
+        title: Text('Edit Emergency Contact',
+            style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
-        content: _buildContactForm(colors, nameController, relationController, phoneController),
+        content: _buildContactForm(
+            colors, nameController, relationController, phoneController),
         actions: [
           TextButton(
-            onPressed: () => _showDeleteConfirmationDialog(contact, index, userInfomation, colors),
+            onPressed: () => _showDeleteConfirmationDialog(
+                contact, index, userInfomation, colors),
             child: Text('Delete', style: TextStyle(color: colors.warning)),
           ),
           TextButton(
@@ -500,8 +565,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text('Cancel', style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
-            onPressed: () => _updateContact(userInfomation, nameController, relationController, phoneController, index, colors),
-            style: ElevatedButton.styleFrom(backgroundColor: colors.accent200, foregroundColor: colors.bg100),
+            onPressed: () => _updateContact(userInfomation, nameController,
+                relationController, phoneController, index, colors),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: colors.accent200,
+                foregroundColor: colors.bg100),
             child: const Text('Save'),
           ),
         ],
@@ -511,14 +579,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Updates an existing contact via userInfomation.
   Future<void> _updateContact(
-      UserInformationService userInfomation,
-      TextEditingController nameController,
-      TextEditingController relationController,
-      TextEditingController phoneController,
-      int index,
-      AppColorTheme colors,
-      ) async {
-    if (!_validateInputs(nameController, relationController, phoneController, colors)) return;
+    UserInformationService userInfomation,
+    TextEditingController nameController,
+    TextEditingController relationController,
+    TextEditingController phoneController,
+    int index,
+    AppColorTheme colors,
+  ) async {
+    if (!_validateInputs(
+        nameController, relationController, phoneController, colors)) return;
 
     final updatedContact = EmergencyContact(
       name: nameController.text.trim(),
@@ -538,11 +607,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Shows a confirmation dialog to delete a contact.
-  void _showDeleteConfirmationDialog(EmergencyContact contact, int index, UserInformationService userInfomation, AppColorTheme colors) {
+  void _showDeleteConfirmationDialog(EmergencyContact contact, int index,
+      UserInformationService userInfomation, AppColorTheme colors) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Contact', style: TextStyle(color: colors.primary300)),
+        title:
+            Text('Delete Contact', style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
         content: Text(
           'Are you sure you want to delete ${contact.name}?',
@@ -555,7 +626,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () => _deleteContact(index, userInfomation, colors),
-            style: ElevatedButton.styleFrom(backgroundColor: colors.warning, foregroundColor: colors.bg100),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: colors.warning, foregroundColor: colors.bg100),
             child: const Text('Delete'),
           ),
         ],
@@ -564,7 +636,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Deletes a contact via userInfomation.
-  Future<void> _deleteContact(int index, UserInformationService userInfomation, AppColorTheme colors) async {
+  Future<void> _deleteContact(int index, UserInformationService userInfomation,
+      AppColorTheme colors) async {
     try {
       await userInfomation.deleteEmergencyContact(index);
       if (mounted) {
@@ -582,9 +655,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirm Logout', style: TextStyle(color: colors.primary300)),
+        title:
+            Text('Confirm Logout', style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
-        content: Text('Are you sure you want to logout?', style: TextStyle(color: colors.text200)),
+        content: Text('Are you sure you want to logout?',
+            style: TextStyle(color: colors.text200)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -592,13 +667,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await Provider.of<UserInformationService>(context, listen: false).logout();
+              await Provider.of<UserInformationService>(context, listen: false)
+                  .logout();
               if (mounted) {
                 Navigator.pop(context);
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: colors.warning, foregroundColor: colors.bg100),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: colors.warning, foregroundColor: colors.bg100),
             child: const Text('Logout'),
           ),
         ],
@@ -608,11 +686,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Reusable contact form widget for add/edit dialogs.
   Widget _buildContactForm(
-      AppColorTheme colors,
-      TextEditingController nameController,
-      TextEditingController relationController,
-      TextEditingController phoneController,
-      ) =>
+    AppColorTheme colors,
+    TextEditingController nameController,
+    TextEditingController relationController,
+    TextEditingController phoneController,
+  ) =>
       Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -621,7 +699,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: InputDecoration(
               labelText: 'Name',
               labelStyle: TextStyle(color: colors.text200),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: colors.bg300)),
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colors.bg300)),
             ),
             style: TextStyle(color: colors.text100),
           ),
@@ -631,7 +710,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: InputDecoration(
               labelText: 'Relationship',
               labelStyle: TextStyle(color: colors.text200),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: colors.bg300)),
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colors.bg300)),
             ),
             style: TextStyle(color: colors.text100),
           ),
@@ -641,7 +721,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: InputDecoration(
               labelText: 'Phone Number',
               labelStyle: TextStyle(color: colors.text200),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: colors.bg300)),
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colors.bg300)),
             ),
             keyboardType: TextInputType.phone,
             style: TextStyle(color: colors.text100),
@@ -651,12 +732,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Validates input fields and shows error if invalid.
   bool _validateInputs(
-      TextEditingController nameController,
-      TextEditingController relationController,
-      TextEditingController phoneController,
-      AppColorTheme colors,
-      ) {
-    if (nameController.text.trim().isEmpty || relationController.text.trim().isEmpty || phoneController.text.trim().isEmpty) {
+    TextEditingController nameController,
+    TextEditingController relationController,
+    TextEditingController phoneController,
+    AppColorTheme colors,
+  ) {
+    if (nameController.text.trim().isEmpty ||
+        relationController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty) {
       _showSnackBar('All fields are required', colors.warning);
       return false;
     }
@@ -707,16 +790,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Provides a reusable card decoration with a subtle shadow.
-  BoxDecoration _cardDecoration(AppColorTheme colors, {double opacity = 0.7}) => BoxDecoration(
-    color: colors.bg100.withOpacity(opacity),
-    borderRadius: BorderRadius.circular(16),
-    border: Border.all(color: colors.bg300.withOpacity(0.2)),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ],
-  );
+  BoxDecoration _cardDecoration(AppColorTheme colors, {double opacity = 0.7}) =>
+      BoxDecoration(
+        color: colors.bg100.withOpacity(opacity),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.bg300.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
 }

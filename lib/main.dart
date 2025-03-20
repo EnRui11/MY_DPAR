@@ -8,22 +8,37 @@ import 'package:mydpar/services/cpr_audio_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
+import 'package:mydpar/services/sos_alert_service.dart';
+import 'package:mydpar/services/permission_service.dart';
 import 'services/firebase_options.dart';
 
 /// Entry point of the MyDPAR application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initializeFirebase();
+  await FirebaseInitializer.initialize();
+  await PermissionRequester.requestInitial();
   runApp(const MyDPARApp());
 }
 
-/// Initializes Firebase with error handling.
-Future<void> _initializeFirebase() async {
-  try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  } catch (e) {
-    debugPrint('Failed to initialize Firebase: $e');
-    // Consider rethrowing for a custom error screen in production
+/// Handles Firebase initialization with robust error management.
+class FirebaseInitializer {
+  static Future<void> initialize() async {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      debugPrint('Failed to initialize Firebase: $e');
+      // Consider rethrowing or custom UI feedback in production
+    }
+  }
+}
+
+/// Manages permission requests for the app.
+class PermissionRequester {
+  static Future<void> requestInitial() async {
+    final permissionService = PermissionService();
+    await permissionService.requestInitialPermissions();
   }
 }
 
@@ -38,6 +53,8 @@ class MyDPARApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => CPRAudioService()),
         ChangeNotifierProvider(create: (_) => UserInformationService()),
+        ChangeNotifierProvider(create: (_) => SOSAlertService()),
+        ChangeNotifierProvider(create: (_) => PermissionService()),
       ],
       child: const AppThemeWrapper(),
     );
@@ -121,39 +138,52 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userService = Provider.of<UserInformationService>(context);
+    final sosService = Provider.of<SOSAlertService>(context);
 
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (snapshot.hasError) {
-          debugPrint('Authentication error: ${snapshot.error}');
-          return const Scaffold(
-            body: Center(child: Text('Error loading authentication state')),
-          );
-        }
-
-        final user = snapshot.data;
-        if (user != null) {
-          // Ensure user data is initialized after auth confirmation
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!userService.isInitialized) {
-              userService.initializeUser().catchError((e) {
-                debugPrint('Failed to initialize user: $e');
-              });
-            }
-          });
-          return const HomeScreen();
-        }
-
-        return const LoginScreen();
-      },
+      builder: _authStateBuilder(userService, sosService),
     );
+  }
+
+  Widget Function(BuildContext, AsyncSnapshot<User?>) _authStateBuilder(
+      UserInformationService userService,
+      SOSAlertService sosService,
+      ) {
+    return (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+
+      if (snapshot.hasError) {
+        debugPrint('Authentication error: ${snapshot.error}');
+        return const Scaffold(body: Center(child: Text('Error loading authentication state')));
+      }
+
+      final user = snapshot.data;
+      if (user != null) {
+        _initializeServices(context, userService, sosService);
+        return const HomeScreen();
+      }
+      return const LoginScreen();
+    };
+  }
+
+  void _initializeServices(
+      BuildContext context,
+      UserInformationService userService,
+      SOSAlertService sosService,
+      ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!userService.isInitialized) {
+        userService.initializeUser().catchError((e) {
+          debugPrint('Failed to initialize user: $e');
+        });
+      }
+      if (!sosService.isInitialized) {
+        sosService.checkActiveAlert(context);
+      }
+    });
   }
 }
 

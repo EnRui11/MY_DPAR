@@ -14,6 +14,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Displays an SOS emergency screen with location, countdown, and alert features.
 class SOSEmergencyScreen extends StatefulWidget {
@@ -42,6 +43,9 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   late Animation<Color?> _flickerAnimation;
   final AudioPlayer _audioPlayer = AudioPlayer();
   Timer? _locationTimer;
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  static const int _notificationId = 888;
 
   // Firebase instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -76,6 +80,24 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
     _audioPlayer.dispose();
     Vibration.cancel();
     super.dispose();
+  }
+
+  Future<void> _initializeNotifications() async {
+    const androidSettings =
+        AndroidInitializationSettings('sos_icon');
+    const initializationSettings =
+        InitializationSettings(android: androidSettings);
+
+    await _notificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) {
+        // Handle notification tap
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SOSEmergencyScreen()),
+        );
+      },
+    );
   }
 
   /// Initializes the emergency alert audio.
@@ -226,9 +248,30 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
       final docRef = await _firestore.collection('alerts').add(initialData);
       _alertDocId = docRef.id;
       _startFirebaseUpdates();
+      await _showPersistentNotification(); // Show persistent notification
     } catch (e) {
       _showSnackBar('Failed to save alert to Firebase: $e', Colors.red);
     }
+  }
+
+  Future<void> _showPersistentNotification() async {
+    const androidDetails = AndroidNotificationDetails(
+      'sos_alert_channel',
+      'SOS Alerts',
+      channelDescription: 'Persistent notification for active SOS alerts',
+      importance: Importance.high,
+      priority: Priority.high,
+      ongoing: true,
+      autoCancel: false,
+      icon: 'sos_icon',
+    );
+
+    await _notificationsPlugin.show(
+      _notificationId,
+      'SOS Alert Active',
+      'Tap to return to emergency screen',
+      const NotificationDetails(android: androidDetails),
+    );
   }
 
   /// Starts periodic updates to Firebase with latest time and location.
@@ -315,6 +358,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
           'isActive': false,
           'cancelTime': Timestamp.now(),
         });
+        await _notificationsPlugin
+            .cancel(_notificationId); // Cancel the notification
       } catch (e) {
         _showSnackBar('Failed to update cancel time: $e', Colors.red);
       }
@@ -329,27 +374,40 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final colors = themeProvider.currentTheme;
 
-    return AnimatedBuilder(
-      animation: _flickerController,
-      builder: (context, child) => Scaffold(
-        backgroundColor: _isAlertSent
-            ? (_flickerAnimation.value ?? colors.warning)
-            : colors.bg200,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(_padding),
-            child: Column(
-              children: [
-                _buildCountdownTimer(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildLocationSection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildEmergencyActions(colors),
-              ],
+    return WillPopScope(
+      onWillPop: () async {
+        if (!_isAlertSent && _alertCountdown <= 0) {
+          return true;
+        }
+        _showSnackBar(
+          'Please cancel the alert to exit',
+          Colors.orange,
+        );
+        return false;
+      },
+      child: AnimatedBuilder(
+        animation: _flickerController,
+        builder: (context, child) => Scaffold(
+          backgroundColor: _isAlertSent
+              ? (_flickerAnimation.value ?? colors.warning)
+              : colors.bg200,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(_padding),
+              child: Column(
+                children: [
+                  _buildCountdownTimer(colors),
+                  const SizedBox(height: _spacingLarge),
+                  _buildLocationSection(colors),
+                  const SizedBox(height: _spacingLarge),
+                  _buildEmergencyActions(colors),
+                ],
+              ),
             ),
           ),
         ),

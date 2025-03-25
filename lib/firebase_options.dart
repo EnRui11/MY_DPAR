@@ -60,5 +60,4 @@ class DefaultFirebaseOptions {
     databaseURL: 'https://mydpar-c5a48-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'mydpar-c5a48.firebasestorage.app',
   );
-
 }

@@ -12,6 +12,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:mydpar/services/incident_verification_service.dart';
 
 class IncidentReport {
   final String id;
@@ -26,6 +27,10 @@ class IncidentReport {
   final List<String> photoPaths;
   final String timestamp;
   final String status;
+  // New fields for verification
+  final List<String>? userList;
+  final List<Map<String, dynamic>>? locationList;
+  final int? verifyNum;
 
   static String _getIncidentTypeShortForm(String type) {
     switch (type.toLowerCase()) {
@@ -74,6 +79,9 @@ class IncidentReport {
     required this.photoPaths,
     required this.timestamp,
     this.status = 'pending',
+    this.userList,
+    this.locationList,
+    this.verifyNum,
   }) : this.id = id ?? generateId(incidentType);
 
   // Convert to JSON for Firebase writes
@@ -90,6 +98,9 @@ class IncidentReport {
         'photoPaths': photoPaths,
         'timestamp': timestamp,
         'status': status,
+        'userList': userList ?? [userId],
+        'locationList': locationList ?? [],
+        'verifyNum': verifyNum ?? 1,
       };
 }
 
@@ -105,6 +116,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   late final TextEditingController _descriptionController;
   late final MapController _mapController;
   final ImagePicker _picker = ImagePicker();
+  final IncidentVerificationService _verificationService =
+      IncidentVerificationService();
   List<File> _selectedPhotos = [];
 
   String? _selectedIncidentType;
@@ -138,6 +151,101 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     _descriptionController = TextEditingController();
     _mapController = MapController();
     _getCurrentLocation();
+    _cacheIncidents(); // Add this line
+  }
+
+  // Add this method
+  Future<void> _cacheIncidents() async {
+    await _verificationService.cacheIncidents();
+  }
+
+  /// Handles form submission
+  Future<void> _handleSubmit(AppColorTheme colors) async {
+    if (_isFormValid()) {
+      try {
+        setState(() => _isLoading = true);
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          _showSnackBar('Please sign in to submit a report', colors.warning);
+          return;
+        }
+
+        // Upload photos first
+        final List<String> photoUrls = await Future.wait(
+          _selectedPhotos.map((photo) async {
+            final ref = FirebaseStorage.instance
+                .ref()
+                .child('incident_photos')
+                .child(
+                    '${DateTime.now().millisecondsSinceEpoch}_${photo.path.split('/').last}');
+            await ref.putFile(photo);
+            return await ref.getDownloadURL();
+          }),
+        );
+
+        final timestamp = DateTime.now().toIso8601String();
+
+        // Check for existing incident
+        if (_selectedMapLocation != null) {
+          final existingIncident =
+              await _verificationService.checkExistingIncident(
+            incidentType: _selectedIncidentType!,
+            latitude: _selectedMapLocation!.latitude,
+            longitude: _selectedMapLocation!.longitude,
+            timestamp: timestamp,
+          );
+
+          if (existingIncident != null) {
+            await _verificationService.updateExistingIncident(
+              incidentId: existingIncident['id'],
+              userId: user.uid,
+              latitude: _selectedMapLocation!.latitude,
+              longitude: _selectedMapLocation!.longitude,
+              severity: _selectedSeverity!,
+              description: _descriptionController.text,
+              photoPaths: photoUrls,
+            );
+
+            _showSnackBar('Incident updated successfully!', colors.accent200);
+            _resetForm();
+            return;
+          }
+        }
+
+        // Create new incident if no match found
+        final report = IncidentReport(
+          userId: user.uid,
+          incidentType: _selectedIncidentType!,
+          otherIncidentType: _otherIncidentType,
+          severity: _selectedSeverity!,
+          location: _selectedLocation!,
+          latitude: _selectedMapLocation?.latitude,
+          longitude: _selectedMapLocation?.longitude,
+          description: _descriptionController.text,
+          photoPaths: photoUrls,
+          timestamp: timestamp,
+        );
+
+        final reportData = report.toJson();
+        await FirebaseFirestore.instance
+            .collection('incident_reports')
+            .doc(report.id)
+            .set(reportData);
+
+        _showSnackBar('New incident reported successfully!', colors.accent200);
+        _resetForm();
+
+        // Refresh cached incidents after creating new one
+        await _cacheIncidents();
+      } catch (e) {
+        _showSnackBar('Failed to submit report: $e', colors.warning);
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    } else {
+      _showValidationErrors(colors);
+    }
   }
 
   @override
@@ -761,66 +869,6 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             result['locationName'] as String? ?? 'Location selected';
         _mapController.move(_selectedMapLocation!, 15);
       });
-    }
-  }
-
-  /// Handles form submission
-  Future<void> _handleSubmit(AppColorTheme colors) async {
-    if (_isFormValid()) {
-      try {
-        setState(() => _isLoading = true); // Add loading state
-
-        // Get current user
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) {
-          _showSnackBar('Please sign in to submit a report', colors.warning);
-          return;
-        }
-
-        // Upload photos to Firebase Storage
-        final List<String> photoUrls = await Future.wait(
-          _selectedPhotos.map((photo) async {
-            final ref = FirebaseStorage.instance
-                .ref()
-                .child('incident_photos')
-                .child(
-                    '${DateTime.now().millisecondsSinceEpoch}_${photo.path.split('/').last}');
-            await ref.putFile(photo);
-            return await ref.getDownloadURL();
-          }),
-        );
-
-        // Create incident report
-        final report = IncidentReport(
-          userId: user.uid,
-          incidentType: _selectedIncidentType!,
-          otherIncidentType: _otherIncidentType,
-          severity: _selectedSeverity!,
-          location: _selectedLocation!,
-          latitude: _selectedMapLocation?.latitude,
-          longitude: _selectedMapLocation?.longitude,
-          description: _descriptionController.text,
-          photoPaths: photoUrls, // Use uploaded photo URLs
-          timestamp: DateTime.now().toIso8601String(),
-        );
-
-        // Save to Firestore
-        await FirebaseFirestore.instance
-            .collection('incident_reports')
-            .doc(report.id)
-            .set(report.toJson());
-
-        _showSnackBar('Report submitted successfully!', colors.accent200);
-
-        // Reset form
-        _resetForm();
-      } catch (e) {
-        _showSnackBar('Failed to submit report: $e', colors.warning);
-      } finally {
-        setState(() => _isLoading = false);
-      }
-    } else {
-      _showValidationErrors(colors);
     }
   }
 

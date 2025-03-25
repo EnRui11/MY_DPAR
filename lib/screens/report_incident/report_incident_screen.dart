@@ -8,9 +8,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mydpar/screens/report_incident/select_location_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
-// Model for incident report data, Firebase-ready
 class IncidentReport {
+  final String id;
+  final String userId;
   final String incidentType;
   final String? otherIncidentType;
   final String severity;
@@ -20,8 +25,45 @@ class IncidentReport {
   final String description;
   final List<String> photoPaths;
   final String timestamp;
+  final String status;
 
-  const IncidentReport({
+  static String _getIncidentTypeShortForm(String type) {
+    switch (type.toLowerCase()) {
+      case 'heavy rain':
+        return 'RAIN';
+      case 'flood':
+        return 'FLD';
+      case 'fire':
+        return 'FIRE';
+      case 'landslide':
+        return 'LAND';
+      case 'haze':
+        return 'HAZE';
+      case 'other':
+        return 'OTH';
+      default:
+        return type.substring(0, min(4, type.length)).toUpperCase();
+    }
+  }
+
+  static String generateId(String incidentType) {
+    final now = DateTime.now();
+    final dateStr =
+        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
+    final randomStr =
+        (100000 + DateTime.now().millisecond * Random().nextInt(900000))
+            .toString()
+            .substring(0, 4);
+    final typeStr = _getIncidentTypeShortForm(incidentType);
+
+    return 'INC_${typeStr}_${dateStr}_${timeStr}_$randomStr';
+  }
+
+  IncidentReport({
+    String? id,
+    required this.userId,
     required this.incidentType,
     this.otherIncidentType,
     required this.severity,
@@ -31,10 +73,13 @@ class IncidentReport {
     required this.description,
     required this.photoPaths,
     required this.timestamp,
-  });
+    this.status = 'pending',
+  }) : this.id = id ?? generateId(incidentType);
 
   // Convert to JSON for Firebase writes
   Map<String, dynamic> toJson() => {
+        'id': id,
+        'userId': userId,
         'incidentType': incidentType,
         'otherIncidentType': otherIncidentType,
         'severity': severity,
@@ -44,6 +89,7 @@ class IncidentReport {
         'description': description,
         'photoPaths': photoPaths,
         'timestamp': timestamp,
+        'status': status,
       };
 }
 
@@ -636,7 +682,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   Widget _buildSubmitButton(AppColorTheme colors) => SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () => _handleSubmit(colors),
+          onPressed: _isLoading ? null : () => _handleSubmit(colors),
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.accent200,
             foregroundColor: colors.bg100,
@@ -644,10 +690,19 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Text(
-            'Submit Report',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
+          child: _isLoading
+              ? SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(colors.bg100),
+                  ),
+                )
+              : const Text(
+                  'Submit Report',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
         ),
       );
 
@@ -710,39 +765,79 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   }
 
   /// Handles form submission
-  void _handleSubmit(AppColorTheme colors) {
+  Future<void> _handleSubmit(AppColorTheme colors) async {
     if (_isFormValid()) {
-      final IncidentReport report = IncidentReport(
-        incidentType: _selectedIncidentType!,
-        otherIncidentType: _otherIncidentType,
-        severity: _selectedSeverity!,
-        location: _selectedLocation!,
-        latitude: _selectedMapLocation?.latitude,
-        longitude: _selectedMapLocation?.longitude,
-        description: _descriptionController.text,
-        photoPaths: _selectedPhotos.map((photo) => photo.path).toList(),
-        timestamp: DateTime.now().toIso8601String(),
-      );
+      try {
+        setState(() => _isLoading = true); // Add loading state
 
-      // TODO: Implement Firebase submission here (see Firebase Integration Steps)
-      debugPrint('Submitting report: ${report.toJson()}');
+        // Get current user
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          _showSnackBar('Please sign in to submit a report', colors.warning);
+          return;
+        }
 
-      _showSnackBar('Report submitted successfully!', colors.accent200);
+        // Upload photos to Firebase Storage
+        final List<String> photoUrls = await Future.wait(
+          _selectedPhotos.map((photo) async {
+            final ref = FirebaseStorage.instance
+                .ref()
+                .child('incident_photos')
+                .child(
+                    '${DateTime.now().millisecondsSinceEpoch}_${photo.path.split('/').last}');
+            await ref.putFile(photo);
+            return await ref.getDownloadURL();
+          }),
+        );
 
-      // Reset form
-      setState(() {
-        _selectedIncidentType = null;
-        _otherIncidentType = null;
-        _selectedSeverity = null;
-        _selectedLocation = null;
-        _selectedMapLocation = null;
-        _descriptionController.clear();
-        _selectedPhotos.clear();
-      });
+        // Create incident report
+        final report = IncidentReport(
+          userId: user.uid,
+          incidentType: _selectedIncidentType!,
+          otherIncidentType: _otherIncidentType,
+          severity: _selectedSeverity!,
+          location: _selectedLocation!,
+          latitude: _selectedMapLocation?.latitude,
+          longitude: _selectedMapLocation?.longitude,
+          description: _descriptionController.text,
+          photoPaths: photoUrls, // Use uploaded photo URLs
+          timestamp: DateTime.now().toIso8601String(),
+        );
+
+        // Save to Firestore
+        await FirebaseFirestore.instance
+            .collection('incident_reports')
+            .doc(report.id)
+            .set(report.toJson());
+
+        _showSnackBar('Report submitted successfully!', colors.accent200);
+
+        // Reset form
+        _resetForm();
+      } catch (e) {
+        _showSnackBar('Failed to submit report: $e', colors.warning);
+      } finally {
+        setState(() => _isLoading = false);
+      }
     } else {
       _showValidationErrors(colors);
     }
   }
+
+  void _resetForm() {
+    setState(() {
+      _selectedIncidentType = null;
+      _otherIncidentType = null;
+      _selectedSeverity = null;
+      _selectedLocation = null;
+      _selectedMapLocation = null;
+      _descriptionController.clear();
+      _selectedPhotos.clear();
+    });
+  }
+
+  // Add loading state variable at the top of the class
+  bool _isLoading = false;
 
   /// Shows validation errors if form is incomplete
   void _showValidationErrors(AppColorTheme colors) {

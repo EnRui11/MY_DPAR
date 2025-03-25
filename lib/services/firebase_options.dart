@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
     appId: '1:599954332302:android:6baf75714c33dfdb3e47df',
     messagingSenderId: '599954332302',
     projectId: 'mydpar-c5a48',
+    databaseURL: 'https://mydpar-c5a48-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'mydpar-c5a48.firebasestorage.app',
   );
-
 }

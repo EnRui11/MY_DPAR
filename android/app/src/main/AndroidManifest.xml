@@ -42,6 +42,12 @@
         android:label="mydpar"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        
+        <!-- Add this meta-data tag for App Check debug provider -->
+        <meta-data
+            android:name="firebase_app_check_debug_token"
+            android:value="REPLACE_WITH_YOUR_DEBUG_TOKEN" />
+            
         <activity
             android:name=".MainActivity"
             android:exported="true"

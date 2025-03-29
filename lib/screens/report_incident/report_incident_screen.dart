@@ -13,6 +13,7 @@ import 'package:mydpar/screens/report_incident/select_location_screen.dart';
 import 'package:mydpar/services/incident_verification_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/services/alert_notification_service.dart';
 
 /// Model representing an incident report.
 class IncidentReport {
@@ -204,6 +205,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
       final photoUrls = await _uploadPhotos(colors);
       final timestamp = IncidentVerificationService.getCurrentTimestamp();
+      final alertService = AlertNotificationService();
 
       if (_selectedMapLocation != null) {
         final existingIncident = await _verificationService.checkExistingIncident(
@@ -223,6 +225,17 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             description: _descriptionController.text,
             photoPaths: photoUrls,
           );
+          // Alert nearby users about the updated incident
+          await alertService.alertNearbyUsers(
+            incidentId: existingIncident['id'],
+            incidentType: _selectedIncidentType!,
+            latitude: _selectedMapLocation!.latitude,
+            longitude: _selectedMapLocation!.longitude,
+            severity: _selectedSeverity!,
+            location: _selectedLocation!,
+            description: _descriptionController.text,
+          );
+          
           _showSnackBar('Incident updated successfully!', colors.accent200);
           _resetForm();
           return;
@@ -243,6 +256,20 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       );
 
       await FirebaseFirestore.instance.collection('incident_reports').doc(report.id).set(report.toJson());
+      
+      // Alert nearby users about the new incident
+      if (_selectedMapLocation != null) {
+        await alertService.alertNearbyUsers(
+          incidentId: report.id,
+          incidentType: _selectedIncidentType!,
+          latitude: _selectedMapLocation!.latitude,
+          longitude: _selectedMapLocation!.longitude,
+          severity: _selectedSeverity!,
+          location: _selectedLocation!,
+          description: _descriptionController.text,
+        );
+      }
+      
       await _verificationService.cacheIncidents(); // Refresh cache
       _showSnackBar('New incident reported successfully!', colors.accent200);
       _resetForm();

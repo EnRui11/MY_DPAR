@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/services/background_location_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class UserInformationService with ChangeNotifier {
   String? _userId;
@@ -50,6 +51,7 @@ class UserInformationService with ChangeNotifier {
       _photoUrl = user.photoURL;
 
       await _loadUserData();
+      await updateFcmToken(); // Add this line
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
@@ -279,5 +281,23 @@ class UserInformationService with ChangeNotifier {
   // Add public method to initialize user
   Future<void> initializeUser() async {
     await _initializeUser();
+  }
+
+  // Step 3: Update User Information Service to Store FCM Tokens
+  
+  /// Updates the user's FCM token for push notifications
+  Future<void> updateFcmToken() async {
+    if (_userId == null) return;
+    
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await _firestore.collection('users').doc(_userId).update({
+          'fcmToken': token,
+        });
+      }
+    } catch (e) {
+      debugPrint('Error updating FCM token: $e');
+    }
   }
 }

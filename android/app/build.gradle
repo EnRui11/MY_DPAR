@@ -5,7 +5,11 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Find the android section and update the compileSdkVersion and targetSdkVersion
 android {
+    // Update these values
+    compileSdkVersion 34
+    
     namespace = "com.example.mydpar"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
@@ -41,6 +45,12 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.core:core:1.12.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    
+    // Add these Firebase App Check dependencies
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-appcheck-debug:17.1.1'
+    implementation 'com.google.firebase:firebase-appcheck:17.1.1'
 }
 
 flutter {

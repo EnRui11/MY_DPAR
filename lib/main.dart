@@ -12,16 +12,17 @@ import 'package:mydpar/services/sos_alert_service.dart';
 import 'package:mydpar/services/permission_service.dart';
 import 'package:mydpar/services/background_location_service.dart';
 import 'services/firebase_options.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 /// Entry point of the MyDPAR application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseInitializer.initialize();
   await PermissionRequester.requestInitial();
-  
+
   // Start background location service
   BackgroundLocationService().startLocationUpdates();
-  
+
   runApp(const MyDPARApp());
 }
 
@@ -32,9 +33,17 @@ class FirebaseInitializer {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      
+      // Initialize Firebase App Check with debug provider
+      await FirebaseAppCheck.instance.activate(
+        // Use debug provider for development
+        androidProvider: AndroidProvider.debug,
+        // For iOS devices
+        appleProvider: AppleProvider.debug,
+      );
+      
     } catch (e) {
-      debugPrint('Failed to initialize Firebase: $e');
-      // Consider rethrowing or custom UI feedback in production
+      debugPrint('Error initializing Firebase: $e');
     }
   }
 }
@@ -103,7 +112,8 @@ class AppThemeWrapper extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.accent200,
             foregroundColor: colors.bg100,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -152,9 +162,9 @@ class AuthWrapper extends StatelessWidget {
   }
 
   Widget Function(BuildContext, AsyncSnapshot<User?>) _authStateBuilder(
-      UserInformationService userService,
-      SOSAlertService sosService,
-      ) {
+    UserInformationService userService,
+    SOSAlertService sosService,
+  ) {
     return (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -162,7 +172,8 @@ class AuthWrapper extends StatelessWidget {
 
       if (snapshot.hasError) {
         debugPrint('Authentication error: ${snapshot.error}');
-        return const Scaffold(body: Center(child: Text('Error loading authentication state')));
+        return const Scaffold(
+            body: Center(child: Text('Error loading authentication state')));
       }
 
       final user = snapshot.data;
@@ -175,10 +186,10 @@ class AuthWrapper extends StatelessWidget {
   }
 
   void _initializeServices(
-      BuildContext context,
-      UserInformationService userService,
-      SOSAlertService sosService,
-      ) {
+    BuildContext context,
+    UserInformationService userService,
+    SOSAlertService sosService,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!userService.isInitialized) {
         userService.initializeUser().catchError((e) {

@@ -10,6 +10,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
 import 'package:mydpar/services/sos_alert_service.dart';
 import 'package:mydpar/services/permission_service.dart';
+import 'package:mydpar/services/background_location_service.dart';
 import 'services/firebase_options.dart';
 
 /// Entry point of the MyDPAR application.
@@ -17,6 +18,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseInitializer.initialize();
   await PermissionRequester.requestInitial();
+  
+  // Start background location service
+  BackgroundLocationService().startLocationUpdates();
+  
   runApp(const MyDPARApp());
 }
 

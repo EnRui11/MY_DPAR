@@ -53,11 +53,10 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBhU8docANt6iqGpwziHdiBJdqP4DGhUys',
-    appId: '1:599954332302:android:6baf75714c33dfdb3e47df',
-    messagingSenderId: '599954332302',
-    projectId: 'mydpar-c5a48',
-    databaseURL: 'https://mydpar-c5a48-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'mydpar-c5a48.firebasestorage.app',
+    apiKey: 'AIzaSyApnlaFnA01DlCuINabShuQGlcV8QgQzzQ',
+    appId: '1:979314781879:android:6e8f7469118828490a2732',
+    messagingSenderId: '979314781879',
+    projectId: 'mydpar-2df4f',
+    storageBucket: 'mydpar-2df4f.firebasestorage.app',
   );
 }

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
+import 'package:mydpar/services/background_location_service.dart';
 
 class UserInformationService with ChangeNotifier {
   String? _userId;
@@ -191,6 +192,17 @@ class UserInformationService with ChangeNotifier {
   /// Logs out the current user.
   Future<void> logout() async {
     try {
+      // Update user's online status before logging out
+      if (_userId != null) {
+        await _firestore.collection('user_locations').doc(_userId).update({
+          'isOnline': false,
+          'lastUpdateTime': Timestamp.now(),
+        });
+      }
+
+      // Stop location updates
+      BackgroundLocationService().stopLocationUpdates();
+
       await _auth.signOut();
       _resetState();
       notifyListeners();

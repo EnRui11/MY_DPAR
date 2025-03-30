@@ -9,18 +9,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:mydpar/screens/report_incident/select_location_screen.dart';
-import 'package:mydpar/services/incident_verification_service.dart';
+import 'package:mydpar/screens/report_disaster/select_location_screen.dart';
+import 'package:mydpar/services/disaster_verification_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/services/alert_notification_service.dart';
 
-/// Model representing an incident report.
-class IncidentReport {
+/// Model representing a disaster report.
+class DisasterReport {
   final String id;
   final String userId;
-  final String incidentType;
-  final String? otherIncidentType;
+  final String disasterType;
+  final String? otherDisasterType;
   final String severity;
   final String location;
   final double? latitude;
@@ -33,11 +33,11 @@ class IncidentReport {
   final List<Map<String, dynamic>>? locationList;
   final int? verifyNum;
 
-  IncidentReport({
+  DisasterReport({
     String? id,
     required this.userId,
-    required this.incidentType,
-    this.otherIncidentType,
+    required this.disasterType,
+    this.otherDisasterType,
     required this.severity,
     required this.location,
     this.latitude,
@@ -49,23 +49,24 @@ class IncidentReport {
     this.userList,
     this.locationList,
     this.verifyNum,
-  }) : id = id ?? _generateId(incidentType);
+  }) : id = id ?? _generateId(disasterType);
 
-  /// Generates a unique ID for the incident.
-  static String _generateId(String incidentType) {
+  /// Generates a unique ID for the disaster.
+  static String _generateId(String disasterType) {
     final now = DateTime.now();
     final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
     final timeStr = '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
     final randomStr = (Random().nextInt(9000) + 1000).toString();
-    final typeStr = _getIncidentTypeShortForm(incidentType);
-    return 'INC_${typeStr}_${dateStr}_${timeStr}_$randomStr';
+    final typeStr = _getDisasterTypeShortForm(disasterType);
+    return 'DIS_${typeStr}_${dateStr}_${timeStr}_$randomStr';
   }
 
-  /// Converts incident type to a short form.
-  static String _getIncidentTypeShortForm(String type) {
+  /// Converts disaster type to a short form.
+  static String _getDisasterTypeShortForm(String type) {
     const map = {
       'heavy rain': 'RAIN',
       'flood': 'FLD',
+      'earthquake' : 'EQT',
       'fire': 'FIRE',
       'landslide': 'LAND',
       'haze': 'HAZE',
@@ -78,8 +79,8 @@ class IncidentReport {
   Map<String, dynamic> toJson() => {
     'id': id,
     'userId': userId,
-    'incidentType': incidentType,
-    'otherIncidentType': otherIncidentType,
+    'disasterType': disasterType,
+    'otherDisasterType': otherDisasterType,
     'severity': severity,
     'location': location,
     'latitude': latitude,
@@ -94,24 +95,24 @@ class IncidentReport {
   };
 }
 
-/// Screen for reporting a new incident or updating an existing one.
-class ReportIncidentScreen extends StatefulWidget {
-  const ReportIncidentScreen({super.key});
+/// Screen for reporting a new disaster or updating an existing one.
+class ReportDisasterScreen extends StatefulWidget {
+  const ReportDisasterScreen({super.key});
 
   @override
-  State<ReportIncidentScreen> createState() => _ReportIncidentScreenState();
+  State<ReportDisasterScreen> createState() => _ReportDisasterScreenState();
 }
 
-class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
+class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
   // Form and state management
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _descriptionController;
   late final MapController _mapController;
   final _picker = ImagePicker();
-  final _verificationService = IncidentVerificationService();
+  final _verificationService = DisasterVerificationService();
   List<File> _selectedPhotos = [];
-  String? _selectedIncidentType;
-  String? _otherIncidentType;
+  String? _selectedDisasterType;
+  String? _otherDisasterType;
   String? _selectedSeverity;
   String? _selectedLocation;
   LatLng? _currentLocation;
@@ -120,7 +121,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   bool _isLoadingLocation = false;
 
   // Constants
-  static const _incidentTypes = ['Heavy Rain', 'Flood', 'Fire', 'Landslide', 'Haze', 'Other'];
+  static const _disasterTypes = ['Heavy Rain', 'Flood', 'Earthquake', 'Fire', 'Landslide', 'Haze', 'Other'];
   static const _severities = ['Low', 'Medium', 'High'];
   static const _defaultLocation = LatLng(3.1390, 101.6869); // Kuala Lumpur
   static const _padding = 24.0;
@@ -144,10 +145,10 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     super.dispose();
   }
 
-  /// Initializes timezone and caches incidents.
+  /// Initializes timezone and caches disasters.
   Future<void> _initializeServices() async {
-    await IncidentVerificationService.initializeTimeZone();
-    await _verificationService.cacheIncidents();
+    await DisasterVerificationService.initializeTimeZone();
+    await _verificationService.cacheDisasters();
   }
 
   /// Updates the current location of the user.
@@ -191,7 +192,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     return true;
   }
 
-  /// Handles form submission by creating or updating an incident.
+  /// Handles form submission by creating or updating a disaster.
   Future<void> _submitReport(AppColorTheme colors) async {
     if (!_isFormValid()) {
       _showValidationErrors(colors);
@@ -204,20 +205,20 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       if (user == null) throw Exception('User not authenticated');
 
       final photoUrls = await _uploadPhotos(colors);
-      final timestamp = IncidentVerificationService.getCurrentTimestamp();
+      final timestamp = DisasterVerificationService.getCurrentTimestamp();
       final alertService = AlertNotificationService();
 
       if (_selectedMapLocation != null) {
-        final existingIncident = await _verificationService.checkExistingIncident(
-          incidentType: _selectedIncidentType!,
+        final existingDisaster = await _verificationService.checkExistingDisaster(
+          disasterType: _selectedDisasterType!,
           latitude: _selectedMapLocation!.latitude,
           longitude: _selectedMapLocation!.longitude,
           timestamp: timestamp,
         );
 
-        if (existingIncident != null) {
-          await _verificationService.updateExistingIncident(
-            incidentId: existingIncident['id'],
+        if (existingDisaster != null) {
+          await _verificationService.updateExistingDisaster(
+            disasterId: existingDisaster['id'],
             userId: user.uid,
             latitude: _selectedMapLocation!.latitude,
             longitude: _selectedMapLocation!.longitude,
@@ -225,27 +226,27 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             description: _descriptionController.text,
             photoPaths: photoUrls,
           );
-          // Alert nearby users about the updated incident
+          // Alert nearby users about the updated disaster
           await alertService.alertNearbyUsers(
-            incidentId: existingIncident['id'],
-            incidentType: _selectedIncidentType!,
+            disasterId: existingDisaster['id'],
+            disasterType: _selectedDisasterType!,
             latitude: _selectedMapLocation!.latitude,
             longitude: _selectedMapLocation!.longitude,
             severity: _selectedSeverity!,
             location: _selectedLocation!,
             description: _descriptionController.text,
           );
-          
-          _showSnackBar('Incident updated successfully!', colors.accent200);
+
+          _showSnackBar('Disaster updated successfully!', colors.accent200);
           _resetForm();
           return;
         }
       }
 
-      final report = IncidentReport(
+      final report = DisasterReport(
         userId: user.uid,
-        incidentType: _selectedIncidentType!,
-        otherIncidentType: _otherIncidentType,
+        disasterType: _selectedDisasterType!,
+        otherDisasterType: _otherDisasterType,
         severity: _selectedSeverity!,
         location: _selectedLocation!,
         latitude: _selectedMapLocation?.latitude,
@@ -255,13 +256,13 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         timestamp: timestamp,
       );
 
-      await FirebaseFirestore.instance.collection('incident_reports').doc(report.id).set(report.toJson());
-      
-      // Alert nearby users about the new incident
+      await FirebaseFirestore.instance.collection('disaster_reports').doc(report.id).set(report.toJson());
+
+      // Alert nearby users about the new disaster
       if (_selectedMapLocation != null) {
         await alertService.alertNearbyUsers(
-          incidentId: report.id,
-          incidentType: _selectedIncidentType!,
+          disasterId: report.id,
+          disasterType: _selectedDisasterType!,
           latitude: _selectedMapLocation!.latitude,
           longitude: _selectedMapLocation!.longitude,
           severity: _selectedSeverity!,
@@ -269,9 +270,9 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
           description: _descriptionController.text,
         );
       }
-      
-      await _verificationService.cacheIncidents(); // Refresh cache
-      _showSnackBar('New incident reported successfully!', colors.accent200);
+
+      await _verificationService.cacheDisasters(); // Refresh cache
+      _showSnackBar('New disaster reported successfully!', colors.accent200);
       _resetForm();
     } catch (e) {
       _showSnackBar('Failed to submit report: $e', colors.warning);
@@ -286,7 +287,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       return await Future.wait(_selectedPhotos.map((photo) async {
         final ref = FirebaseStorage.instance
             .ref()
-            .child('incident_photos')
+            .child('disaster_photos')
             .child('${DateTime.now().millisecondsSinceEpoch}_${photo.path.split('/').last}');
         await ref.putFile(photo);
         return await ref.getDownloadURL();
@@ -326,7 +327,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         Text(
-          'Report Incident',
+          'Report Disaster',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
         ),
       ],
@@ -342,7 +343,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildIncidentTypeSection(colors),
+            _buildDisasterTypeSection(colors),
             const SizedBox(height: _spacingLarge),
             _buildSeveritySection(colors),
             const SizedBox(height: _spacingLarge),
@@ -359,18 +360,18 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     ),
   );
 
-  /// Builds the incident type selection section.
-  Widget _buildIncidentTypeSection(AppColorTheme colors) => Column(
+  /// Builds the disaster type selection section.
+  Widget _buildDisasterTypeSection(AppColorTheme colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _buildLabel('Incident Type', colors, isRequired: true),
+      _buildLabel('Disaster Type', colors, isRequired: true),
       const SizedBox(height: _spacingSmall),
-      _buildIncidentTypeDropdown(colors),
-      if (_selectedIncidentType == 'Other') ...[
+      _buildDisasterTypeDropdown(colors),
+      if (_selectedDisasterType == 'Other') ...[
         const SizedBox(height: _spacingMedium),
-        _buildLabel('Specify Incident Type', colors, isRequired: true),
+        _buildLabel('Specify Disaster Type', colors, isRequired: true),
         const SizedBox(height: _spacingSmall),
-        _buildOtherIncidentField(colors),
+        _buildOtherDisasterField(colors),
       ],
     ],
   );
@@ -424,19 +425,19 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     ],
   );
 
-  /// Builds the incident type dropdown.
-  Widget _buildIncidentTypeDropdown(AppColorTheme colors) => Container(
+  /// Builds the disaster type dropdown.
+  Widget _buildDisasterTypeDropdown(AppColorTheme colors) => Container(
     decoration: _fieldDecoration(colors),
     child: DropdownButtonFormField<String>(
-      value: _selectedIncidentType,
+      value: _selectedDisasterType,
       decoration: const InputDecoration(
         contentPadding: EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
         border: InputBorder.none,
       ),
       dropdownColor: colors.bg100,
       style: TextStyle(color: colors.text200, fontSize: 16),
-      hint: Text('Select incident type', style: TextStyle(color: colors.text200)),
-      items: _incidentTypes
+      hint: Text('Select disaster type', style: TextStyle(color: colors.text200)),
+      items: _disasterTypes
           .map((value) => DropdownMenuItem<String>(
         value: value,
         child: Row(
@@ -448,18 +449,18 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         ),
       ))
           .toList(),
-      onChanged: (value) => setState(() => _selectedIncidentType = value),
+      onChanged: (value) => setState(() => _selectedDisasterType = value),
     ),
   );
 
-  /// Builds the field for specifying other incident type.
-  Widget _buildOtherIncidentField(AppColorTheme colors) => Container(
+  /// Builds the field for specifying other disaster type.
+  Widget _buildOtherDisasterField(AppColorTheme colors) => Container(
     decoration: _fieldDecoration(colors),
     child: TextField(
-      onChanged: (value) => _otherIncidentType = value,
+      onChanged: (value) => _otherDisasterType = value,
       style: TextStyle(color: colors.text200),
       decoration: InputDecoration(
-        hintText: 'Please specify the incident type',
+        hintText: 'Please specify the disaster type',
         hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
         contentPadding: const EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
         border: InputBorder.none,
@@ -582,7 +583,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       style: TextStyle(color: colors.text200),
       maxLines: 4,
       decoration: InputDecoration(
-        hintText: 'Describe the incident...',
+        hintText: 'Describe the disaster...',
         hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
         contentPadding: const EdgeInsets.all(_spacingMedium),
         border: InputBorder.none,
@@ -735,8 +736,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
   /// Validates the form data.
   bool _isFormValid() {
-    return _selectedIncidentType != null &&
-        (_selectedIncidentType != 'Other' || (_otherIncidentType?.isNotEmpty ?? false)) &&
+    return _selectedDisasterType != null &&
+        (_selectedDisasterType != 'Other' || (_otherDisasterType?.isNotEmpty ?? false)) &&
         _selectedSeverity != null &&
         _selectedLocation != null;
   }
@@ -744,8 +745,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   /// Resets the form to its initial state.
   void _resetForm() {
     setState(() {
-      _selectedIncidentType = null;
-      _otherIncidentType = null;
+      _selectedDisasterType = null;
+      _otherDisasterType = null;
       _selectedSeverity = null;
       _selectedLocation = null;
       _selectedMapLocation = null;
@@ -757,9 +758,9 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   /// Shows validation errors if the form is incomplete.
   void _showValidationErrors(AppColorTheme colors) {
     final missingFields = <String>[];
-    if (_selectedIncidentType == null) missingFields.add('Incident Type');
-    if (_selectedIncidentType == 'Other' && (_otherIncidentType?.isEmpty ?? true)) {
-      missingFields.add('Other Incident Type specification');
+    if (_selectedDisasterType == null) missingFields.add('Disaster Type');
+    if (_selectedDisasterType == 'Other' && (_otherDisasterType?.isEmpty ?? true)) {
+      missingFields.add('Other Disaster Type specification');
     }
     if (_selectedSeverity == null) missingFields.add('Severity Level');
     if (_selectedLocation == null) missingFields.add('Location');
@@ -800,6 +801,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         return Icons.thunderstorm_outlined;
       case 'flood':
         return flood;
+      case 'earthquake':
+        return Icons.terrain;
       case 'fire':
         return Icons.local_fire_department;
       case 'landslide':

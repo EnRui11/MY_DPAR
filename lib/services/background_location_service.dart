@@ -1,32 +1,51 @@
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart'; // For debugPrint
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
+/// Manages background location updates for authenticated users, storing data in Firestore.
 class BackgroundLocationService {
-  static final BackgroundLocationService _instance = BackgroundLocationService._internal();
+  // Singleton pattern
+  static final BackgroundLocationService _instance = BackgroundLocationService._internal(
+    FirebaseAuth.instance,
+    FirebaseFirestore.instance,
+  );
   factory BackgroundLocationService() => _instance;
-  BackgroundLocationService._internal();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Dependencies
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
   Timer? _locationTimer;
-  static const _defaultLocation = GeoPoint(3.1390, 101.6869);
 
+  // Constants
+  static const _updateInterval = Duration(seconds: 1);
+  static const _defaultLocation = GeoPoint(3.1390, 101.6869); // Kuala Lumpur
+
+  /// Private constructor for singleton initialization with default dependencies.
+  BackgroundLocationService._internal(this._auth, this._firestore);
+
+  /// Constructs the service with optional Firebase dependencies for testing.
+  BackgroundLocationService.withDependencies({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance;
+
+  /// Starts periodic location updates.
   void startLocationUpdates() {
-    _locationTimer?.cancel();
-    _locationTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => _updateLocation(),
-    );
+    _locationTimer?.cancel(); // Prevent multiple timers
+    _locationTimer = Timer.periodic(_updateInterval, (_) => _updateLocation());
   }
 
+  /// Stops location updates and cancels the timer.
   void stopLocationUpdates() {
     _locationTimer?.cancel();
+    _locationTimer = null;
   }
 
+  /// Updates the user's location in Firestore if authenticated and permissions are granted.
   Future<void> _updateLocation() async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -34,25 +53,33 @@ class BackgroundLocationService {
     if (!await _checkLocationPermission()) return;
 
     try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-      
-      final address = placemarks.isNotEmpty
-          ? _formatAddress(placemarks.first)
-          : 'Unnamed Location';
-
-      await _updateFirestore(user.uid, position, address);
+      final position = await _fetchCurrentPosition();
+      final address = await _getAddressFromPosition(position);
+      await _saveLocationToFirestore(user.uid, position, address);
     } catch (e) {
       debugPrint('Error updating location: $e');
     }
   }
 
+  /// Fetches the current position with high accuracy.
+  Future<Position> _fetchCurrentPosition() async {
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
+  /// Retrieves an address from a given position.
+  Future<String> _getAddressFromPosition(Position position) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      return placemarks.isNotEmpty ? _formatAddress(placemarks.first) : 'Unnamed Location';
+    } catch (e) {
+      debugPrint('Error geocoding position: $e');
+      return 'Unknown Location';
+    }
+  }
+
+  /// Formats a placemark into a readable address string.
   String _formatAddress(Placemark place) {
     return [
       place.street,
@@ -62,8 +89,10 @@ class BackgroundLocationService {
     ].where((e) => e != null && e.isNotEmpty).join(', ').trim();
   }
 
+  /// Checks and requests location permissions, returning true if granted.
   Future<bool> _checkLocationPermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
+      debugPrint('Location services are disabled');
       return false;
     }
 
@@ -71,18 +100,21 @@ class BackgroundLocationService {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        debugPrint('Location permission denied');
         return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
+      debugPrint('Location permission permanently denied');
       return false;
     }
 
     return true;
   }
 
-  Future<void> _updateFirestore(String uid, Position position, String address) async {
+  /// Saves the user's location data to Firestore.
+  Future<void> _saveLocationToFirestore(String uid, Position position, String address) async {
     final updateData = {
       'userId': uid,
       'lastUpdateTime': Timestamp.now(),
@@ -94,7 +126,11 @@ class BackgroundLocationService {
     try {
       await _firestore.collection('user_locations').doc(uid).set(updateData);
     } catch (e) {
-      debugPrint('Failed to update location in Firestore: $e');
+      debugPrint('Failed to update Firestore: $e');
+      throw Exception('Failed to save location: $e'); // Propagate error for handling
     }
   }
+
+  /// Returns the default location as a GeoPoint.
+  GeoPoint get defaultLocation => _defaultLocation;
 }

@@ -4,13 +4,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
-/// Service for verifying and managing incident reports in Firestore.
-class IncidentVerificationService {
+/// Service for verifying and managing disaster reports in Firestore.
+class DisasterVerificationService {
   final FirebaseFirestore _firestore;
-  List<DocumentSnapshot> _cachedIncidents = [];
+  List<DocumentSnapshot> _cachedDisasters = [];
 
   /// Constructs the service with an optional Firestore instance for testing.
-  IncidentVerificationService({FirebaseFirestore? firestore})
+  DisasterVerificationService({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Initializes timezone data for Malaysia (UTC+8).
@@ -30,23 +30,23 @@ class IncidentVerificationService {
     return tz.TZDateTime.from(utcTime, tz.local);
   }
 
-  /// Caches recent incident reports from Firestore.
-  Future<void> cacheIncidents() async {
+  /// Caches recent disaster reports from Firestore.
+  Future<void> cacheDisasters() async {
     try {
       final snapshot = await _firestore
-          .collection('incident_reports')
+          .collection('disaster_reports')
           .orderBy('timestamp', descending: true)
           .get();
-      _cachedIncidents = snapshot.docs;
+      _cachedDisasters = snapshot.docs;
     } catch (e) {
-      debugPrint('Error caching incidents: $e');
+      debugPrint('Error caching disasters: $e');
       rethrow; // Allow consumers to handle caching errors
     }
   }
 
-  /// Checks for a similar existing incident within 1km and 1 hour.
-  Future<Map<String, dynamic>?> checkExistingIncident({
-    required String incidentType,
+  /// Checks for a similar existing disaster within 1km and 1 hour.
+  Future<Map<String, dynamic>?> checkExistingDisaster({
+    required String disasterType,
     required double latitude,
     required double longitude,
     required String timestamp,
@@ -55,9 +55,9 @@ class IncidentVerificationService {
       final reportTime = convertToLocalTime(timestamp);
       final oneHourAgo = reportTime.subtract(const Duration(hours: 1));
 
-      for (final doc in _cachedIncidents) {
+      for (final doc in _cachedDisasters) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!_isMatchingIncident(data, incidentType, oneHourAgo, latitude, longitude)) {
+        if (!_isMatchingDisaster(data, disasterType, oneHourAgo, latitude, longitude)) {
           continue;
         }
 
@@ -68,14 +68,14 @@ class IncidentVerificationService {
       }
       return null;
     } catch (e) {
-      debugPrint('Error checking existing incidents: $e');
+      debugPrint('Error checking existing disasters: $e');
       return null;
     }
   }
 
-  /// Updates an existing incident with new verification data.
-  Future<void> updateExistingIncident({
-    required String incidentId,
+  /// Updates an existing disaster with new verification data.
+  Future<void> updateExistingDisaster({
+    required String disasterId,
     required String userId,
     required double latitude,
     required double longitude,
@@ -84,15 +84,15 @@ class IncidentVerificationService {
     required List<String> photoPaths,
   }) async {
     try {
-      final docRef = _firestore.collection('incident_reports').doc(incidentId);
+      final docRef = _firestore.collection('disaster_reports').doc(disasterId);
       final doc = await docRef.get();
 
       if (!doc.exists) {
-        throw Exception('Incident not found');
+        throw Exception('Disaster not found');
       }
 
       final data = doc.data() as Map<String, dynamic>;
-      final updatedData = _prepareUpdatedIncidentData(
+      final updatedData = _prepareUpdatedDisasterData(
         data,
         userId,
         latitude,
@@ -104,23 +104,23 @@ class IncidentVerificationService {
 
       await docRef.update(updatedData);
     } catch (e) {
-      debugPrint('Error updating existing incident: $e');
-      throw Exception('Failed to update incident: $e');
+      debugPrint('Error updating existing disaster: $e');
+      throw Exception('Failed to update disaster: $e');
     }
   }
 
-  /// Checks if an incident matches the criteria for type, time, and proximity.
-  bool _isMatchingIncident(
+  /// Checks if a disaster matches the criteria for type, time, and proximity.
+  bool _isMatchingDisaster(
       Map<String, dynamic> data,
-      String incidentType,
+      String disasterType,
       DateTime oneHourAgo,
       double latitude,
       double longitude,
       ) {
-    if (data['incidentType'] != incidentType) return false;
+    if (data['disasterType'] != disasterType) return false;
 
-    final incidentTime = convertToLocalTime(data['timestamp'] as String);
-    if (incidentTime.isBefore(oneHourAgo)) return false;
+    final disasterTime = convertToLocalTime(data['timestamp'] as String);
+    if (disasterTime.isBefore(oneHourAgo)) return false;
 
     final lat = data['latitude'] as double?;
     final lon = data['longitude'] as double?;
@@ -130,8 +130,8 @@ class IncidentVerificationService {
     return distance <= 1000; // 1km radius
   }
 
-  /// Prepares data for updating an existing incident.
-  Map<String, dynamic> _prepareUpdatedIncidentData(
+  /// Prepares data for updating an existing disaster.
+  Map<String, dynamic> _prepareUpdatedDisasterData(
       Map<String, dynamic> existingData,
       String userId,
       double latitude,

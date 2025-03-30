@@ -8,7 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/screens/main/community_screen.dart';
-import 'package:mydpar/screens/report_incident/report_incident_screen.dart';
+import 'package:mydpar/screens/report_disaster/report_disaster_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
@@ -244,7 +244,7 @@ class _MapScreenState extends State<MapScreen> {
           children: [
             _buildFilterButton(
               icon: Icons.warning_amber_rounded,
-              label: 'Incidents',
+              label: 'Disasters',
               colors: colors,
             ),
             _buildFilterButton(
@@ -330,7 +330,7 @@ class _MapScreenState extends State<MapScreen> {
     ),
   );
 
-  /// Builds the report incident button
+  /// Builds the report disaster button
   Widget _buildReportButton(BuildContext context, AppColorTheme colors) => Positioned(
     bottom: 85,
     left: 0,
@@ -344,7 +344,7 @@ class _MapScreenState extends State<MapScreen> {
         ),
         padding: const EdgeInsets.all(4),
         child: ElevatedButton(
-          onPressed: () => _navigateTo(context, const ReportIncidentScreen()),
+          onPressed: () => _navigateTo(context, const ReportDisasterScreen()),
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.warning,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -358,7 +358,7 @@ class _MapScreenState extends State<MapScreen> {
                 Icon(Icons.location_on_outlined, color: colors.bg100, size: 20),
                 const SizedBox(width: _spacingSmall),
                 Text(
-                  'Report Incident',
+                  'Report Disaster',
                   style: TextStyle(
                     color: colors.bg100,
                     fontWeight: FontWeight.w600,

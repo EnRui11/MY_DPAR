@@ -3,61 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/screens/knowledge_base/knowledge_base_screen.dart';
 import 'package:mydpar/screens/main/map_screen.dart';
-import 'package:mydpar/screens/report_incident/report_incident_screen.dart';
+import 'package:mydpar/screens/report_disaster/report_disaster_screen.dart';
 import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/sos_emergency/sos_emergency_screen.dart';
-import 'package:mydpar/screens/incident_infomation/all_incidents_screen.dart';
+import 'package:mydpar/screens/disaster_infomation/all_disasters_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/services/user_information_service.dart';
+import 'package:mydpar/services/disaster_information_service.dart';
 
-// Model for alert data, Firebase-ready
-class Incident {
-  final String topic;
-  final String description;
-  final String severity;
-  final String location;
-  final String time;
-  final String disasterType;
-  final LatLng? coordinates;
-
-  const Incident({
-    required this.topic,
-    required this.description,
-    required this.severity,
-    required this.location,
-    required this.time,
-    required this.disasterType,
-    this.coordinates,
-  });
-
-  // Factory for Firebase data parsing (uncomment when integrating)
-  // factory Incident.fromJson(Map<String, dynamic> json) => Incident(
-  //   topic: json['topic'] as String,
-  //   description: json['description'] as String,
-  // );
-
-  // Convert to JSON for Firebase writes
-  Map<String, dynamic> toJson() => {
-        'topic': topic,
-        'description': description,
-        'severity': severity,
-        'location': location,
-        'time': time,
-        'disasterType': disasterType,
-        'coordinates': coordinates != null
-            ? {
-                'latitude': coordinates!.latitude,
-                'longitude': coordinates!.longitude
-              }
-            : null,
-      };
-}
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   // Constants for consistency and easy tweaking
   static const double _paddingValue = 24.0;
   static const double _spacingSmall = 8.0;
@@ -65,9 +28,19 @@ class HomeScreen extends StatelessWidget {
   static const double _spacingLarge = 24.0;
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch disasters when the screen loads, only get happening disasters
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<DisasterService>(context, listen: false)
+          .fetchRecentDisasters(onlyHappening: true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme; // Updated type
+    final AppColorTheme colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -85,47 +58,47 @@ class HomeScreen extends StatelessWidget {
 
   /// Builds the header with gradient and welcome message
   Widget _buildHeader(AppColorTheme colors) => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [colors.accent200, colors.accent100],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [colors.accent200, colors.accent100],
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    padding: const EdgeInsets.all(_paddingValue),
+    child: Consumer<UserInformationService>(
+      builder: (context, userService, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Hello, ${userService.lastName ?? 'User'}',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: colors.bg100,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(_paddingValue),
-        child: Consumer<UserInformationService>(
-          builder: (context, userService, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Hello, ${userService.lastName ?? 'User'}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: colors.bg100,
-                ),
-              ),
-              const SizedBox(height: _spacingSmall),
-              Text(
-                'Welcome to MY_DPAR',
-                style: TextStyle(fontSize: 16, color: colors.primary100),
-              ),
-              Text(
-                'Your Disaster Preparedness and Response Assistant',
-                style: TextStyle(fontSize: 16, color: colors.primary100),
-              ),
-            ],
           ),
-        ),
-      );
+          const SizedBox(height: _spacingSmall),
+          Text(
+            'Welcome to MY_DPAR',
+            style: TextStyle(fontSize: 16, color: colors.primary100),
+          ),
+          Text(
+            'Your Disaster Preparedness and Response Assistant',
+            style: TextStyle(fontSize: 16, color: colors.primary100),
+          ),
+        ],
+      ),
+    ),
+  );
 
   /// Builds the scrollable main content area
   Widget _buildContent(BuildContext context, AppColorTheme colors) =>
@@ -140,7 +113,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: _spacingLarge),
             _buildSOSButton(context, colors),
             const SizedBox(height: _spacingLarge),
-            _buildRecentIncidentsSection(context, colors),
+            _buildRecentDisastersSection(context, colors),
             const SizedBox(height: 80), // Space for bottom nav
           ],
         ),
@@ -193,28 +166,28 @@ class HomeScreen extends StatelessWidget {
         ),
       );
 
-  /// Builds the quick action cards (Report Incident, Knowledge Base)
+  /// Builds the quick action cards (Report Disaster, Knowledge Base)
   Widget _buildQuickActions(BuildContext context, AppColorTheme colors) => Row(
-        children: [
-          Expanded(
-            child: _buildActionCard(
-              icon: Icons.location_on_outlined,
-              label: 'Report Incident',
-              colors: colors,
-              onTap: () => _navigateTo(context, const ReportIncidentScreen()),
-            ),
-          ),
-          const SizedBox(width: _spacingMedium),
-          Expanded(
-            child: _buildActionCard(
-              icon: Icons.book_outlined,
-              label: 'Knowledge Base',
-              colors: colors,
-              onTap: () => _navigateTo(context, const KnowledgeBaseScreen()),
-            ),
-          ),
-        ],
-      );
+    children: [
+      Expanded(
+        child: _buildActionCard(
+          icon: Icons.location_on_outlined,
+          label: 'Report Disaster',
+          colors: colors,
+          onTap: () => _navigateTo(context, const ReportDisasterScreen()),
+        ),
+      ),
+      const SizedBox(width: _spacingMedium),
+      Expanded(
+        child: _buildActionCard(
+          icon: Icons.book_outlined,
+          label: 'Knowledge Base',
+          colors: colors,
+          onTap: () => _navigateTo(context, const KnowledgeBaseScreen()),
+        ),
+      ),
+    ],
+  );
 
   /// Reusable action card widget
   Widget _buildActionCard({
@@ -251,24 +224,24 @@ class HomeScreen extends StatelessWidget {
         ),
       );
 
-  /// Builds the recent alerts section with a header and list
-  Widget _buildRecentIncidentsSection(
-          BuildContext context, AppColorTheme colors) =>
+  /// Builds the recent disasters section with a header and list
+  Widget _buildRecentDisastersSection(
+      BuildContext context, AppColorTheme colors) =>
       Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recent Incidents',
+                'Disasters Happening Now',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: colors.primary300,
                 ),
               ),
               TextButton(
-                onPressed: () => _navigateTo(context, const IncidentsScreen()),
+                onPressed: () => _navigateTo(context, const DisastersScreen()),
                 child: Text(
                   'View All',
                   style: TextStyle(
@@ -280,13 +253,12 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: _spacingMedium),
-          _buildIncidentsList(colors),
+          _buildDisastersList(colors),
         ],
       );
 
-  /// Builds an individual alert card
-  Widget _buildIncidentCard({
-    required String topic,
+  /// Builds an individual disaster card
+  Widget _buildDisasterCard({
     required String description,
     required String severity,
     required String location,
@@ -324,9 +296,9 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         disasterType,
                         style: TextStyle(
-                          color: colors.accent200,
+                          color: colors.primary300,
                           fontWeight: FontWeight.w500,
-                          fontSize: 12,
+                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -344,21 +316,12 @@ class HomeScreen extends StatelessWidget {
                           severity,
                           style: TextStyle(
                             color: _getSeverityColor(severity, colors),
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    topic,
-                    style: TextStyle(
-                      color: colors.primary300,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -373,14 +336,17 @@ class HomeScreen extends StatelessWidget {
                       Icon(Icons.location_on_outlined,
                           color: colors.text200, size: 16),
                       const SizedBox(width: 4),
-                      Text(
-                        location,
-                        style: TextStyle(
-                          color: colors.text200,
-                          fontSize: 12,
+                      Expanded(
+                        child: Text(
+                          location,
+                          style: TextStyle(
+                            color: colors.text200,
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 8),
                       Icon(Icons.access_time, color: colors.text200, size: 16),
                       const SizedBox(width: 4),
                       Text(
@@ -408,7 +374,6 @@ class HomeScreen extends StatelessWidget {
         return Color(0xFFFF8C00);
       case 'low':
         return Color(0xFF71C4EF);
-        ;
       default:
         return colors.text200;
     }
@@ -420,6 +385,8 @@ class HomeScreen extends StatelessWidget {
     const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
 
     switch (type.toLowerCase()) {
+      case 'heavy rain':
+        return Icons.thunderstorm_outlined;
       case 'flood':
         return flood;
       case 'fire':
@@ -441,60 +408,83 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  /// Builds the scrollable list of alerts
-  Widget _buildIncidentsList(AppColorTheme colors) {
-    // Hardcoded incidents for now, replace with Firebase later
-    const List<Incident> incidents = [
-      Incident(
-        topic: 'Flash Flood Warning',
-        description:
-            'Heavy rainfall expected in Klang Valley area. Please stay alert and avoid flood-prone areas.',
-        severity: 'High',
-        location: 'Klang Valley',
-        time: '2 hours ago',
-        disasterType: 'Flood',
-        coordinates: null,
-      ),
-      Incident(
-        topic: 'Earthquake Alert',
-        description:
-            'Magnitude 5.2 earthquake detected. Stay away from damaged buildings.',
-        severity: 'Medium',
-        location: 'Sabah',
-        time: '4 hours ago',
-        disasterType: 'Earthquake',
-        coordinates: null,
-      ),
-      Incident(
-        topic: 'Weather Advisory',
-        description: 'Strong winds and thunderstorms expected in the evening.',
-        severity: 'Low',
-        location: 'Kuala Lumpur',
-        time: '5 hours ago',
-        disasterType: 'Weather',
-        coordinates: null,
-      ),
-    ];
-
-    return SizedBox(
-      height: 300,
-      child: Scrollbar(
-        thickness: 6,
-        radius: const Radius.circular(3),
-        child: ListView(
-          children: incidents
-              .map((incident) => _buildIncidentCard(
-                    topic: incident.topic,
-                    description: incident.description,
-                    severity: incident.severity,
-                    location: incident.location,
-                    time: incident.time,
-                    disasterType: incident.disasterType,
-                    colors: colors,
-                  ))
-              .toList(),
-        ),
-      ),
+  /// Builds the scrollable list of disasters
+  Widget _buildDisastersList(AppColorTheme colors) {
+    return Consumer<DisasterService>(
+      builder: (context, disasterService, child) {
+        return RefreshIndicator(
+          onRefresh: () =>
+              disasterService.fetchRecentDisasters(onlyHappening: true),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                if (disasterService.isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                else if (disasterService.error != null)
+                  Center(
+                    child: Text(
+                      'Error: ${disasterService.error}',
+                      style: TextStyle(color: colors.warning),
+                    ),
+                  )
+                else if (disasterService.happeningDisasters.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(_spacingMedium),
+                        child: Text(
+                          'No active disasters at the moment',
+                          style: TextStyle(color: colors.text200),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: disasterService.happeningDisasters.length,
+                      itemBuilder: (context, index) {
+                        final disaster =
+                        disasterService.happeningDisasters[index];
+                        return _buildDisasterCard(
+                          description: disaster.description,
+                          severity: disaster.severity,
+                          location: disaster.location,
+                          time: disaster.formattedTime,
+                          disasterType: disaster.disasterType,
+                          colors: colors,
+                        );
+                      },
+                    ),
+                // Pull to refresh hint text
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.arrow_downward,
+                        size: 16,
+                        color: colors.text200,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Pull down to refresh',
+                        style: TextStyle(
+                          color: colors.text200,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -517,16 +507,16 @@ class HomeScreen extends StatelessWidget {
                   _buildNavItem(
                       Icons.home, true, () {}, colors), // Home is active
                   _buildNavItem(Icons.map_outlined, false,
-                      () => _navigateTo(context, const MapScreen()), colors),
+                          () => _navigateTo(context, const MapScreen()), colors),
                   _buildNavItem(
                       Icons.people_outline,
                       false,
-                      () => _navigateTo(context, const CommunityScreen()),
+                          () => _navigateTo(context, const CommunityScreen()),
                       colors),
                   _buildNavItem(
                       Icons.person_outline,
                       false,
-                      () => _navigateTo(context, const ProfileScreen()),
+                          () => _navigateTo(context, const ProfileScreen()),
                       colors),
                 ],
               ),
@@ -537,15 +527,15 @@ class HomeScreen extends StatelessWidget {
 
   /// Reusable navigation item widget
   Widget _buildNavItem(
-    IconData icon,
-    bool isActive,
-    VoidCallback onPressed,
-    AppColorTheme colors,
-  ) =>
+      IconData icon,
+      bool isActive,
+      VoidCallback onPressed,
+      AppColorTheme colors,
+      ) =>
       Container(
         decoration: BoxDecoration(
           color:
-              isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
+          isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: IconButton(

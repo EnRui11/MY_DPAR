@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 
-/// Service for sending alert notifications to nearby users when incidents are reported
+/// Service for sending alert notifications to nearby users when disasters are reported
 class AlertNotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -14,10 +14,10 @@ class AlertNotificationService {
   // Distance threshold in meters (5km)
   static const double _proximityThreshold = 5000;
 
-  /// Sends alert notifications to users near an incident
+  /// Sends alert notifications to users near a disaster
   Future<void> alertNearbyUsers({
-    required String incidentId,
-    required String incidentType,
+    required String disasterId,
+    required String disasterType,
     required double latitude,
     required double longitude,
     required String severity,
@@ -30,14 +30,14 @@ class AlertNotificationService {
       if (currentUser == null) return;
 
       final userDoc =
-          await _firestore.collection('users').doc(currentUser.uid).get();
+      await _firestore.collection('users').doc(currentUser.uid).get();
       final reporterName = userDoc.data()?['lastName'] ?? 'A user';
 
       // Step 1: Retrieve all user IDs and their locations from the "user_locations" collection
       final userLocationsSnapshot =
-          await _firestore.collection('user_locations').get();
+      await _firestore.collection('user_locations').get();
 
-      // Step 2 & 3: Compare each user's location with the incident location and filter nearby users
+      // Step 2 & 3: Compare each user's location with the disaster location and filter nearby users
       final List<String> nearbyUserIds = [];
 
       for (final doc in userLocationsSnapshot.docs) {
@@ -49,7 +49,7 @@ class AlertNotificationService {
         // Check if location data exists
         final GeoPoint? userLocation = data['location'] as GeoPoint?;
         if (userLocation != null) {
-          // Calculate distance between incident and user
+          // Calculate distance between disaster and user
           final distance = Geolocator.distanceBetween(latitude, longitude,
               userLocation.latitude, userLocation.longitude);
 
@@ -66,11 +66,11 @@ class AlertNotificationService {
         await _sendNotification(
           userId: userId,
           reporterName: reporterName,
-          incidentType: incidentType,
+          disasterType: disasterType,
           severity: severity,
           location: location,
           description: description,
-          incidentId: incidentId,
+          disasterId: disasterId,
         );
       }
 
@@ -85,11 +85,11 @@ class AlertNotificationService {
   Future<void> _sendNotification({
     required String userId,
     required String reporterName,
-    required String incidentType,
+    required String disasterType,
     required String severity,
     required String location,
     required String description,
-    required String incidentId,
+    required String disasterId,
   }) async {
     try {
       // Get user's FCM token from Firestore
@@ -101,11 +101,11 @@ class AlertNotificationService {
       // Create notification data
       final notificationData = {
         'userId': userId,
-        'title': '$severity $incidentType Reported Nearby',
+        'title': '$severity $disasterType Reported Nearby',
         'body':
-            '$reporterName reported a $severity $incidentType near $location',
-        'type': 'incident_alert',
-        'incidentId': incidentId,
+        '$reporterName reported a $severity $disasterType near $location',
+        'type': 'disaster_alert',
+        'disasterId': disasterId,
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,
       };

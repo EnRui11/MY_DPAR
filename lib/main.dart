@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mydpar/screens/main/bottom_nav_container.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
@@ -38,7 +39,7 @@ class FirebaseInitializer {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      
+
       // Initialize Firebase App Check with debug provider
       await FirebaseAppCheck.instance.activate(
         // Use debug provider for development
@@ -46,7 +47,6 @@ class FirebaseInitializer {
         // For iOS devices
         appleProvider: AppleProvider.debug,
       );
-      
     } catch (e) {
       debugPrint('Error initializing Firebase: $e');
     }
@@ -168,6 +168,8 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 
+  // In the _authStateBuilder method, replace the return statement:
+
   Widget Function(BuildContext, AsyncSnapshot<User?>) _authStateBuilder(
     UserInformationService userService,
     SOSAlertService sosService,
@@ -186,7 +188,7 @@ class AuthWrapper extends StatelessWidget {
       final user = snapshot.data;
       if (user != null) {
         _initializeServices(context, userService, sosService);
-        return const HomeScreen();
+        return const BottomNavContainer();
       }
       return const LoginScreen();
     };

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
-import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/main/home_screen.dart';
-import 'package:mydpar/screens/main/map_screen.dart';
-import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
@@ -90,12 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildHeader(themeProvider, colors),
                 _buildContent(userInfomation, colors),
               ],
-            ),
-            const Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomNavBar(),
             ),
           ],
         ),

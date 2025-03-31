@@ -5,7 +5,6 @@ import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 
 // Model for feature items
@@ -102,12 +101,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 _buildHeader(context, colors),
                 _buildContent(context, colors),
               ],
-            ),
-            const Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomNavBar(),
             ),
           ],
         ),
@@ -530,53 +523,4 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ],
         ),
       );
-
-  Widget _buildBottomNavigation(BuildContext context, AppColorTheme colors) =>
-      Container(
-        decoration: BoxDecoration(
-          color: colors.bg100,
-          border: Border(top: BorderSide(color: colors.bg100)),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home_outlined, false,
-                () => _navigateTo(context, const HomeScreen()), colors),
-            _buildNavItem(Icons.map_outlined, false,
-                () => _navigateTo(context, const MapScreen()), colors),
-            _buildNavItem(Icons.people, true, () {}, colors),
-            _buildNavItem(Icons.person_outline, false,
-                () => _navigateTo(context, const ProfileScreen()), colors),
-          ],
-        ),
-      );
-
-  Widget _buildNavItem(
-    IconData icon,
-    bool isActive,
-    VoidCallback onPressed,
-    AppColorTheme colors,
-  ) =>
-      Container(
-        decoration: BoxDecoration(
-          color:
-              isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: IconButton(
-          icon: Icon(icon),
-          color: isActive ? colors.accent200 : colors.text200,
-          onPressed: onPressed,
-          iconSize: 24,
-          padding: const EdgeInsets.all(12),
-        ),
-      );
-
-  void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => screen),
-    );
-  }
 }

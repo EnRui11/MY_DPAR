@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/screens/knowledge_base/knowledge_base_screen.dart';
-import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/report_disaster/report_disaster_screen.dart';
-import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/sos_emergency/sos_emergency_screen.dart';
 import 'package:mydpar/screens/disaster_infomation/all_disasters_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/screens/disaster_infomation/alert_detail_screen.dart';
-import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool showNavBar;
+
+  const HomeScreen({Key? key, this.showNavBar = true}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -54,12 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _buildContent(context, colors),
             _buildHeader(colors),
-            const Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
-              child: BottomNavBar(),
-            ),
           ],
         ),
       ),

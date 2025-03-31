@@ -5,13 +5,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:mydpar/screens/main/home_screen.dart';
-import 'package:mydpar/screens/main/profile_screen.dart';
-import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/report_disaster/report_disaster_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 
 class MapScreen extends StatefulWidget {
@@ -153,12 +149,6 @@ class _MapScreenState extends State<MapScreen> {
           _buildFilterControls(colors),
           _buildLocationControl(colors),
           _buildReportButton(context, colors),
-          const Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: BottomNavBar(),
-          ),
         ],
       ),
     );
@@ -331,7 +321,7 @@ class _MapScreenState extends State<MapScreen> {
 
   /// Builds the location control button
   Widget _buildLocationControl(AppColorTheme colors) => Positioned(
-        bottom: 90,
+        bottom: 7,
         right: 10,
         child: Container(
           decoration: BoxDecoration(
@@ -354,7 +344,7 @@ class _MapScreenState extends State<MapScreen> {
   /// Builds the report disaster button
   Widget _buildReportButton(BuildContext context, AppColorTheme colors) =>
       Positioned(
-        bottom: 85,
+        bottom: 5,
         left: 0,
         right: 0,
         child: Center(
@@ -396,9 +386,6 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
       );
-
-  // Replace the _buildBottomNavigation method
-  // Replace the _buildNavItem method
 
   /// Navigates to a new screen
   void _navigateTo(BuildContext context, Widget screen) {

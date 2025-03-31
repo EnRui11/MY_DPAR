@@ -5,6 +5,8 @@ import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
+import 'package:mydpar/services/bottom_nav_service.dart';
 
 // Model for feature items
 class FeatureItem {
@@ -34,11 +36,11 @@ class HelpRequest {
   });
 
   Map<String, dynamic> toJson() => {
-    'title': title,
-    'description': description,
-    'needs': needs,
-    'category': category,
-  };
+        'title': title,
+        'description': description,
+        'needs': needs,
+        'category': category,
+      };
 }
 
 // Model for available resources, Firebase-ready
@@ -56,20 +58,34 @@ class Resource {
   });
 
   Map<String, dynamic> toJson() => {
-    'title': title,
-    'description': description,
-    'location': location,
-    'isAvailable': isAvailable,
-  };
+        'title': title,
+        'description': description,
+        'location': location,
+        'isAvailable': isAvailable,
+      };
 }
 
-class CommunityScreen extends StatelessWidget {
+class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
 
+  @override
+  State<CommunityScreen> createState() => _CommunityScreenState();
+}
+
+class _CommunityScreenState extends State<CommunityScreen> {
   static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set current index in navigation service
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NavigationService>(context, listen: false).changeIndex(2);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,11 +95,20 @@ class CommunityScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _buildHeader(context, colors),
-            _buildContent(context, colors),
-            _buildBottomNavigation(context, colors),
+            Column(
+              children: [
+                _buildHeader(context, colors),
+                _buildContent(context, colors),
+              ],
+            ),
+            const Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: BottomNavBar(),
+            ),
           ],
         ),
       ),
@@ -91,32 +116,32 @@ class CommunityScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, AppColorTheme colors) => Padding(
-    padding: const EdgeInsets.symmetric(
-        horizontal: _paddingValue, vertical: _paddingValue),
-    child: Text(
-      'Community',
-      style: TextStyle(
-        color: colors.primary300,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
+        padding: const EdgeInsets.symmetric(
+            horizontal: _paddingValue, vertical: _paddingValue),
+        child: Text(
+          'Community',
+          style: TextStyle(
+            color: colors.primary300,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
 
   Widget _buildContent(BuildContext context, AppColorTheme colors) => Expanded(
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.all(_paddingValue),
-      child: Column(
-        children: [
-          _buildFeatureGrid(context, colors),
-          const SizedBox(height: _spacingLarge),
-          _buildActiveHelpRequests(context, colors),
-          const SizedBox(height: _spacingLarge),
-          _buildAvailableResources(context, colors),
-        ],
-      ),
-    ),
-  );
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(_paddingValue),
+          child: Column(
+            children: [
+              _buildFeatureGrid(context, colors),
+              const SizedBox(height: _spacingLarge),
+              _buildActiveHelpRequests(context, colors),
+              const SizedBox(height: _spacingLarge),
+              _buildAvailableResources(context, colors),
+            ],
+          ),
+        ),
+      );
 
   Widget _buildFeatureGrid(BuildContext context, AppColorTheme colors) {
     const List<FeatureItem> features = [
@@ -192,14 +217,14 @@ class CommunityScreen extends StatelessWidget {
       HelpRequest(
         title: 'Food Distribution',
         description:
-        'Help needed to distribute food packages to affected areas',
+            'Help needed to distribute food packages to affected areas',
         needs: '200 food packages needed',
         category: 'Supplies',
       ),
       HelpRequest(
         title: 'Medical Supplies Needed',
         description:
-        'First aid kits and medications needed for elderly care center',
+            'First aid kits and medications needed for elderly care center',
         needs: '10 first aid kits, basic medications',
         category: 'Medical',
       ),
@@ -242,15 +267,15 @@ class CommunityScreen extends StatelessWidget {
             child: ListView(
               children: helpRequests
                   .map((request) => Padding(
-                padding: const EdgeInsets.only(bottom: _spacingMedium),
-                child: _buildHelpRequestCard(
-                  request.title,
-                  request.description,
-                  request.needs,
-                  request.category,
-                  colors,
-                ),
-              ))
+                        padding: const EdgeInsets.only(bottom: _spacingMedium),
+                        child: _buildHelpRequestCard(
+                          request.title,
+                          request.description,
+                          request.needs,
+                          request.category,
+                          colors,
+                        ),
+                      ))
                   .toList(),
             ),
           ),
@@ -260,12 +285,12 @@ class CommunityScreen extends StatelessWidget {
   }
 
   Widget _buildHelpRequestCard(
-      String title,
-      String description,
-      String needs,
-      String category,
-      AppColorTheme colors,
-      ) =>
+    String title,
+    String description,
+    String needs,
+    String category,
+    AppColorTheme colors,
+  ) =>
       Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
@@ -408,16 +433,16 @@ class CommunityScreen extends StatelessWidget {
               child: Column(
                 children: resources
                     .map((resource) => Padding(
-                  padding:
-                  const EdgeInsets.only(bottom: _spacingMedium),
-                  child: _buildResourceCard(
-                    resource.title,
-                    resource.description,
-                    resource.location,
-                    resource.isAvailable,
-                    colors,
-                  ),
-                ))
+                          padding:
+                              const EdgeInsets.only(bottom: _spacingMedium),
+                          child: _buildResourceCard(
+                            resource.title,
+                            resource.description,
+                            resource.location,
+                            resource.isAvailable,
+                            colors,
+                          ),
+                        ))
                     .toList(),
               ),
             ),
@@ -428,12 +453,12 @@ class CommunityScreen extends StatelessWidget {
   }
 
   Widget _buildResourceCard(
-      String title,
-      String description,
-      String location,
-      bool isAvailable,
-      AppColorTheme colors,
-      ) =>
+    String title,
+    String description,
+    String location,
+    bool isAvailable,
+    AppColorTheme colors,
+  ) =>
       Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
@@ -517,26 +542,26 @@ class CommunityScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(Icons.home_outlined, false,
-                    () => _navigateTo(context, const HomeScreen()), colors),
+                () => _navigateTo(context, const HomeScreen()), colors),
             _buildNavItem(Icons.map_outlined, false,
-                    () => _navigateTo(context, const MapScreen()), colors),
+                () => _navigateTo(context, const MapScreen()), colors),
             _buildNavItem(Icons.people, true, () {}, colors),
             _buildNavItem(Icons.person_outline, false,
-                    () => _navigateTo(context, const ProfileScreen()), colors),
+                () => _navigateTo(context, const ProfileScreen()), colors),
           ],
         ),
       );
 
   Widget _buildNavItem(
-      IconData icon,
-      bool isActive,
-      VoidCallback onPressed,
-      AppColorTheme colors,
-      ) =>
+    IconData icon,
+    bool isActive,
+    VoidCallback onPressed,
+    AppColorTheme colors,
+  ) =>
       Container(
         decoration: BoxDecoration(
           color:
-          isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
+              isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: IconButton(

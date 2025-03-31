@@ -4,9 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
+import 'package:mydpar/screens/main/map_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
+import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
 import 'package:mydpar/services/cpr_audio_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
+import 'package:mydpar/services/bottom_nav_service.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/widgets/cpr_rhythm_overlay.dart';
 import 'package:mydpar/services/sos_alert_service.dart';
@@ -71,6 +75,7 @@ class MyDPARApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SOSAlertService()),
         ChangeNotifierProvider(create: (_) => PermissionService()),
         ChangeNotifierProvider(create: (_) => DisasterService()),
+        ChangeNotifierProvider(create: (_) => NavigationService()),
       ],
       child: const AppThemeWrapper(),
     );

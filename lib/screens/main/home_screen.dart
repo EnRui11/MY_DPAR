@@ -13,6 +13,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/screens/disaster_infomation/alert_detail_screen.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
+import 'package:mydpar/services/bottom_nav_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Fetch disasters when the screen loads, only get happening disasters
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Set current index in navigation service
+      Provider.of<NavigationService>(context, listen: false).changeIndex(0);
       Provider.of<DisasterService>(context, listen: false)
           .fetchRecentDisasters(onlyHappening: true);
     });
@@ -50,7 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _buildContent(context, colors),
             _buildHeader(colors),
-            _buildBottomNavigation(context, colors),
+            const Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: BottomNavBar(),
+            ),
           ],
         ),
       ),
@@ -447,8 +456,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     // Limit to maximum 3 items
-                    itemCount: disasterService.happeningDisasters.length > 3 
-                        ? 3 
+                    itemCount: disasterService.happeningDisasters.length > 3
+                        ? 3
                         : disasterService.happeningDisasters.length,
                     itemBuilder: (context, index) {
                       final disaster =
@@ -501,65 +510,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  /// Builds the bottom navigation bar
-  Widget _buildBottomNavigation(BuildContext context, AppColorTheme colors) =>
-      Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          decoration: BoxDecoration(
-            color: colors.bg100,
-            border: Border(top: BorderSide(color: colors.bg100)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
-                      Icons.home, true, () {}, colors), // Home is active
-                  _buildNavItem(Icons.map_outlined, false,
-                      () => _navigateTo(context, const MapScreen()), colors),
-                  _buildNavItem(
-                      Icons.people_outline,
-                      false,
-                      () => _navigateTo(context, const CommunityScreen()),
-                      colors),
-                  _buildNavItem(
-                      Icons.person_outline,
-                      false,
-                      () => _navigateTo(context, const ProfileScreen()),
-                      colors),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-  /// Reusable navigation item widget
-  Widget _buildNavItem(
-    IconData icon,
-    bool isActive,
-    VoidCallback onPressed,
-    AppColorTheme colors,
-  ) =>
-      Container(
-        decoration: BoxDecoration(
-          color:
-              isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: IconButton(
-          icon: Icon(icon),
-          color: isActive ? colors.accent200 : colors.text200,
-          onPressed: onPressed,
-          iconSize: 24,
-          padding: const EdgeInsets.all(12),
-        ),
-      );
 
   /// Navigates to a new screen
   void _navigateTo(BuildContext context, Widget screen) {

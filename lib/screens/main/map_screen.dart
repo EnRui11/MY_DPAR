@@ -11,6 +11,8 @@ import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/report_disaster/report_disaster_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
+import 'package:mydpar/services/bottom_nav_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -31,7 +33,8 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _searchedLocation;
 
   // Constants for consistency and easy tweaking
-  static const LatLng _defaultLocation = LatLng(3.1390, 101.6869); // Kuala Lumpur
+  static const LatLng _defaultLocation =
+      LatLng(3.1390, 101.6869); // Kuala Lumpur
   static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
@@ -43,6 +46,11 @@ class _MapScreenState extends State<MapScreen> {
     _initializeLocation();
     _locationTimer =
         Timer.periodic(const Duration(seconds: 1), (_) => _updateLocation());
+
+    // Set current index in navigation service
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NavigationService>(context, listen: false).changeIndex(1);
+    });
   }
 
   @override
@@ -104,7 +112,8 @@ class _MapScreenState extends State<MapScreen> {
         _searchResults = locations;
         _isSearching = false;
         if (locations.isNotEmpty) {
-          _searchedLocation = LatLng(locations.first.latitude, locations.first.longitude);
+          _searchedLocation =
+              LatLng(locations.first.latitude, locations.first.longitude);
           _mapController.move(_searchedLocation!, 15);
         }
       });
@@ -133,7 +142,8 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final AppColorTheme colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
+    final AppColorTheme colors = themeProvider.currentTheme;
 
     return Scaffold(
       body: Stack(
@@ -143,7 +153,12 @@ class _MapScreenState extends State<MapScreen> {
           _buildFilterControls(colors),
           _buildLocationControl(colors),
           _buildReportButton(context, colors),
-          _buildBottomNavigation(context, colors),
+          const Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: BottomNavBar(),
+          ),
         ],
       ),
     );
@@ -151,122 +166,126 @@ class _MapScreenState extends State<MapScreen> {
 
   /// Builds the map with current location marker
   Widget _buildMap() => FlutterMap(
-    mapController: _mapController,
-    options: MapOptions(
-      center: _currentLocation ?? _defaultLocation,
-      zoom: 15,
-    ),
-    children: [
-      TileLayer(
-        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        subdomains: const ['a', 'b', 'c'],
-        userAgentPackageName: 'com.mydpar.app',
-      ),
-      MarkerLayer(
-        markers: [
-          if (_currentLocation != null)
-            Marker(
-              point: _currentLocation!,
-              builder: (_) =>
-              const Icon(Icons.my_location, color: Colors.blue, size: 30),
-            ),
+        mapController: _mapController,
+        options: MapOptions(
+          center: _currentLocation ?? _defaultLocation,
+          zoom: 15,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            subdomains: const ['a', 'b', 'c'],
+            userAgentPackageName: 'com.mydpar.app',
+          ),
+          MarkerLayer(
+            markers: [
+              if (_currentLocation != null)
+                Marker(
+                  point: _currentLocation!,
+                  builder: (_) => const Icon(Icons.my_location,
+                      color: Colors.blue, size: 30),
+                ),
+            ],
+          ),
         ],
-      ),
-    ],
-  );
+      );
 
   /// Builds the search bar at the top
   Widget _buildSearchBar(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg100,
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    margin: const EdgeInsets.only(top: 48, left: _spacingLarge, right: _spacingLarge),
-    padding: const EdgeInsets.symmetric(horizontal: _paddingValue, vertical: _spacingSmall),
-    child: Row(
-      children: [
-        Icon(Icons.search, color: colors.primary300, size: 24),
-        const SizedBox(width: _spacingMedium),
-        Expanded(
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search location',
-              hintStyle: TextStyle(color: colors.primary300.withOpacity(0.5)),
-              border: InputBorder.none,
-              suffixIcon: _isSearching
-                  ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.accent200,
-                ),
-              )
-                  : null,
-            ),
-            style: TextStyle(color: colors.primary300),
-            onSubmitted: (value) => value.isNotEmpty ? _searchLocation(value) : null,
-          ),
-        ),
-      ],
-    ),
-  );
-
-  /// Builds the filter controls below the search bar
-  Widget _buildFilterControls(AppColorTheme colors) => Positioned(
-    top: 120,
-    left: _spacingLarge,
-    right: _spacingLarge,
-    child: Container(
-      decoration: BoxDecoration(
-        color: colors.bg100,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: _spacingSmall),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildFilterButton(
-              icon: Icons.warning_amber_rounded,
-              label: 'Disasters',
-              colors: colors,
-            ),
-            _buildFilterButton(
-              icon: Icons.home_outlined,
-              label: 'Shelters',
-              colors: colors,
-            ),
-            _buildFilterButton(
-              icon: Icons.local_hospital_outlined,
-              label: 'Medical',
-              colors: colors,
-            ),
-            _buildFilterButton(
-              icon: Icons.inventory_2_outlined,
-              label: 'Supplies',
-              colors: colors,
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-      ),
-    ),
-  );
+        margin: const EdgeInsets.only(
+            top: 48, left: _spacingLarge, right: _spacingLarge),
+        padding: const EdgeInsets.symmetric(
+            horizontal: _paddingValue, vertical: _spacingSmall),
+        child: Row(
+          children: [
+            Icon(Icons.search, color: colors.primary300, size: 24),
+            const SizedBox(width: _spacingMedium),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search location',
+                  hintStyle:
+                      TextStyle(color: colors.primary300.withOpacity(0.5)),
+                  border: InputBorder.none,
+                  suffixIcon: _isSearching
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colors.accent200,
+                          ),
+                        )
+                      : null,
+                ),
+                style: TextStyle(color: colors.primary300),
+                onSubmitted: (value) =>
+                    value.isNotEmpty ? _searchLocation(value) : null,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  /// Builds the filter controls below the search bar
+  Widget _buildFilterControls(AppColorTheme colors) => Positioned(
+        top: 120,
+        left: _spacingLarge,
+        right: _spacingLarge,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.bg100,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: _spacingSmall),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterButton(
+                  icon: Icons.warning_amber_rounded,
+                  label: 'Disasters',
+                  colors: colors,
+                ),
+                _buildFilterButton(
+                  icon: Icons.home_outlined,
+                  label: 'Shelters',
+                  colors: colors,
+                ),
+                _buildFilterButton(
+                  icon: Icons.local_hospital_outlined,
+                  label: 'Medical',
+                  colors: colors,
+                ),
+                _buildFilterButton(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Supplies',
+                  colors: colors,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
   /// Builds an individual filter button
   Widget _buildFilterButton({
@@ -280,10 +299,12 @@ class _MapScreenState extends State<MapScreen> {
       child: GestureDetector(
         onTap: () => _toggleFilter(label),
         child: Container(
-          padding:
-          const EdgeInsets.symmetric(horizontal: _paddingValue, vertical: _spacingSmall),
+          padding: const EdgeInsets.symmetric(
+              horizontal: _paddingValue, vertical: _spacingSmall),
           decoration: BoxDecoration(
-            color: isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
+            color: isActive
+                ? colors.accent200.withOpacity(0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
@@ -310,133 +331,74 @@ class _MapScreenState extends State<MapScreen> {
 
   /// Builds the location control button
   Widget _buildLocationControl(AppColorTheme colors) => Positioned(
-    bottom: 90,
-    right: 10,
-    child: Container(
-      decoration: BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.bg100.withOpacity(0.2)),
-      ),
-      child: IconButton(
-        icon: Icon(Icons.my_location, color: colors.accent200),
-        onPressed: () {
-          if (_currentLocation != null) {
-            _mapController.rotate(-_currentHeading);
-            _mapController.move(_currentLocation!, 15);
-          }
-        },
-      ),
-    ),
-  );
+        bottom: 90,
+        right: 10,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.bg100.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.bg100.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            icon: Icon(Icons.my_location, color: colors.accent200),
+            onPressed: () {
+              if (_currentLocation != null) {
+                _mapController.rotate(-_currentHeading);
+                _mapController.move(_currentLocation!, 15);
+              }
+            },
+          ),
+        ),
+      );
 
   /// Builds the report disaster button
-  Widget _buildReportButton(BuildContext context, AppColorTheme colors) => Positioned(
-    bottom: 85,
-    left: 0,
-    right: 0,
-    child: Center(
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.bg100.withOpacity(0.2)),
-        ),
-        padding: const EdgeInsets.all(4),
-        child: ElevatedButton(
-          onPressed: () => _navigateTo(context, const ReportDisasterScreen()),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colors.warning,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: _paddingValue, vertical: _spacingMedium),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.location_on_outlined, color: colors.bg100, size: 20),
-                const SizedBox(width: _spacingSmall),
-                Text(
-                  'Report Disaster',
-                  style: TextStyle(
-                    color: colors.bg100,
-                    fontWeight: FontWeight.w600,
-                  ),
+  Widget _buildReportButton(BuildContext context, AppColorTheme colors) =>
+      Positioned(
+        bottom: 85,
+        left: 0,
+        right: 0,
+        child: Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: colors.bg100.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.bg100.withOpacity(0.2)),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: ElevatedButton(
+              onPressed: () =>
+                  _navigateTo(context, const ReportDisasterScreen()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.warning,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: _paddingValue, vertical: _spacingMedium),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.location_on_outlined,
+                        color: colors.bg100, size: 20),
+                    const SizedBox(width: _spacingSmall),
+                    Text(
+                      'Report Disaster',
+                      style: TextStyle(
+                        color: colors.bg100,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-    ),
-  );
-
-  /// Builds the bottom navigation bar
-  Widget _buildBottomNavigation(BuildContext context, AppColorTheme colors) => Align(
-    alignment: Alignment.bottomCenter,
-    child: Container(
-      decoration: BoxDecoration(
-        color: colors.bg100,
-        border: Border(top: BorderSide(color: colors.bg100)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                icon: Icons.home,
-                isActive: false,
-                onPressed: () => _navigateTo(context, const HomeScreen()),
-                colors: colors,
-              ),
-              _buildNavItem(
-                icon: Icons.map_outlined,
-                isActive: true, // Map is active
-                onPressed: () {},
-                colors: colors,
-              ),
-              _buildNavItem(
-                icon: Icons.people_outline,
-                isActive: false,
-                onPressed: () => _navigateTo(context, const CommunityScreen()),
-                colors: colors,
-              ),
-              _buildNavItem(
-                icon: Icons.person_outline,
-                isActive: false,
-                onPressed: () => _navigateTo(context, const ProfileScreen()),
-                colors: colors,
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-
-  /// Reusable navigation item widget
-  Widget _buildNavItem({
-    required IconData icon,
-    required bool isActive,
-    required VoidCallback onPressed,
-    required AppColorTheme colors,
-  }) =>
-      Container(
-        decoration: BoxDecoration(
-          color: isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: IconButton(
-          icon: Icon(icon),
-          color: isActive ? colors.accent200 : colors.text200,
-          onPressed: onPressed,
-          padding: const EdgeInsets.all(_spacingMedium),
-        ),
       );
+
+  // Replace the _buildBottomNavigation method
+  // Replace the _buildNavItem method
 
   /// Navigates to a new screen
   void _navigateTo(BuildContext context, Widget screen) {

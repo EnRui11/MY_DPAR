@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mydpar/services/bottom_nav_service.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/screens/main/map_screen.dart';
@@ -58,26 +60,43 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Spacing constants
   static const double _padding = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
 
   @override
+  void initState() {
+    super.initState();
+    // Set current index in navigation service
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NavigationService>(context, listen: false).changeIndex(3);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
+    final AppColorTheme colors = themeProvider.currentTheme;
     final userInfomation = Provider.of<UserInformationService>(context);
-    final colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _buildHeader(themeProvider, colors),
-            _buildContent(userInfomation, colors),
-            _buildBottomNavigation(colors),
+            Column(
+              children: [
+                _buildHeader(themeProvider, colors),
+                _buildContent(userInfomation, colors),
+              ],
+            ),
+            const Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: BottomNavBar(),
+            ),
           ],
         ),
       ),
@@ -361,37 +380,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
-      );
-
-  /// Builds the bottom navigation bar.
-  Widget _buildBottomNavigation(AppColorTheme colors) => Container(
-        decoration: BoxDecoration(
-          color: colors.bg100,
-          border: Border(top: BorderSide(color: colors.bg300.withOpacity(0.2))),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: _spacingSmall),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home_outlined, false,
-                () => _navigateTo(const HomeScreen(), replace: true), colors),
-            _buildNavItem(Icons.map_outlined, false,
-                () => _navigateTo(const MapScreen(), replace: true), colors),
-            _buildNavItem(Icons.people_outline, false,
-                () => _navigateTo(const CommunityScreen()), colors),
-            _buildNavItem(Icons.person, true, () {}, colors),
-          ],
-        ),
-      );
-
-  /// Reusable navigation item widget.
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onPressed,
-          AppColorTheme colors) =>
-      IconButton(
-        icon: Icon(icon),
-        color: isActive ? colors.accent200 : colors.text200,
-        onPressed: onPressed,
-        tooltip: isActive ? 'Profile (current)' : null,
       );
 
   /// Launches a phone call with error handling.
@@ -781,11 +769,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Navigates to a new screen, optionally replacing the current one.
   void _navigateTo(Widget screen, {bool replace = false}) {
-    final route = MaterialPageRoute(builder: (_) => screen);
     if (replace) {
-      Navigator.pushReplacement(context, route);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => screen),
+      );
     } else {
-      Navigator.push(context, route);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => screen),
+      );
     }
   }
 

@@ -1,2 +1,0 @@
-C:/Folder/APU/Third Year/Final Year Project/FYP/MY_DPAR/android/app/.cxx/Debug/6d1g3j4o/arm64-v8a/CMakeFiles/edit_cache.dir
-C:/Folder/APU/Third Year/Final Year Project/FYP/MY_DPAR/android/app/.cxx/Debug/6d1g3j4o/arm64-v8a/CMakeFiles/rebuild_cache.dir

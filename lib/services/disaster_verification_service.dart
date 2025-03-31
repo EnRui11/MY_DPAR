@@ -53,11 +53,16 @@ class DisasterVerificationService {
   }) async {
     try {
       final reportTime = convertToLocalTime(timestamp);
-      final oneHourAgo = reportTime.subtract(const Duration(hours: 1));
 
       for (final doc in _cachedDisasters) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!_isMatchingDisaster(data, disasterType, oneHourAgo, latitude, longitude)) {
+
+        // Convert status to lowercase before checking
+        final status = (data['status'] as String?)?.toLowerCase() ?? '';
+        if (status == 'past') continue;
+
+        if (!_isMatchingDisaster(
+            data, disasterType, reportTime, latitude, longitude)) {
           continue;
         }
 
@@ -82,16 +87,40 @@ class DisasterVerificationService {
     required String severity,
     required String description,
     required List<String> photoPaths,
+    // Add disasterType parameter for creating new disaster
+    required String disasterType,
+    required String timestamp,
   }) async {
     try {
       final docRef = _firestore.collection('disaster_reports').doc(disasterId);
       final doc = await docRef.get();
 
       if (!doc.exists) {
-        throw Exception('Disaster not found');
+        // Create new disaster instead of throwing error
+        await createNewDisaster(
+          disasterType: disasterType,
+          userId: userId,
+          latitude: latitude,
+          longitude: longitude,
+          severity: severity,
+          description: description,
+          photoPaths: photoPaths,
+          timestamp: timestamp,
+        );
+        return;
       }
 
       final data = doc.data() as Map<String, dynamic>;
+      
+      // Ensure first reporter's location is in locationList
+      if ((data['locationList'] as List<dynamic>?)?.isEmpty ?? true) {
+        data['locationList'] = [{
+          'latitude': data['latitude'],
+          'longitude': data['longitude'],
+          'timestamp': data['timestamp'],
+        }];
+      }
+
       final updatedData = _prepareUpdatedDisasterData(
         data,
         userId,
@@ -111,16 +140,13 @@ class DisasterVerificationService {
 
   /// Checks if a disaster matches the criteria for type, time, and proximity.
   bool _isMatchingDisaster(
-      Map<String, dynamic> data,
-      String disasterType,
-      DateTime oneHourAgo,
-      double latitude,
-      double longitude,
-      ) {
+    Map<String, dynamic> data,
+    String disasterType,
+    DateTime reportTime,
+    double latitude,
+    double longitude,
+  ) {
     if (data['disasterType'] != disasterType) return false;
-
-    final disasterTime = convertToLocalTime(data['timestamp'] as String);
-    if (disasterTime.isBefore(oneHourAgo)) return false;
 
     final lat = data['latitude'] as double?;
     final lon = data['longitude'] as double?;
@@ -132,16 +158,17 @@ class DisasterVerificationService {
 
   /// Prepares data for updating an existing disaster.
   Map<String, dynamic> _prepareUpdatedDisasterData(
-      Map<String, dynamic> existingData,
-      String userId,
-      double latitude,
-      double longitude,
-      String severity,
-      String description,
-      List<String> photoPaths,
-      ) {
+    Map<String, dynamic> existingData,
+    String userId,
+    double latitude,
+    double longitude,
+    String severity,
+    String description,
+    List<String> photoPaths,
+  ) {
     final userList = List<String>.from(existingData['userList'] ?? []);
-    final locationList = List<Map<String, dynamic>>.from(existingData['locationList'] ?? []);
+    final locationList =
+        List<Map<String, dynamic>>.from(existingData['locationList'] ?? []);
     final isNewUser = !userList.contains(userId);
 
     if (isNewUser) userList.add(userId);
@@ -152,7 +179,8 @@ class DisasterVerificationService {
     });
 
     final verifyNum = (existingData['verifyNum'] ?? 0) + (isNewUser ? 1 : 0);
-    final status = verifyNum >= 2 ? 'Happening' : existingData['status'] ?? 'pending';
+    final status =
+        verifyNum >= 2 ? 'Happening' : existingData['status'] ?? 'pending';
 
     return {
       'severity': severity,
@@ -164,5 +192,43 @@ class DisasterVerificationService {
       'status': status,
       'lastUpdated': getCurrentTimestamp(),
     };
+  }
+
+  /// Creates a new disaster report with initial data
+  Future<void> createNewDisaster({
+    required String disasterType,
+    required String userId,
+    required double latitude,
+    required double longitude,
+    required String severity,
+    required String description,
+    required List<String> photoPaths,
+    required String timestamp,
+  }) async {
+    try {
+      final locationList = [{
+        'latitude': latitude,
+        'longitude': longitude,
+        'timestamp': timestamp,
+      }];
+
+      await _firestore.collection('disaster_reports').add({
+        'disasterType': disasterType,
+        'userList': [userId],
+        'locationList': locationList,
+        'verifyNum': 1,
+        'status': 'pending',
+        'severity': severity,
+        'description': description,
+        'photoPaths': photoPaths,
+        'timestamp': timestamp,
+        'lastUpdated': timestamp,
+        'latitude': latitude,  // store initial location
+        'longitude': longitude,
+      });
+    } catch (e) {
+      debugPrint('Error creating new disaster: $e');
+      throw Exception('Failed to create disaster: $e');
+    }
   }
 }

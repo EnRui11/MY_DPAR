@@ -224,7 +224,7 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
             longitude: _selectedMapLocation!.longitude,
             severity: _selectedSeverity!,
             description: _descriptionController.text,
-            photoPaths: photoUrls,
+            photoPaths: photoUrls, disasterType: '', timestamp: '',
           );
           // Alert nearby users about the updated disaster
           await alertService.alertNearbyUsers(

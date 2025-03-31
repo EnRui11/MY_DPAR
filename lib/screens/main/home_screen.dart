@@ -446,7 +446,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: disasterService.happeningDisasters.length,
+                    // Limit to maximum 3 items
+                    itemCount: disasterService.happeningDisasters.length > 3 
+                        ? 3 
+                        : disasterService.happeningDisasters.length,
                     itemBuilder: (context, index) {
                       final disaster =
                           disasterService.happeningDisasters[index];

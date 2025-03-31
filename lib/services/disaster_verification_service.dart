@@ -127,7 +127,7 @@ class DisasterVerificationService {
     if (lat == null || lon == null) return false;
 
     final distance = Geolocator.distanceBetween(latitude, longitude, lat, lon);
-    return distance <= 1000; // 1km radius
+    return distance <= 5000; // 5km radius
   }
 
   /// Prepares data for updating an existing disaster.

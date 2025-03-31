@@ -12,6 +12,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
+import 'package:mydpar/screens/disaster_infomation/alert_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,47 +59,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Builds the header with gradient and welcome message
   Widget _buildHeader(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [colors.accent200, colors.accent100],
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Consumer<UserInformationService>(
-      builder: (context, userService, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Hello, ${userService.lastName ?? 'User'}',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: colors.bg100,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [colors.accent200, colors.accent100],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
+          ],
+        ),
+        padding: const EdgeInsets.all(_paddingValue),
+        child: Consumer<UserInformationService>(
+          builder: (context, userService, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Hello, ${userService.lastName ?? 'User'}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: colors.bg100,
+                ),
+              ),
+              const SizedBox(height: _spacingSmall),
+              Text(
+                'Welcome to MY_DPAR',
+                style: TextStyle(fontSize: 16, color: colors.primary100),
+              ),
+              Text(
+                'Your Disaster Preparedness and Response Assistant',
+                style: TextStyle(fontSize: 16, color: colors.primary100),
+              ),
+            ],
           ),
-          const SizedBox(height: _spacingSmall),
-          Text(
-            'Welcome to MY_DPAR',
-            style: TextStyle(fontSize: 16, color: colors.primary100),
-          ),
-          Text(
-            'Your Disaster Preparedness and Response Assistant',
-            style: TextStyle(fontSize: 16, color: colors.primary100),
-          ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 
   /// Builds the scrollable main content area
   Widget _buildContent(BuildContext context, AppColorTheme colors) =>
@@ -168,26 +169,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Builds the quick action cards (Report Disaster, Knowledge Base)
   Widget _buildQuickActions(BuildContext context, AppColorTheme colors) => Row(
-    children: [
-      Expanded(
-        child: _buildActionCard(
-          icon: Icons.location_on_outlined,
-          label: 'Report Disaster',
-          colors: colors,
-          onTap: () => _navigateTo(context, const ReportDisasterScreen()),
-        ),
-      ),
-      const SizedBox(width: _spacingMedium),
-      Expanded(
-        child: _buildActionCard(
-          icon: Icons.book_outlined,
-          label: 'Knowledge Base',
-          colors: colors,
-          onTap: () => _navigateTo(context, const KnowledgeBaseScreen()),
-        ),
-      ),
-    ],
-  );
+        children: [
+          Expanded(
+            child: _buildActionCard(
+              icon: Icons.location_on_outlined,
+              label: 'Report Disaster',
+              colors: colors,
+              onTap: () => _navigateTo(context, const ReportDisasterScreen()),
+            ),
+          ),
+          const SizedBox(width: _spacingMedium),
+          Expanded(
+            child: _buildActionCard(
+              icon: Icons.book_outlined,
+              label: 'Knowledge Base',
+              colors: colors,
+              onTap: () => _navigateTo(context, const KnowledgeBaseScreen()),
+            ),
+          ),
+        ],
+      );
 
   /// Reusable action card widget
   Widget _buildActionCard({
@@ -226,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Builds the recent disasters section with a header and list
   Widget _buildRecentDisastersSection(
-      BuildContext context, AppColorTheme colors) =>
+          BuildContext context, AppColorTheme colors) =>
       Column(
         children: [
           Row(
@@ -431,33 +432,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 else if (disasterService.happeningDisasters.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(_spacingMedium),
-                        child: Text(
-                          'No active disasters at the moment',
-                          style: TextStyle(color: colors.text200),
-                        ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(_spacingMedium),
+                      child: Text(
+                        'No active disasters at the moment',
+                        style: TextStyle(color: colors.text200),
                       ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: disasterService.happeningDisasters.length,
-                      itemBuilder: (context, index) {
-                        final disaster =
-                        disasterService.happeningDisasters[index];
-                        return _buildDisasterCard(
+                    ),
+                  )
+                else
+                  // Inside _buildDisastersList method, update the ListView.builder
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: disasterService.happeningDisasters.length,
+                    itemBuilder: (context, index) {
+                      final disaster =
+                          disasterService.happeningDisasters[index];
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AlertDetailScreen(disasterId: disaster.id),
+                          ),
+                        ),
+                        child: _buildDisasterCard(
                           description: disaster.description,
                           severity: disaster.severity,
                           location: disaster.location,
                           time: disaster.formattedTime,
                           disasterType: disaster.disasterType,
                           colors: colors,
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
+                  ),
                 // Pull to refresh hint text
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -507,16 +518,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildNavItem(
                       Icons.home, true, () {}, colors), // Home is active
                   _buildNavItem(Icons.map_outlined, false,
-                          () => _navigateTo(context, const MapScreen()), colors),
+                      () => _navigateTo(context, const MapScreen()), colors),
                   _buildNavItem(
                       Icons.people_outline,
                       false,
-                          () => _navigateTo(context, const CommunityScreen()),
+                      () => _navigateTo(context, const CommunityScreen()),
                       colors),
                   _buildNavItem(
                       Icons.person_outline,
                       false,
-                          () => _navigateTo(context, const ProfileScreen()),
+                      () => _navigateTo(context, const ProfileScreen()),
                       colors),
                 ],
               ),
@@ -527,15 +538,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Reusable navigation item widget
   Widget _buildNavItem(
-      IconData icon,
-      bool isActive,
-      VoidCallback onPressed,
-      AppColorTheme colors,
-      ) =>
+    IconData icon,
+    bool isActive,
+    VoidCallback onPressed,
+    AppColorTheme colors,
+  ) =>
       Container(
         decoration: BoxDecoration(
           color:
-          isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
+              isActive ? colors.accent200.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: IconButton(

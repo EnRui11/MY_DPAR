@@ -5,56 +5,56 @@ import 'package:latlong2/latlong.dart';
 /// Model for disaster data with consistent structure across the app
 class DisasterModel {
   final String id;
-  final String topic;
-  final String description;
+  final String userId;
+  final String disasterType;
+  final String? otherDisasterType;
   final String severity;
   final String location;
-  final String time;
-  final String disasterType;
   final LatLng? coordinates;
-  final int verificationCount;
+  final String description;
+  final List<String>? photoPaths; 
+  final String timestamp;
   final String status;
+  final List<String>? userList;
+  final List<Map<String, dynamic>>? locationList;
+  final int verificationCount;
 
-  const DisasterModel({
+  DisasterModel({
     required this.id,
-    required this.topic,
-    required this.description,
+    required this.userId,
+    required this.disasterType,
+    this.otherDisasterType,
     required this.severity,
     required this.location,
-    required this.time,
-    required this.disasterType,
     this.coordinates,
-    this.verificationCount = 1,
-    this.status = 'pending',
+    required this.description,
+    this.photoPaths,  // Added this parameter
+    required this.timestamp,
+    required this.status,
+    this.userList,
+    this.locationList,
+    required this.verificationCount,
   });
 
-  /// Factory constructor to create a DisasterModel from Firestore data
   factory DisasterModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-
-    // Handle coordinates if they exist
-    LatLng? coordinates;
-    if (data['latitude'] != null && data['longitude'] != null) {
-      coordinates = LatLng(data['latitude'], data['longitude']);
-    } else if (data['coordinates'] != null) {
-      final coords = data['coordinates'] as Map<String, dynamic>;
-      coordinates = LatLng(coords['latitude'], coords['longitude']);
-    }
-
     return DisasterModel(
       id: doc.id,
-      topic: data['disasterType'] ??
-          data['topic'] ??
-          data['title'] ??
-          'Unknown Disaster',
-      description: data['description'] ?? 'No description available',
-      severity: data['severity'] ?? 'Medium',
-      location: data['location'] ?? 'Unknown location',
-      time: data['timestamp'] ?? DateTime.now().toIso8601String(),
-      disasterType: data['disasterType'] ?? 'Other',
-      coordinates: coordinates,
-      verificationCount: data['verifyNum'] ?? 1,
-      status: data['status'] ?? 'pending',
+      userId: data['userId'] ?? '',
+      disasterType: data['disasterType'] ?? '',
+      otherDisasterType: data['otherDisasterType'],
+      severity: data['severity'] ?? '',
+      location: data['location'] ?? '',
+      coordinates: data['latitude'] != null && data['longitude'] != null
+          ? LatLng(data['latitude'], data['longitude'])
+          : null,
+      description: data['description'] ?? '',
+      photoPaths: (data['photoPaths'] as List<dynamic>?)?.cast<String>(),  // Added this conversion
+      timestamp: data['timestamp'] ?? '',
+      status: data['status'] ?? 'happening',
+      userList: (data['userList'] as List<dynamic>?)?.cast<String>(),
+      locationList: (data['locationList'] as List<dynamic>?)?.cast<Map<String, dynamic>>(),
+      verificationCount: data['verifyNum'] ?? 0,
     );
   }
 
@@ -72,7 +72,7 @@ class DisasterModel {
   /// Convert to a formatted time string (e.g., "2 hours ago")
   String get formattedTime {
     try {
-      final DateTime disasterTime = DateTime.parse(time);
+      final DateTime disasterTime = DateTime.parse(timestamp);  // Changed from time to timestamp
       final Duration difference = DateTime.now().difference(disasterTime);
 
       if (difference.inMinutes < 60) {
@@ -83,24 +83,23 @@ class DisasterModel {
         return '${difference.inDays} days ago';
       }
     } catch (e) {
-      return time;
+      return timestamp;  // Changed from time to timestamp
     }
   }
 
   /// Convert to a map for JSON serialization
   Map<String, dynamic> toJson() => {
     'id': id,
-    'topic': topic,
     'description': description,
     'severity': severity,
     'location': location,
-    'time': time,
+    'timestamp': timestamp,  // Changed from time to timestamp
     'disasterType': disasterType,
     'coordinates': coordinates != null
         ? {
-      'latitude': coordinates!.latitude,
-      'longitude': coordinates!.longitude
-    }
+            'latitude': coordinates!.latitude,
+            'longitude': coordinates!.longitude
+          }
         : null,
     'verificationCount': verificationCount,
     'status': status,
@@ -216,5 +215,18 @@ class DisasterService with ChangeNotifier {
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
+  }
+
+  /// Fetch a specific disaster by ID
+  Future<DisasterModel?> getDisasterById(String disasterId) async {
+    try {
+      final doc = await _firestore.collection('disaster_reports').doc(disasterId).get();
+      if (!doc.exists) return null;
+      return DisasterModel.fromFirestore(doc);
+    } catch (e) {
+      debugPrint('Error fetching disaster: $e');
+      _error = 'Failed to load disaster: $e';
+      return null;
+    }
   }
 }

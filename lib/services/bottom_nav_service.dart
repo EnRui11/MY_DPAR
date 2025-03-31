@@ -7,10 +7,10 @@ import 'package:mydpar/screens/main/profile_screen.dart';
 class NavigationService extends ChangeNotifier {
   // Current selected index for bottom navigation
   int _currentIndex = 0;
-  
+
   // Getter for current index
   int get currentIndex => _currentIndex;
-  
+
   // List of main screen routes
   static const List<String> routes = [
     '/home',
@@ -18,7 +18,7 @@ class NavigationService extends ChangeNotifier {
     '/community',
     '/profile',
   ];
-  
+
   // Method to change the current index
   void changeIndex(int index) {
     if (index != _currentIndex) {
@@ -26,7 +26,7 @@ class NavigationService extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   // Get screen name based on index
   String getScreenName(int index) {
     switch (index) {
@@ -42,7 +42,7 @@ class NavigationService extends ChangeNotifier {
         return 'Unknown';
     }
   }
-  
+
   // Get icon data based on index
   IconData getScreenIcon(int index) {
     switch (index) {
@@ -58,21 +58,23 @@ class NavigationService extends ChangeNotifier {
         return Icons.error;
     }
   }
-  
+
   // Navigate to a specific screen using route name
-  void navigateToNamed(BuildContext context, String routeName, {bool replace = false}) {
+  void navigateToNamed(BuildContext context, String routeName,
+      {bool replace = false}) {
     if (replace) {
       Navigator.pushReplacementNamed(context, routeName);
     } else {
       Navigator.pushNamed(context, routeName);
     }
   }
-  
+
   // Navigate to a specific screen using index
-  void navigateToIndex(BuildContext context, int index, {bool replace = false}) {
+  void navigateToIndex(BuildContext context, int index,
+      {bool replace = false}) {
     if (index >= 0 && index < routes.length) {
       changeIndex(index);
-      
+
       // Create the appropriate screen based on index
       Widget screen;
       switch (index) {
@@ -91,18 +93,13 @@ class NavigationService extends ChangeNotifier {
         default:
           return;
       }
-      
+
       // Navigate using MaterialPageRoute instead of named routes
       if (replace) {
         Navigator.pushReplacement(
-          context, 
-          MaterialPageRoute(builder: (_) => screen)
-        );
+            context, MaterialPageRoute(builder: (_) => screen));
       } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => screen)
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
       }
     }
   }

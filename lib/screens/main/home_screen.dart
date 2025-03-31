@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildContent(context, colors),
             _buildHeader(colors),
             const Positioned(
-              bottom: 0,
+              bottom: 16,
               left: 0,
               right: 0,
               child: BottomNavBar(),

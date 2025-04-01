@@ -101,13 +101,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(
-              icon: Icon(
-                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: colors.accent200,
+            SizedBox(
+              width: 80,
+              child: Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (_) => themeProvider.toggleTheme(),
+                activeColor: colors.accent200,
+                activeTrackColor: colors.accent200.withOpacity(0.3),
+                inactiveThumbColor: Colors.amber,
+                inactiveTrackColor: Colors.amber.withOpacity(0.3),
+                thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
+                  (Set<MaterialState> states) {
+                    return Icon(
+                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                      size: 16,
+                      color: themeProvider.isDarkMode ? colors.bg100 : Colors.white,
+                    );
+                  },
+                ),
+                trackOutlineColor: MaterialStateProperty.resolveWith(
+                  (states) => themeProvider.isDarkMode ? colors.bg300.withOpacity(0.2) : Colors.transparent,
+                ),
               ),
-              onPressed: themeProvider.toggleTheme,
-              tooltip: 'Toggle theme',
             ),
             IconButton(
               icon: Icon(Icons.settings, color: colors.primary300),

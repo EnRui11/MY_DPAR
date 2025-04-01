@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_map: ^5.0.0
   latlong2: ^0.9.0
   geolocator: ^10.1.0
@@ -47,6 +49,7 @@ dependencies:
   flutter_local_notifications: ^19.0.0
   timezone: ^0.10.0
   custom_refresh_indicator: ^2.2.1
+
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -86,6 +89,7 @@ flutter:
     - assets/fonts/Inter/
     - assets/sounds/loud-emergency-alarm.mp3
     - assets/sounds/stayin-alive.mp3
+    - assets/lang/
 
   fonts:
     - family: Inter

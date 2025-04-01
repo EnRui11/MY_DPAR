@@ -8,6 +8,8 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:mydpar/services/language_service.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 // Model for emergency contact data
 class EmergencyContact {
@@ -75,6 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
     final AppColorTheme colors = themeProvider.currentTheme;
     final userInfomation = Provider.of<UserInformationService>(context);
+    final languageService = Provider.of<LanguageService>(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -83,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Column(
               children: [
-                _buildHeader(themeProvider, colors),
+                _buildHeader(themeProvider, colors, languageService),
                 _buildContent(userInfomation, colors),
               ],
             ),
@@ -94,41 +97,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Builds the header with theme toggle and settings icon.
-  Widget _buildHeader(ThemeProvider themeProvider, AppColorTheme colors) =>
+  Widget _buildHeader(ThemeProvider themeProvider, AppColorTheme colors,
+          LanguageService languageService) =>
       Padding(
         padding: const EdgeInsets.symmetric(
             horizontal: _padding, vertical: _spacingSmall),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-              width: 80,
-              child: Switch(
-                value: themeProvider.isDarkMode,
-                onChanged: (_) => themeProvider.toggleTheme(),
-                activeColor: colors.accent200,
-                activeTrackColor: colors.accent200.withOpacity(0.3),
-                inactiveThumbColor: Colors.amber,
-                inactiveTrackColor: Colors.amber.withOpacity(0.3),
-                thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
-                  (Set<MaterialState> states) {
-                    return Icon(
-                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      size: 16,
-                      color: themeProvider.isDarkMode ? colors.bg100 : Colors.white,
-                    );
+            Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Switch(
+                    value: themeProvider.isDarkMode,
+                    onChanged: (_) => themeProvider.toggleTheme(),
+                    activeColor: colors.accent200,
+                    activeTrackColor: colors.accent200.withOpacity(0.3),
+                    inactiveThumbColor: Colors.amber,
+                    inactiveTrackColor: Colors.amber.withOpacity(0.3),
+                    thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
+                      (Set<MaterialState> states) {
+                        return Icon(
+                          themeProvider.isDarkMode
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
+                          size: 16,
+                          color: themeProvider.isDarkMode
+                              ? colors.bg100
+                              : Colors.white,
+                        );
+                      },
+                    ),
+                    trackOutlineColor: MaterialStateProperty.resolveWith(
+                      (states) => themeProvider.isDarkMode
+                          ? colors.bg300.withOpacity(0.2)
+                          : Colors.transparent,
+                    ),
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  offset: const Offset(0, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  color: colors.bg100,
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: LanguageService.english,
+                      child: Row(
+                        children: [
+                          Text(
+                            'EN',
+                            style: TextStyle(
+                              color: colors.text100,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'English',
+                            style: TextStyle(
+                              color: colors.text200,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: LanguageService.malay,
+                      child: Row(
+                        children: [
+                          Text(
+                            'BM',
+                            style: TextStyle(
+                              color: colors.text100,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Bahasa Melayu',
+                            style: TextStyle(
+                              color: colors.text200,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: LanguageService.mandarin,
+                      child: Row(
+                        children: [
+                          Text(
+                            'ZH',
+                            style: TextStyle(
+                              color: colors.text100,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '中文',
+                            style: TextStyle(
+                              color: colors.text200,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (String value) {
+                    languageService.changeLanguage(value);
                   },
+                  child: Container(
+                    height: 32,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: colors.accent200.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colors.accent200.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        languageService.currentLanguageCode,
+                        style: TextStyle(
+                          color: colors.accent200,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                trackOutlineColor: MaterialStateProperty.resolveWith(
-                  (states) => themeProvider.isDarkMode ? colors.bg300.withOpacity(0.2) : Colors.transparent,
-                ),
-              ),
+              ],
             ),
             IconButton(
               icon: Icon(Icons.settings, color: colors.primary300),
               onPressed: () =>
                   _navigateTo(const Placeholder()), // Placeholder for settings
-              tooltip: 'Settings',
+              tooltip: AppLocalizations.of(context).translate('settings'),
             ),
           ],
         ),
@@ -218,7 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Emergency Contacts',
+                AppLocalizations.of(context).translate('emergency_contacts'),
                 style: TextStyle(
                     color: colors.primary300,
                     fontSize: 18,
@@ -227,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               IconButton(
                 icon: Icon(Icons.add, color: colors.accent200),
                 onPressed: () => _showAddContactDialog(userInfomation, colors),
-                tooltip: 'Add contact',
+                tooltip: AppLocalizations.of(context).translate('add_contact'),
               ),
             ],
           ),
@@ -259,7 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
             const SizedBox(height: _spacingMedium),
             Text(
-              'No Emergency Contacts',
+              AppLocalizations.of(context).translate('no_emergency_contacts'),
               style: TextStyle(
                   color: colors.primary300,
                   fontSize: 16,
@@ -267,7 +378,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: _spacingSmall),
             Text(
-              'Add contacts for quick help during emergencies',
+              AppLocalizations.of(context).translate('add_contacts_help'),
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.text200),
             ),
@@ -279,7 +390,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent200,
                   foregroundColor: colors.bg100),
-              child: const Text('Add Contact'),
+              child:
+                  Text(AppLocalizations.of(context).translate('add_contact')),
             ),
           ],
         ),
@@ -317,13 +429,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 IconButton(
                   icon: Icon(Icons.phone, color: colors.accent200),
                   onPressed: () => _launchPhoneCall(contact.phone, colors),
-                  tooltip: 'Call ${contact.name}',
+                  tooltip: AppLocalizations.of(context)
+                      .translate('call_contact', {'name': contact.name}),
                 ),
                 IconButton(
                   icon: Icon(Icons.edit, color: colors.accent200),
                   onPressed: () => _showEditContactDialog(
                       contact, index, userInfomation, colors),
-                  tooltip: 'Edit ${contact.name}',
+                  tooltip: AppLocalizations.of(context)
+                      .translate('edit_contact', {'name': contact.name}),
                 ),
               ],
             ),
@@ -336,17 +450,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final settings = [
       SettingItem(
         icon: Icons.shield_outlined,
-        title: 'Privacy',
+        title: AppLocalizations.of(context).translate('privacy'),
         onTap: () => _navigateTo(const Placeholder()),
       ),
       SettingItem(
         icon: Icons.help_outline,
-        title: 'Help & Support',
+        title: AppLocalizations.of(context).translate('help_support'),
         onTap: () => _navigateTo(const Placeholder()),
       ),
       SettingItem(
         icon: Icons.logout,
-        title: 'Logout',
+        title: AppLocalizations.of(context).translate('logout'),
         onTap: () => _showLogoutDialog(colors),
       ),
     ];
@@ -395,42 +509,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
       } else {
-        _showSnackBar('Could not launch phone call', colors.warning);
+        _showSnackBar(AppLocalizations.of(context).translate('call_failed'),
+            colors.warning);
       }
     } catch (e) {
-      _showSnackBar('Error calling $phone: $e', colors.warning);
+      _showSnackBar(
+          AppLocalizations.of(context)
+              .translate('call_error', {'phone': phone, 'error': e.toString()}),
+          colors.warning);
     }
   }
 
   /// Requests permission and picks an image, then updates via userInfomation.
   Future<void> _pickImage(ImageSource source,
       UserInformationService userInfomation, AppColorTheme colors) async {
-    final permission =
-        source == ImageSource.camera ? Permission.camera : Permission.photos;
-    final status = await permission.request();
+    // Request permission
+    final PermissionStatus status = await Permission.photos.request();
 
     if (status.isGranted) {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: source);
-      if (pickedFile != null && mounted) {
-        _showLoadingDialog(colors, 'Uploading photo...');
+      try {
+        final ImagePicker picker = ImagePicker();
+        final XFile? pickedFile = await picker.pickImage(
+          source: source,
+          maxWidth: 800,
+          maxHeight: 800,
+          imageQuality: 85,
+        );
+
+        if (pickedFile == null) return;
+
+        if (mounted) {
+          _showLoadingDialog(colors, 'uploading_photo');
+        }
+
         try {
           await userInfomation.updateProfilePhoto(pickedFile.path);
           if (mounted) {
-            Navigator.pop(context); // Close loading dialog
-            _showSnackBar('Profile photo updated', colors.accent200);
+            Navigator.pop(context);
+            _showSnackBar(
+                AppLocalizations.of(context).translate('profile_photo_updated'),
+                colors.accent200);
           }
         } catch (e) {
           if (mounted) {
             Navigator.pop(context);
-            _showSnackBar('Failed to update photo: $e', colors.warning);
+            _showSnackBar(
+                AppLocalizations.of(context)
+                    .translate('photo_update_failed', {'error': e.toString()}),
+                colors.warning);
           }
         }
+      } catch (e) {
+        _showSnackBar('Error picking image: $e', colors.warning);
       }
     } else if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
         _showSnackBar(
-            'Permission denied. Enable it in settings.', colors.warning);
+            AppLocalizations.of(context).translate('permission_denied'),
+            colors.warning);
       }
     }
   }
@@ -441,7 +577,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Change Profile Photo',
+        title: Text(
+            AppLocalizations.of(context).translate('change_profile_photo'),
             style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
         content: Column(
@@ -449,7 +586,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             ListTile(
               leading: Icon(Icons.photo_library, color: colors.accent200),
-              title: Text('Choose from Gallery',
+              title: Text(
+                  AppLocalizations.of(context).translate('choose_gallery'),
                   style: TextStyle(color: colors.text100)),
               onTap: () {
                 Navigator.pop(context);
@@ -458,8 +596,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: colors.accent200),
-              title:
-                  Text('Take a Photo', style: TextStyle(color: colors.text100)),
+              title: Text(AppLocalizations.of(context).translate('take_photo'),
+                  style: TextStyle(color: colors.text100)),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera, userInfomation, colors);
@@ -481,7 +619,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Add Emergency Contact',
+        title: Text(
+            AppLocalizations.of(context).translate('add_emergency_contact'),
             style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
         content: _buildContactForm(
@@ -489,7 +628,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colors.text200)),
+            child: Text(AppLocalizations.of(context).translate('cancel'),
+                style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
             onPressed: () => _addContact(userInfomation, nameController,
@@ -497,7 +637,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent200,
                 foregroundColor: colors.bg100),
-            child: const Text('Add'),
+            child: Text(AppLocalizations.of(context).translate('add')),
           ),
         ],
       ),
@@ -542,7 +682,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Emergency Contact',
+        title: Text(
+            AppLocalizations.of(context).translate('edit_emergency_contact'),
             style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
         content: _buildContactForm(
@@ -551,11 +692,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => _showDeleteConfirmationDialog(
                 contact, index, userInfomation, colors),
-            child: Text('Delete', style: TextStyle(color: colors.warning)),
+            child: Text(AppLocalizations.of(context).translate('delete'),
+                style: TextStyle(color: colors.warning)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colors.text200)),
+            child: Text(AppLocalizations.of(context).translate('cancel'),
+                style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
             onPressed: () => _updateContact(userInfomation, nameController,
@@ -563,7 +706,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent200,
                 foregroundColor: colors.bg100),
-            child: const Text('Save'),
+            child: Text(AppLocalizations.of(context).translate('save')),
           ),
         ],
       ),
@@ -605,23 +748,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            Text('Delete Contact', style: TextStyle(color: colors.primary300)),
+        title: Text(AppLocalizations.of(context).translate('delete_contact'),
+            style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
         content: Text(
-          'Are you sure you want to delete ${contact.name}?',
+          AppLocalizations.of(context)
+              .translate('delete_contact_confirmation', {'name': contact.name}),
           style: TextStyle(color: colors.text200),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colors.text200)),
+            child: Text(AppLocalizations.of(context).translate('cancel'),
+                style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
             onPressed: () => _deleteContact(index, userInfomation, colors),
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.warning, foregroundColor: colors.bg100),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context).translate('delete')),
           ),
         ],
       ),
@@ -648,15 +793,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            Text('Confirm Logout', style: TextStyle(color: colors.primary300)),
+        title: Text(AppLocalizations.of(context).translate('confirm_logout'),
+            style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
-        content: Text('Are you sure you want to logout?',
+        content: Text(
+            AppLocalizations.of(context).translate('logout_confirmation'),
             style: TextStyle(color: colors.text200)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colors.text200)),
+            child: Text(AppLocalizations.of(context).translate('cancel'),
+                style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -670,7 +817,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.warning, foregroundColor: colors.bg100),
-            child: const Text('Logout'),
+            child: Text(AppLocalizations.of(context).translate('logout')),
           ),
         ],
       ),
@@ -690,7 +837,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextField(
             controller: nameController,
             decoration: InputDecoration(
-              labelText: 'Name',
+              labelText: AppLocalizations.of(context).translate('name'),
               labelStyle: TextStyle(color: colors.text200),
               enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: colors.bg300)),
@@ -701,7 +848,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextField(
             controller: relationController,
             decoration: InputDecoration(
-              labelText: 'Relationship',
+              labelText: AppLocalizations.of(context).translate('relationship'),
               labelStyle: TextStyle(color: colors.text200),
               enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: colors.bg300)),
@@ -712,7 +859,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextField(
             controller: phoneController,
             decoration: InputDecoration(
-              labelText: 'Phone Number',
+              labelText: AppLocalizations.of(context).translate('phone_number'),
               labelStyle: TextStyle(color: colors.text200),
               enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: colors.bg300)),
@@ -733,14 +880,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (nameController.text.trim().isEmpty ||
         relationController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty) {
-      _showSnackBar('All fields are required', colors.warning);
+      _showSnackBar(
+          AppLocalizations.of(context).translate('all_fields_required'),
+          colors.warning);
       return false;
     }
     return true;
   }
 
   /// Shows a loading dialog with a custom message.
-  void _showLoadingDialog(AppColorTheme colors, String message) {
+  void _showLoadingDialog(AppColorTheme colors, String messageKey) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -750,7 +899,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             CircularProgressIndicator(color: colors.accent200),
             const SizedBox(width: 20),
-            Text(message, style: TextStyle(color: colors.text100)),
+            Text(AppLocalizations.of(context).translate(messageKey),
+                style: TextStyle(color: colors.text100)),
           ],
         ),
       ),

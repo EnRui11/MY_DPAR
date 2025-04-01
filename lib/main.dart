@@ -19,6 +19,9 @@ import 'package:mydpar/services/permission_service.dart';
 import 'package:mydpar/services/background_location_service.dart';
 import 'services/firebase_options.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:mydpar/localization/app_localizations.dart';
+import 'package:mydpar/services/language_service.dart';
 
 /// Entry point of the MyDPAR application.
 Future<void> main() async {
@@ -76,6 +79,7 @@ class MyDPARApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PermissionService()),
         ChangeNotifierProvider(create: (_) => DisasterService()),
         ChangeNotifierProvider(create: (_) => NavigationService()),
+        ChangeNotifierProvider(create: (_) => LanguageService()),
       ],
       child: const AppThemeWrapper(),
     );
@@ -89,10 +93,11 @@ class AppThemeWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final languageService = Provider.of<LanguageService>(context);
     final colors = themeProvider.currentTheme;
 
     return MaterialApp(
-      title: 'MyDPAR',
+      title: 'MY-DPAR',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -125,6 +130,18 @@ class AppThemeWrapper extends StatelessWidget {
         ),
       ),
       builder: (context, child) => AppOverlay(child: child),
+      locale: Locale(languageService.currentLanguage),
+      supportedLocales: const [
+        Locale('en', ''), // English
+        Locale('ms', ''), // Malay
+        Locale('zh', ''), // Mandarin
+      ],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: const AuthWrapper(),
     );
   }

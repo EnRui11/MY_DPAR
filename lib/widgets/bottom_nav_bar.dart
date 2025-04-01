@@ -7,7 +7,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 class BottomNavBar extends StatelessWidget {
   // Add onTap callback
   final Function(int)? onTap;
-  
+
   const BottomNavBar({Key? key, this.onTap}) : super(key: key);
 
   @override
@@ -67,8 +67,9 @@ class BottomNavBar extends StatelessWidget {
           }
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 1000),
+          // Changed curve to make animation feel more natural
+          curve: Curves.easeOutCubic,
           margin: const EdgeInsets.symmetric(
               vertical: 8.0, horizontal: 1.0), // Further reduced margin
           padding: EdgeInsets.symmetric(
@@ -91,9 +92,9 @@ class BottomNavBar extends StatelessWidget {
             children: [
               if (!isActive && index > activeIndex)
                 SizedBox(
-                  width: 38, // Fixed width for icon container
+                  width: 38,
                   child: Container(
-                    padding: const EdgeInsets.all(6.0), // Reduced padding
+                    padding: const EdgeInsets.all(6.0),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.transparent,
@@ -101,15 +102,15 @@ class BottomNavBar extends StatelessWidget {
                     child: Icon(
                       navigationService.getScreenIcon(index),
                       color: colors.text200.withOpacity(0.7),
-                      size: 20, // Slightly smaller icon
+                      size: 20,
                     ),
                   ),
                 ),
               if (isActive) ...[
                 SizedBox(
-                  width: 38, // Fixed width for icon container
+                  width: 38,
                   child: Container(
-                    padding: const EdgeInsets.all(6.0), // Reduced padding
+                    padding: const EdgeInsets.all(6.0),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: colors.accent200,
@@ -124,32 +125,40 @@ class BottomNavBar extends StatelessWidget {
                     child: Icon(
                       navigationService.getScreenIcon(index),
                       color: colors.bg100,
-                      size: 20, // Slightly smaller icon
+                      size: 20,
                     ),
                   ),
                 ),
-                const SizedBox(width: 4.0), // Reduced spacing
+                const SizedBox(width: 4.0),
                 Flexible(
-                  // Changed from Expanded to Flexible
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: 1.0,
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        color: colors.accent200,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12, // Smaller text
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  child: TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 800),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Transform.translate(
+                        offset: Offset((1 - value) * -20, 0),
+                        child: Opacity(
+                          opacity: value,
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              color: colors.accent200,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
               if (!isActive && index < activeIndex)
                 SizedBox(
-                  width: 38, // Fixed width for icon container
+                  width: 38,
                   child: Container(
                     padding: const EdgeInsets.all(6.0), // Reduced padding
                     decoration: BoxDecoration(

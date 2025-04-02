@@ -1,4 +1,33 @@
 {
+  "login_screen":"login_screen.dart",
+  "welcome_back_sign_in": "Selamat kembali, log masuk untuk meneruskan",
+  "email": "E-mel",
+  "enter_your_email": "Masukkan e-mel anda",
+  "invalid_email": "E-mel tidak sah",
+  "password": "Kata Laluan",
+  "enter_your_password": "Masukkan kata laluan anda",
+  "password_required": "Kata laluan diperlukan",
+  "sign_in": "Log Masuk",
+  "dont_have_account": "Tidak mempunyai akaun? ",
+  "sign_up": "Daftar",
+  "forgot_password": "Lupa Kata Laluan?",
+  "invalid_credentials": "E-mel atau kata laluan tidak sah. Sila semak maklumat anda.",
+  "no_account_exists": "Tiada akaun wujud dengan e-mel ini.",
+  "incorrect_password": "Kata laluan salah. Sila cuba lagi.",
+  "invalid_email_address": "Alamat e-mel tidak sah.",
+  "account_disabled": "Akaun ini telah dinyahaktifkan.",
+  "too_many_login_attempts": "Terlalu banyak percubaan log masuk. Sila cuba lagi kemudian.",
+  "network_error": "Ralat rangkaian. Sila periksa sambungan anda.",
+  "login_failed": "Log masuk gagal: {message} (Kod: {code})",
+  "enter_valid_email": "Sila masukkan e-mel yang sah",
+  "reset_email_sent": "Jika akaun wujud, e-mel tetapan semula telah dihantar.",
+  "too_many_requests": "Terlalu banyak permintaan. Sila cuba lagi kemudian.",
+  "error_with_code": "Ralat: {message} (Kod: {code})",
+
+
+
+
+  
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "Kenalan Kecemasan",
   "add_contact": "Tambah Kenalan",

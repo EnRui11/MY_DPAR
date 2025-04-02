@@ -1,4 +1,33 @@
 {
+  "login_screen":"login_screen.dart",
+  "welcome_back_sign_in": "欢迎回来，请登录继续",
+  "email": "电子邮件",
+  "enter_your_email": "输入您的电子邮件",
+  "invalid_email": "无效的电子邮件",
+  "password": "密码",
+  "enter_your_password": "输入您的密码",
+  "password_required": "密码是必需的",
+  "sign_in": "登录",
+  "dont_have_account": "没有账户？ ",
+  "sign_up": "注册",
+  "forgot_password": "忘记密码？",
+  "invalid_credentials": "电子邮件或密码无效。请检查您的凭据。",
+  "no_account_exists": "此电子邮件不存在账户。",
+  "incorrect_password": "密码不正确。请再试一次。",
+  "invalid_email_address": "电子邮件地址无效。",
+  "account_disabled": "此账户已被禁用。",
+  "too_many_login_attempts": "登录尝试次数过多。请稍后再试。",
+  "network_error": "网络错误。请检查您的连接。",
+  "login_failed": "登录失败：{message}（代码：{code}）",
+  "enter_valid_email": "请输入有效的电子邮件",
+  "reset_email_sent": "如果账户存在，重置电子邮件已发送。",
+  "too_many_requests": "请求过多。请稍后再试。",
+  "error_with_code": "错误：{message}（代码：{code}）",
+
+
+
+
+
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "紧急联系人",
   "add_contact": "添加联系人",

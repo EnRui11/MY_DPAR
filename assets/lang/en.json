@@ -1,4 +1,33 @@
 {
+  "login_screen":"login_screen.dart",
+  "welcome_back_sign_in": "Welcome back, sign in to continue",
+  "email": "Email",
+  "enter_your_email": "Enter your email",
+  "invalid_email": "Invalid email",
+  "password": "Password",
+  "enter_your_password": "Enter your password",
+  "password_required": "Password is required",
+  "sign_in": "Sign In",
+  "dont_have_account": "Don't have an account? ",
+  "sign_up": "Sign Up",
+  "forgot_password": "Forgot Password?",
+  "invalid_credentials": "Invalid email or password. Please check your credentials.",
+  "no_account_exists": "No account exists with this email.",
+  "incorrect_password": "Incorrect password. Please try again.",
+  "invalid_email_address": "The email address is not valid.",
+  "account_disabled": "This account has been disabled.",
+  "too_many_login_attempts": "Too many login attempts. Please try again later.",
+  "network_error": "Network error. Please check your connection.",
+  "login_failed": "Login failed: {message} (Code: {code})",
+  "enter_valid_email": "Please enter a valid email",
+  "reset_email_sent": "If an account exists, a reset email has been sent.",
+  "too_many_requests": "Too many requests. Please try again later.",
+  "error_with_code": "Error: {message} (Code: {code})",
+
+
+
+
+  
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "Emergency Contacts",
   "add_contact": "Add Contact",

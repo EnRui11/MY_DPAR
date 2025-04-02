@@ -27,6 +27,41 @@
 
 
 
+
+  "registration_screen":"registration_screen.dart",
+  "get_started": "Get Started",
+  "create_account_to_continue": "Create your account to continue",
+  "first_name": "First Name",
+  "first_name_hint": "First name",
+  "last_name": "Last Name",
+  "last_name_hint": "Last name",
+  "phone_number": "Phone Number",
+  "enter_phone_number": "Enter your phone number",
+  "invalid_phone_number": "Please enter a valid phone number",
+  "create_password": "Create a password",
+  "confirm_password": "Confirm Password",
+  "reenter_password": "Re-enter your password",
+  "passwords_match": "Passwords match",
+  "min_characters": "At least {count} characters",
+  "one_uppercase": "At least one uppercase letter",
+  "one_lowercase": "At least one lowercase letter",
+  "one_number": "At least one number",
+  "one_special_char": "At least one special character",
+  "emergency_contact": "Emergency Contact",
+  "add_later": "You can add this field later.",
+  "contact_name": "Contact Name",
+  "emergency_contact_name": "Emergency contact name",
+  "relationship": "Relationship",
+  "relationship_to_contact": "Relationship to contact",
+  "contact_phone": "Contact Phone",
+  "emergency_contact_phone": "Emergency contact phone",
+  "create_account": "Create Account",
+  "already_have_account": "Already have an account? ",
+  "account_created_successfully": "Account created successfully! Please sign in.",
+
+
+
+
   
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "Emergency Contacts",

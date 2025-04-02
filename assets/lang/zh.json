@@ -27,6 +27,40 @@
 
 
 
+  "register_screen":"register_screen.dart",
+  "get_started": "开始使用",
+  "create_account_to_continue": "创建您的账户以继续",
+  "first_name": "名字",
+  "first_name_hint": "名字",
+  "last_name": "姓氏",
+  "last_name_hint": "姓氏",
+  "phone_number": "电话号码",
+  "enter_phone_number": "输入您的电话号码",
+  "invalid_phone_number": "请输入有效的电话号码",
+  "create_password": "创建密码",
+  "confirm_password": "确认密码",
+  "reenter_password": "重新输入您的密码",
+  "passwords_match": "密码匹配",
+  "min_characters": "至少{count}个字符",
+  "one_uppercase": "至少一个大写字母",
+  "one_lowercase": "至少一个小写字母",
+  "one_number": "至少一个数字",
+  "one_special_char": "至少一个特殊字符",
+  "emergency_contact": "紧急联系人",
+  "add_later": "您可以稍后添加此字段。",
+  "contact_name": "联系人姓名",
+  "emergency_contact_name": "紧急联系人姓名",
+  "relationship": "关系",
+  "relationship_to_contact": "与联系人的关系",
+  "contact_phone": "联系人电话",
+  "emergency_contact_phone": "紧急联系人电话",
+  "create_account": "创建账户",
+  "already_have_account": "已有账户？ ",
+  "account_created_successfully": "账户创建成功！请登录。",
+
+
+
+
 
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "紧急联系人",

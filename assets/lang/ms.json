@@ -27,6 +27,40 @@
 
 
 
+  "register_screen":"register_screen.dart",
+  "get_started": "Mulakan",
+  "create_account_to_continue": "Cipta akaun anda untuk meneruskan",
+  "first_name": "Nama Pertama",
+  "first_name_hint": "Nama pertama",
+  "last_name": "Nama Akhir",
+  "last_name_hint": "Nama akhir",
+  "phone_number": "Nombor Telefon",
+  "enter_phone_number": "Masukkan nombor telefon anda",
+  "invalid_phone_number": "Sila masukkan nombor telefon yang sah",
+  "create_password": "Cipta kata laluan",
+  "confirm_password": "Sahkan Kata Laluan",
+  "reenter_password": "Masukkan semula kata laluan anda",
+  "passwords_match": "Kata laluan sepadan",
+  "min_characters": "Sekurang-kurangnya {count} aksara",
+  "one_uppercase": "Sekurang-kurangnya satu huruf besar",
+  "one_lowercase": "Sekurang-kurangnya satu huruf kecil",
+  "one_number": "Sekurang-kurangnya satu nombor",
+  "one_special_char": "Sekurang-kurangnya satu aksara khas",
+  "emergency_contact": "Kenalan Kecemasan",
+  "add_later": "Anda boleh menambah medan ini kemudian.",
+  "contact_name": "Nama Kenalan",
+  "emergency_contact_name": "Nama kenalan kecemasan",
+  "relationship": "Hubungan",
+  "relationship_to_contact": "Hubungan dengan kenalan",
+  "contact_phone": "Telefon Kenalan",
+  "emergency_contact_phone": "Telefon kenalan kecemasan",
+  "create_account": "Cipta Akaun",
+  "already_have_account": "Sudah mempunyai akaun? ",
+  "account_created_successfully": "Akaun berjaya dicipta! Sila log masuk.",
+
+
+
+
   
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "Kenalan Kecemasan",

@@ -3,18 +3,45 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/services/background_location_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+/// Model for emergency contact data
+class EmergencyContact {
+  final String name;
+  final String relation;
+  final String phone;
+
+  const EmergencyContact({
+    required this.name,
+    required this.relation,
+    required this.phone,
+  });
+
+  factory EmergencyContact.fromJson(Map<String, dynamic> json) =>
+      EmergencyContact(
+        name: json['name'] as String? ?? 'Unknown',
+        relation: json['relation'] as String? ?? 'Not specified',
+        phone: json['phone'] as String? ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'relation': relation,
+        'phone': phone,
+      };
+}
+
 class UserInformationService with ChangeNotifier {
   String? _userId;
+  String? _firstName;
   String? _lastName;
   String? _photoUrl;
   String? _email;
   String? _phoneNumber;
   List<EmergencyContact> _contacts = [];
   bool _isInitialized = false;
+  bool _isLoading = false;
 
   // Private Firebase instances for better encapsulation
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -23,6 +50,7 @@ class UserInformationService with ChangeNotifier {
 
   // Getters
   String? get userId => _userId;
+  String? get firstName => _firstName;
   String? get lastName => _lastName;
   String? get photoUrl => _photoUrl;
   String? get email => _email;
@@ -30,6 +58,8 @@ class UserInformationService with ChangeNotifier {
   List<EmergencyContact> get contacts =>
       List.unmodifiable(_contacts); // Immutable list for safety
   bool get isInitialized => _isInitialized;
+  bool get isLoading => _isLoading;
+  bool get isLoggedIn => _auth.currentUser != null;
 
   UserInformationService() {
     _initializeUser();
@@ -51,7 +81,7 @@ class UserInformationService with ChangeNotifier {
       _photoUrl = user.photoURL;
 
       await _loadUserData();
-      await updateFcmToken(); // Add this line
+      await updateFcmToken();
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
@@ -67,6 +97,7 @@ class UserInformationService with ChangeNotifier {
       final doc = await _firestore.collection('users').doc(_userId).get();
       if (doc.exists) {
         final data = doc.data()!;
+        _firstName = data['firstName'] as String?;
         _lastName = data['lastName'] as String? ?? 'User';
         _phoneNumber = data['phoneNumber'] as String?;
         _contacts = (data['emergencyContacts'] as List<dynamic>? ?? [])
@@ -76,6 +107,7 @@ class UserInformationService with ChangeNotifier {
       } else {
         // Initialize default user document if it doesn't exist
         await _firestore.collection('users').doc(_userId).set({
+          'firstName': _firstName,
           'lastName': _lastName ?? 'User',
           'email': _email,
           'phoneNumber': _phoneNumber,
@@ -101,9 +133,100 @@ class UserInformationService with ChangeNotifier {
     }
   }
 
+  /// Register a new user with email and password
+  Future<UserCredential> registerUser({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    required String phoneNumber,
+    List<EmergencyContact> emergencyContacts = const [],
+  }) async {
+    _setLoading(true);
+    try {
+      // Create the user with Firebase Auth
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Store additional user data in Firestore
+      await _firestore.collection('users').doc(credential.user!.uid).set({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'emergencyContacts': emergencyContacts.map((e) => e.toJson()).toList(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Initialize user data
+      _userId = credential.user!.uid;
+      _firstName = firstName;
+      _lastName = lastName;
+      _email = email;
+      _phoneNumber = phoneNumber;
+      _contacts = List.from(emergencyContacts);
+
+      await updateFcmToken();
+      _isInitialized = true;
+      notifyListeners();
+
+      return credential;
+    } catch (e) {
+      debugPrint('Error registering user: $e');
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Login with email and password
+  Future<UserCredential> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    _setLoading(true);
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      _userId = credential.user!.uid;
+      _email = email;
+
+      await _loadUserData();
+      await updateFcmToken();
+      _isInitialized = true;
+      notifyListeners();
+
+      return credential;
+    } catch (e) {
+      debugPrint('Error logging in: $e');
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Send password reset email
+  Future<void> resetPassword(String email) async {
+    _setLoading(true);
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      debugPrint('Error sending password reset: $e');
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   /// Updates profile photo in Firebase Storage, Auth, and Firestore.
   Future<String> updateProfilePhoto(String filePath) async {
     if (_userId == null) throw Exception('No user signed in');
+    _setLoading(true);
 
     try {
       final ref = _storage.ref().child('user_photos').child('$_userId.jpg');
@@ -123,12 +246,15 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating profile photo: $e');
       throw Exception('Failed to update profile photo: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
   /// Adds an emergency contact to Firestore.
   Future<void> addEmergencyContact(EmergencyContact contact) async {
     if (_userId == null) throw Exception('No user signed in');
+    _setLoading(true);
 
     try {
       final docRef = _firestore.collection('users').doc(_userId);
@@ -143,6 +269,8 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error adding emergency contact: $e');
       throw Exception('Failed to add emergency contact: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -152,6 +280,7 @@ class UserInformationService with ChangeNotifier {
     if (_userId == null) throw Exception('No user signed in');
     if (index < 0 || index >= _contacts.length)
       throw Exception('Invalid contact index');
+    _setLoading(true);
 
     try {
       final docRef = _firestore.collection('users').doc(_userId);
@@ -166,6 +295,8 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating emergency contact: $e');
       throw Exception('Failed to update emergency contact: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -174,6 +305,7 @@ class UserInformationService with ChangeNotifier {
     if (_userId == null) throw Exception('No user signed in');
     if (index < 0 || index >= _contacts.length)
       throw Exception('Invalid contact index');
+    _setLoading(true);
 
     try {
       final docRef = _firestore.collection('users').doc(_userId);
@@ -188,11 +320,14 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error deleting emergency contact: $e');
       throw Exception('Failed to delete emergency contact: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
   /// Logs out the current user.
   Future<void> logout() async {
+    _setLoading(true);
     try {
       // Update user's online status before logging out
       if (_userId != null) {
@@ -211,12 +346,35 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error logging out: $e');
       throw Exception('Failed to log out: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Updates the first name in Firestore.
+  Future<void> updateFirstName(String firstName) async {
+    if (_userId == null) throw Exception('No user signed in');
+    _setLoading(true);
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .update({'firstName': firstName});
+      _firstName = firstName;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error updating first name: $e');
+      throw Exception('Failed to update first name: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
   /// Updates the last name in Firestore.
   Future<void> updateLastName(String lastName) async {
     if (_userId == null) throw Exception('No user signed in');
+    _setLoading(true);
 
     try {
       await _firestore
@@ -228,12 +386,15 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating last name: $e');
       throw Exception('Failed to update last name: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
   /// Updates the email in Firebase Auth and Firestore.
   Future<void> updateEmail(String email) async {
     if (_userId == null) throw Exception('No user signed in');
+    _setLoading(true);
 
     try {
       await _auth.currentUser?.updateEmail(email);
@@ -246,24 +407,15 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating email: $e');
       throw Exception('Failed to update email: $e');
+    } finally {
+      _setLoading(false);
     }
-  }
-
-  /// Resets provider state after logout or error.
-  void _resetState() {
-    _userId = null;
-    _lastName = null;
-    _photoUrl = null;
-    _email = null;
-    _phoneNumber = null;
-    _contacts = [];
-    _isInitialized = false;
   }
 
   /// Updates the phone number in Firestore.
   Future<void> updatePhoneNumber(String phoneNumber) async {
-    // Add this method
     if (_userId == null) throw Exception('No user signed in');
+    _setLoading(true);
 
     try {
       await _firestore
@@ -275,7 +427,28 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating phone number: $e');
       throw Exception('Failed to update phone number: $e');
+    } finally {
+      _setLoading(false);
     }
+  }
+
+  /// Resets provider state after logout or error.
+  void _resetState() {
+    _userId = null;
+    _firstName = null;
+    _lastName = null;
+    _photoUrl = null;
+    _email = null;
+    _phoneNumber = null;
+    _contacts = [];
+    _isInitialized = false;
+    _isLoading = false;
+  }
+
+  /// Helper method to set loading state
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
   }
 
   // Add public method to initialize user
@@ -283,12 +456,10 @@ class UserInformationService with ChangeNotifier {
     await _initializeUser();
   }
 
-  // Step 3: Update User Information Service to Store FCM Tokens
-  
   /// Updates the user's FCM token for push notifications
   Future<void> updateFcmToken() async {
     if (_userId == null) return;
-    
+
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
@@ -299,5 +470,15 @@ class UserInformationService with ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating FCM token: $e');
     }
+  }
+
+  /// Check if a user is currently logged in
+  bool checkUserLoggedIn() {
+    return _auth.currentUser != null;
+  }
+
+  /// Get current user ID
+  String? getCurrentUserId() {
+    return _auth.currentUser?.uid;
   }
 }

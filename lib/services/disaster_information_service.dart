@@ -28,7 +28,7 @@ class DisasterModel {
     required this.location,
     this.coordinates,
     required this.description,
-    this.photoPaths,  // Added this parameter
+    this.photoPaths,
     required this.timestamp,
     required this.status,
     this.userList,
@@ -49,7 +49,7 @@ class DisasterModel {
           ? LatLng(data['latitude'], data['longitude'])
           : null,
       description: data['description'] ?? '',
-      photoPaths: (data['photoPaths'] as List<dynamic>?)?.cast<String>(),  // Added this conversion
+      photoPaths: (data['photoPaths'] as List<dynamic>?)?.cast<String>(),
       timestamp: data['timestamp'] ?? '',
       status: data['status'] ?? 'happening',
       userList: (data['userList'] as List<dynamic>?)?.cast<String>(),
@@ -61,10 +61,8 @@ class DisasterModel {
   /// Check if the disaster is currently happening
   bool get isHappening {
     try {
-      // Consider a disaster as "happening" if its status is "happening"
       return status.toLowerCase() == 'happening';
     } catch (e) {
-      // If there's an error, default to not showing the disaster
       return false;
     }
   }
@@ -72,7 +70,7 @@ class DisasterModel {
   /// Convert to a formatted time string (e.g., "2 hours ago")
   String get formattedTime {
     try {
-      final DateTime disasterTime = DateTime.parse(timestamp);  // Changed from time to timestamp
+      final DateTime disasterTime = DateTime.parse(timestamp);
       final Duration difference = DateTime.now().difference(disasterTime);
 
       if (difference.inMinutes < 60) {
@@ -83,27 +81,63 @@ class DisasterModel {
         return '${difference.inDays} days ago';
       }
     } catch (e) {
-      return timestamp;  // Changed from time to timestamp
+      return timestamp;
     }
   }
 
   /// Convert to a map for JSON serialization
   Map<String, dynamic> toJson() => {
     'id': id,
+    'userId': userId,
+    'disasterType': disasterType,
+    'otherDisasterType': otherDisasterType,
     'description': description,
     'severity': severity,
     'location': location,
-    'timestamp': timestamp,  // Changed from time to timestamp
-    'disasterType': disasterType,
-    'coordinates': coordinates != null
-        ? {
-            'latitude': coordinates!.latitude,
-            'longitude': coordinates!.longitude
-          }
-        : null,
-    'verificationCount': verificationCount,
+    'timestamp': timestamp,
     'status': status,
+    'verifyNum': verificationCount,
+    'userList': userList,
+    'locationList': locationList,
+    'photoPaths': photoPaths,
+    'latitude': coordinates?.latitude,
+    'longitude': coordinates?.longitude,
   };
+  
+  /// Create a copy of this model with updated fields
+  DisasterModel copyWith({
+    String? id,
+    String? userId,
+    String? disasterType,
+    String? otherDisasterType,
+    String? severity,
+    String? location,
+    LatLng? coordinates,
+    String? description,
+    List<String>? photoPaths,
+    String? timestamp,
+    String? status,
+    List<String>? userList,
+    List<Map<String, dynamic>>? locationList,
+    int? verificationCount,
+  }) {
+    return DisasterModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      disasterType: disasterType ?? this.disasterType,
+      otherDisasterType: otherDisasterType ?? this.otherDisasterType,
+      severity: severity ?? this.severity,
+      location: location ?? this.location,
+      coordinates: coordinates ?? this.coordinates,
+      description: description ?? this.description,
+      photoPaths: photoPaths ?? this.photoPaths,
+      timestamp: timestamp ?? this.timestamp,
+      status: status ?? this.status,
+      userList: userList ?? this.userList,
+      locationList: locationList ?? this.locationList,
+      verificationCount: verificationCount ?? this.verificationCount,
+    );
+  }
 }
 
 /// Service for fetching and managing disaster data
@@ -227,6 +261,163 @@ class DisasterService with ChangeNotifier {
       debugPrint('Error fetching disaster: $e');
       _error = 'Failed to load disaster: $e';
       return null;
+    }
+  }
+  
+  /// Create a new disaster report
+  Future<String?> createDisaster({
+    required String userId,
+    required String disasterType,
+    String? otherDisasterType,
+    required String severity,
+    required String location,
+    LatLng? coordinates,
+    required String description,
+    required List<String> photoPaths,
+    required String timestamp,
+    required String status,
+    required List<String> userList,
+    required List<Map<String, dynamic>> locationList,
+    required int verificationCount,
+  }) async {
+    _setLoading(true);
+    try {
+      final data = {
+        'userId': userId,
+        'disasterType': disasterType,
+        'otherDisasterType': otherDisasterType,
+        'severity': severity,
+        'location': location,
+        'latitude': coordinates?.latitude,
+        'longitude': coordinates?.longitude,
+        'description': description,
+        'photoPaths': photoPaths,
+        'timestamp': timestamp,
+        'status': status,
+        'userList': userList,
+        'locationList': locationList,
+        'verifyNum': verificationCount,
+      };
+      
+      final docRef = await _firestore.collection('disaster_reports').add(data);
+      
+      // Update the document with its ID
+      await docRef.update({'id': docRef.id});
+      
+      // Refresh the disaster lists
+      await fetchDisasters();
+      
+      _error = null;
+      return docRef.id;
+    } catch (e) {
+      debugPrint('Error creating disaster: $e');
+      _error = 'Failed to create disaster: $e';
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+  
+  /// Update an existing disaster report
+  Future<bool> updateDisaster(DisasterModel disaster) async {
+    _setLoading(true);
+    try {
+      await _firestore
+          .collection('disaster_reports')
+          .doc(disaster.id)
+          .update(disaster.toJson());
+      
+      // Update local lists
+      final index = _disasters.indexWhere((d) => d.id == disaster.id);
+      if (index >= 0) {
+        _disasters[index] = disaster;
+        
+        // Update happening disasters list if needed
+        if (disaster.isHappening) {
+          final happeningIndex = _happeningDisasters.indexWhere((d) => d.id == disaster.id);
+          if (happeningIndex >= 0) {
+            _happeningDisasters[happeningIndex] = disaster;
+          } else {
+            _happeningDisasters.add(disaster);
+          }
+        } else {
+          _happeningDisasters.removeWhere((d) => d.id == disaster.id);
+        }
+        
+        notifyListeners();
+      }
+      
+      _error = null;
+      return true;
+    } catch (e) {
+      debugPrint('Error updating disaster: $e');
+      _error = 'Failed to update disaster: $e';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+  
+  /// Delete a disaster report
+  Future<bool> deleteDisaster(String disasterId) async {
+    _setLoading(true);
+    try {
+      await _firestore.collection('disaster_reports').doc(disasterId).delete();
+      
+      // Update local lists
+      _disasters.removeWhere((d) => d.id == disasterId);
+      _happeningDisasters.removeWhere((d) => d.id == disasterId);
+      
+      notifyListeners();
+      _error = null;
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting disaster: $e');
+      _error = 'Failed to delete disaster: $e';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+  
+  /// Change the status of a disaster (e.g., from 'happening' to 'past')
+  Future<bool> updateDisasterStatus(String disasterId, String newStatus) async {
+    try {
+      final disaster = await getDisasterById(disasterId);
+      if (disaster == null) return false;
+      
+      final updatedDisaster = disaster.copyWith(status: newStatus);
+      return await updateDisaster(updatedDisaster);
+    } catch (e) {
+      debugPrint('Error updating disaster status: $e');
+      _error = 'Failed to update disaster status: $e';
+      return false;
+    }
+  }
+  
+  /// Search disasters by keyword in description or location
+  Future<List<DisasterModel>> searchDisasters(String query) async {
+    _setLoading(true);
+    try {
+      // Fetch all disasters first (we'll filter client-side)
+      await fetchDisasters(onlyHappening: false);
+      
+      if (query.isEmpty) return _disasters;
+      
+      final lowercaseQuery = query.toLowerCase();
+      final results = _disasters.where((disaster) {
+        return disaster.description.toLowerCase().contains(lowercaseQuery) ||
+               disaster.location.toLowerCase().contains(lowercaseQuery) ||
+               disaster.disasterType.toLowerCase().contains(lowercaseQuery);
+      }).toList();
+      
+      return results;
+    } catch (e) {
+      debugPrint('Error searching disasters: $e');
+      _error = 'Failed to search disasters: $e';
+      return [];
+    } finally {
+      _setLoading(false);
     }
   }
 }

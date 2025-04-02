@@ -10,6 +10,7 @@ import 'package:mydpar/screens/knowledge_base/prepareration_guide/flood_guide_sc
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/landslide_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/heavy_rain_guide_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 class AlertDetailScreen extends StatefulWidget {
   final String disasterId;
@@ -23,9 +24,8 @@ class AlertDetailScreen extends StatefulWidget {
 class _AlertDetailScreenState extends State<AlertDetailScreen> {
   DisasterModel? _disaster;
   bool _isLoading = true;
-
-  // Add at the top of the class
   LatLng? _userLocation;
+  String? _distanceText;
 
   @override
   void initState() {
@@ -41,6 +41,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
       );
       setState(() {
         _userLocation = LatLng(position.latitude, position.longitude);
+        _calculateDistance();
       });
     } catch (e) {
       debugPrint('Error getting location: $e');
@@ -50,16 +51,44 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
   Future<void> _loadDisasterData() async {
     final disasterService =
         Provider.of<DisasterService>(context, listen: false);
-    final disaster = await disasterService.getDisasterById(widget.disasterId);
-    setState(() {
-      _disaster = disaster;
-      _isLoading = false;
-    });
+    try {
+      final disaster = await disasterService.getDisasterById(widget.disasterId);
+      setState(() {
+        _disaster = disaster;
+        _isLoading = false;
+        _calculateDistance();
+      });
+    } catch (e) {
+      debugPrint('Error loading disaster: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  
+  void _calculateDistance() {
+    if (_disaster?.coordinates != null && _userLocation != null) {
+      final distance = Geolocator.distanceBetween(
+        _userLocation!.latitude,
+        _userLocation!.longitude,
+        _disaster!.coordinates!.latitude,
+        _disaster!.coordinates!.longitude,
+      );
+      
+      setState(() {
+        if (distance < 1000) {
+          _distanceText = '${distance.toStringAsFixed(0)}m away';
+        } else {
+          _distanceText = '${(distance / 1000).toStringAsFixed(1)}km away';
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final localizations = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -67,7 +96,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
           ? Center(child: CircularProgressIndicator(color: colors.accent200))
           : _disaster == null
               ? Center(
-                  child: Text('Disaster not found',
+                  child: Text(localizations.translate('error_loading_disaster'),
                       style: TextStyle(color: colors.text200)))
               : SafeArea(
                   child: Stack(
@@ -100,7 +129,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             Text(
-              'Alert Details',
+              AppLocalizations.of(context).translate('disaster_details'),
               style: TextStyle(
                 color: colors.accent200,
                 fontSize: 18,
@@ -199,12 +228,47 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                 Icon(Icons.location_on, color: colors.accent200, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Location',
+                  AppLocalizations.of(context).translate('location'),
                   style: TextStyle(
                     color: colors.text100,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                if (_distanceText != null) ...[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.accent200.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colors.accent200.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.near_me,
+                          size: 14,
+                          color: colors.accent200,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _distanceText!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.accent200,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 8),
@@ -280,7 +344,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                 Icon(Icons.description, color: colors.accent200, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Description',
+                  AppLocalizations.of(context).translate('description'),
                   style: TextStyle(
                     color: colors.text100,
                     fontWeight: FontWeight.w600,
@@ -307,7 +371,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                 Icon(Icons.photo_library, color: colors.accent200, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Photos',
+                  AppLocalizations.of(context).translate('photos'),
                   style: TextStyle(
                     color: colors.text100,
                     fontWeight: FontWeight.w600,
@@ -341,7 +405,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Preparation Guides',
+            AppLocalizations.of(context).translate('safety_tips'),
             style: TextStyle(
               color: colors.text100,
               fontSize: 16,
@@ -351,9 +415,9 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
           const SizedBox(height: 12),
           _buildGuideButton(
             colors,
-            title: '${_disaster!.disasterType} Safety Guide',
+            title: '${_disaster!.disasterType} ${AppLocalizations.of(context).translate('safety_tips')}',
             description:
-                'Learn how to handle ${_disaster!.disasterType.toLowerCase()} situations',
+                '${AppLocalizations.of(context).translate('learn_handle')} ${_disaster!.disasterType.toLowerCase()} ${AppLocalizations.of(context).translate('situations')}',
             icon: _getDisasterIcon(_disaster!.disasterType),
             onTap: () => _navigateToGuide(context, _disaster!.disasterType),
           ),
@@ -417,24 +481,31 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
       );
 
   void _navigateToGuide(BuildContext context, String disasterType) {
-    Widget? guide;
+    Widget guideScreen;
+    
+    // Use the disaster type to determine which guide to show
     switch (disasterType.toLowerCase()) {
       case 'fire':
-        guide = const FireGuideScreen();
+        guideScreen = const FireGuideScreen();
         break;
       case 'flood':
-        guide = const FloodGuideScreen();
+        guideScreen = const FloodGuideScreen();
         break;
       case 'landslide':
-        guide = const LandslideGuideScreen();
+        guideScreen = const LandslideGuideScreen();
         break;
       case 'heavy rain':
-        guide = const HeavyRainGuideScreen();
+        guideScreen = const HeavyRainGuideScreen();
         break;
+      default:
+        // Default to a general guide or the most relevant one
+        guideScreen = const FloodGuideScreen();
     }
-    if (guide != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => guide!));
-    }
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => guideScreen),
+    );
   }
 
   IconData _getDisasterIcon(String type) {

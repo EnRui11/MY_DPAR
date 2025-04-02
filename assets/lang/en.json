@@ -27,6 +27,48 @@
 
 
 
+  
+  "alert_detail_screen": "alert_detail_screen.dart",
+  "disaster_details": "Disaster Details",
+  "location": "Location",
+  "type": "Type",
+  "severity": "Severity",
+  "status": "Status",
+  "description": "Description",
+  "date_reported": "Date Reported",
+  "last_updated": "Last Updated",
+  "affected_areas": "Affected Areas",
+  "safety_tips": "Safety Tips",
+  "view_guide": "View Guide",
+  "loading": "Loading...",
+  "error_loading_disaster": "Error loading disaster information",
+  "distance_from_you": "{distance} km from your location",
+  "no_location_access": "Location access not available",
+  "retry": "Retry",
+  "photos": "Photos",
+  "learn_handle": "Learn how to handle",
+  "situations": "situations",
+  "preparation_guides": "Preparation Guides",
+  "safety_guide": "Safety Guide",
+  "disaster_not_found": "Disaster not found",
+  "disaster_type_fire": "Fire",
+  "disaster_type_flood": "Flood",
+  "disaster_type_landslide": "Landslide",
+  "disaster_type_earthquake": "Earthquake",
+  "disaster_type_heavy_rain": "Heavy Rain",
+  "disaster_type_haze": "Haze",
+  "severity_high": "High",
+  "severity_medium": "Medium",
+  "severity_low": "Low",
+  "days_ago": "{days} days ago",
+  "hours_ago": "{hours} hours ago",
+  "minutes_ago": "{minutes} minutes ago",
+  "just_now": "Just now",
+  "distance_away": "{distance} km away",
+
+
+
+
 
   "registration_screen":"registration_screen.dart",
   "get_started": "Get Started",

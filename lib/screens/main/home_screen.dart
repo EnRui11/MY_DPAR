@@ -414,8 +414,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<DisasterService>(
       builder: (context, disasterService, child) {
         return RefreshIndicator(
-          onRefresh: () =>
-              disasterService.fetchRecentDisasters(onlyHappening: true),
+          onRefresh: () async {
+            // Show a snackbar to indicate refresh is happening
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Refreshing disaster information...'),
+                duration: Duration(seconds: 1),
+                backgroundColor: colors.accent200,
+              ),
+            );
+            return await disasterService.fetchRecentDisasters(onlyHappening: true);
+          },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -434,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 else if (disasterService.happeningDisasters.isEmpty)
                   Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(_spacingMedium),
+                      padding: const EdgeInsets.all(_spacingLarge),
                       child: Text(
                         'No active disasters at the moment',
                         style: TextStyle(color: colors.text200),
@@ -442,56 +451,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 else
-                  // Inside _buildDisastersList method, update the ListView.builder
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    // Limit to maximum 3 items
-                    itemCount: disasterService.happeningDisasters.length > 3
-                        ? 3
-                        : disasterService.happeningDisasters.length,
-                    itemBuilder: (context, index) {
-                      final disaster =
-                          disasterService.happeningDisasters[index];
-                      return GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                AlertDetailScreen(disasterId: disaster.id),
+                  Column(
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: disasterService.happeningDisasters.length > 3 
+                            ? 3 
+                            : disasterService.happeningDisasters.length,
+                        itemBuilder: (context, index) {
+                          final disaster = disasterService.happeningDisasters[index];
+                          return GestureDetector(
+                            onTap: () => _navigateToDisasterDetail(context, disaster.id),
+                            child: _buildDisasterCard(
+                              description: disaster.description,
+                              severity: disaster.severity,
+                              location: disaster.location,
+                              time: disaster.formattedTime,
+                              disasterType: disaster.disasterType,
+                              colors: colors,
+                            ),
+                          );
+                        },
+                      ),
+                      if (disasterService.happeningDisasters.length > 3)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.info_outline, 
+                                size: 16, 
+                                color: colors.text200),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Showing 3 of ${disasterService.happeningDisasters.length} disasters',
+                                style: TextStyle(
+                                  color: colors.text200,
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: _buildDisasterCard(
-                          description: disaster.description,
-                          severity: disaster.severity,
-                          location: disaster.location,
-                          time: disaster.formattedTime,
-                          disasterType: disaster.disasterType,
-                          colors: colors,
-                        ),
-                      );
-                    },
-                  ),
-                // Pull to refresh hint text
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.arrow_downward,
-                        size: 16,
-                        color: colors.text200,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Pull down to refresh',
-                        style: TextStyle(
-                          color: colors.text200,
-                          fontSize: 12,
-                        ),
-                      ),
                     ],
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Pull down to refresh',
+                    style: TextStyle(
+                      color: colors.text200,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -502,8 +516,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Navigates to a new screen
+  /// Navigate to disaster detail screen
+  void _navigateToDisasterDetail(BuildContext context, String disasterId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AlertDetailScreen(disasterId: disasterId),
+      ),
+    );
+  }
+
+  /// Helper method to navigate to a screen
   void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
   }
 }

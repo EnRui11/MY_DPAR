@@ -61,6 +61,47 @@
 
 
 
+  "alert_detail_screen": "alert_detail_screen.dart",
+  "disaster_details": "灾害详情",
+  "location": "位置",
+  "type": "类型",
+  "severity": "严重程度",
+  "status": "状态",
+  "description": "描述",
+  "date_reported": "报告日期",
+  "last_updated": "最后更新",
+  "affected_areas": "受影响地区",
+  "safety_tips": "安全提示",
+  "view_guide": "查看指南",
+  "loading": "加载中...",
+  "error_loading_disaster": "加载灾害信息时出错",
+  "distance_from_you": "距离您{distance}公里",
+  "no_location_access": "无法访问位置",
+  "retry": "重试",
+  "photos": "照片",
+  "learn_handle": "了解如何处理",
+  "situations": "情况",
+  "preparation_guides": "准备指南",
+  "safety_guide": "安全指南",
+  "disaster_not_found": "找不到灾害信息",
+  "disaster_type_fire": "火灾",
+  "disaster_type_flood": "洪水",
+  "disaster_type_landslide": "山体滑坡",
+  "disaster_type_earthquake": "地震",
+  "disaster_type_heavy_rain": "暴雨",
+  "disaster_type_haze": "雾霾",
+  "severity_high": "高",
+  "severity_medium": "中",
+  "severity_low": "低",
+  "days_ago": "{days}天前",
+  "hours_ago": "{hours}小时前",
+  "minutes_ago": "{minutes}分钟前",
+  "just_now": "刚刚",
+  "distance_away": "距离{distance}公里",
+
+
+
+
 
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "紧急联系人",

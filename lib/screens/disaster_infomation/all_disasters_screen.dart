@@ -60,7 +60,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
     _fetchCurrentLocation();
     _scrollController.addListener(_updateBackToTopVisibility);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DisasterService>(context, listen: false).fetchDisasters();
+      // Use the DisasterService to fetch all disasters
+      Provider.of<DisasterService>(context, listen: false).fetchDisasters(onlyHappening: true);
     });
   }
 
@@ -258,8 +259,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
               style: TextStyle(color: colors.warning)));
     }
 
-    final filteredDisasters =
-        _filterAndSortDisasters(service.happeningDisasters);
+    final filteredDisasters = _filterAndSortDisasters(service.happeningDisasters);
     if (filteredDisasters.isEmpty) {
       return Center(
           child: Text('No happening disasters found',
@@ -268,7 +268,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await service.fetchDisasters();
+        await service.fetchDisasters(onlyHappening: true);
         await _fetchCurrentLocation();
       },
       color: colors.accent200,
@@ -307,7 +307,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
               icon: Icon(Icons.refresh_rounded,
                   color: colors.accent200, size: 20),
               onPressed: () async {
-                await service.fetchDisasters();
+                // Use the DisasterService to refresh disasters
+                await service.fetchDisasters(onlyHappening: true);
                 await _fetchCurrentLocation();
               },
             ),

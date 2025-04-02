@@ -61,6 +61,47 @@
 
 
 
+  "alert_detail_screen": "alert_detail_screen.dart",
+  "disaster_details": "Butiran Bencana",
+  "location": "Lokasi",
+  "type": "Jenis",
+  "severity": "Tahap Keterukan",
+  "status": "Status",
+  "description": "Penerangan",
+  "date_reported": "Tarikh Dilaporkan",
+  "last_updated": "Terakhir Dikemaskini",
+  "affected_areas": "Kawasan Terjejas",
+  "safety_tips": "Tip Keselamatan",
+  "view_guide": "Lihat Panduan",
+  "loading": "Memuatkan...",
+  "error_loading_disaster": "Ralat memuatkan maklumat bencana",
+  "distance_from_you": "{distance} km dari lokasi anda",
+  "no_location_access": "Akses lokasi tidak tersedia",
+  "retry": "Cuba Semula",
+  "photos": "Gambar",
+  "learn_handle": "Pelajari cara menangani",
+  "situations": "situasi",
+  "preparation_guides": "Panduan Persediaan",
+  "safety_guide": "Panduan Keselamatan",
+  "disaster_not_found": "Bencana tidak dijumpai",
+  "disaster_type_fire": "Kebakaran",
+  "disaster_type_flood": "Banjir",
+  "disaster_type_landslide": "Tanah Runtuh",
+  "disaster_type_earthquake": "Gempa Bumi",
+  "disaster_type_heavy_rain": "Hujan Lebat",
+  "disaster_type_haze": "Jerebu",
+  "severity_high": "Tinggi",
+  "severity_medium": "Sederhana",
+  "severity_low": "Rendah",
+  "days_ago": "{days} hari yang lalu",
+  "hours_ago": "{hours} jam yang lalu",
+  "minutes_ago": "{minutes} minit yang lalu",
+  "just_now": "Baru sahaja",
+  "distance_away": "{distance} km jauh",
+
+
+
+
   
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "Kenalan Kecemasan",

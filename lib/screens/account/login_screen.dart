@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mydpar/screens/account/register_screen.dart';
-import 'package:mydpar/screens/main/home_screen.dart';
+import 'package:mydpar/screens/main/bottom_nav_container.dart';
 import 'package:mydpar/services/language_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -339,7 +339,37 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Builds the loading overlay for async operations.
   Widget _buildLoadingOverlay(AppColorTheme colors) => Container(
         color: Colors.black.withOpacity(0.5),
-        child: const Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: colors.bg100,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Signing in...',
+                  style: TextStyle(
+                    color: colors.text100,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 
   /// Builds a field label with consistent styling.
@@ -367,7 +397,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
       debugPrint('User signed in with UID: ${credential.user?.uid}');
-      if (mounted) _navigateTo(context, const HomeScreen(), replace: true);
+      if (mounted)
+        _navigateTo(context, const BottomNavContainer(), replace: true);
     } catch (e) {
       _showErrorSnackBar(context, _mapErrorToMessage(e, localizations));
       debugPrint('Sign-in error: $e');

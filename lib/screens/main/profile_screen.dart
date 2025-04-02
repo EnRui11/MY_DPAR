@@ -744,7 +744,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(AppLocalizations.of(context).translate('confirm_logout'),
             style: TextStyle(color: colors.primary300)),
         backgroundColor: colors.bg100,
@@ -753,25 +753,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(color: colors.text200)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(AppLocalizations.of(context).translate('cancel'),
                 style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
             onPressed: () async {
+              Navigator.pop(dialogContext);
               try {
                 await userInformation.logout();
                 if (mounted) {
                   Navigator.pop(context);
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()));
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
                 }
               } catch (e) {
                 if (mounted) {
+                  Navigator.pop(context);
                   _showSnackBar(
-                      AppLocalizations.of(context)
-                          .translate('logout_failed', {'error': e.toString()}),
-                      colors.warning);
+                    AppLocalizations.of(context)
+                        .translate('logout_failed', {'error': e.toString()}),
+                    colors.warning,
+                  );
                 }
               }
             },

@@ -7,6 +7,7 @@ import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 /// Displays a list of ongoing disasters with filtering and sorting capabilities.
 class DisastersScreen extends StatefulWidget {
@@ -26,14 +27,14 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   // Constants
   static const _disasterTypes = [
-    'All Types',
-    'Heavy Rain',
-    'Earthquake',
-    'Flood',
-    'Fire',
-    'Landslide',
-    'Haze',
-    'Other',
+    'all_types',
+    'heavy_rain',
+    'earthquake',
+    'flood',
+    'fire',
+    'landslide',
+    'haze',
+    'other',
   ];
   static const _padding = 16.0;
   static const _spacingSmall = 8.0;
@@ -61,7 +62,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
     _scrollController.addListener(_updateBackToTopVisibility);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Use the DisasterService to fetch all disasters
-      Provider.of<DisasterService>(context, listen: false).fetchDisasters(onlyHappening: true);
+      Provider.of<DisasterService>(context, listen: false)
+          .fetchDisasters(onlyHappening: true);
     });
   }
 
@@ -78,14 +80,19 @@ class _DisastersScreenState extends State<DisastersScreen> {
           desiredAccuracy: LocationAccuracy.high);
       setState(() => _currentPosition = position);
     } catch (e) {
-      _showSnackBar('Error getting location: $e', Colors.red);
+      _showSnackBar(
+          AppLocalizations.of(context)
+              .translate('error_location')
+              .replaceAll('{error}', e.toString()),
+          Colors.red);
     }
   }
 
   /// Checks and requests location permissions.
   Future<bool> _checkLocationPermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      _showSnackBar('Location services are disabled', Colors.red);
+      _showSnackBar(AppLocalizations.of(context).translate('location_disabled'),
+          Colors.red);
       return false;
     }
 
@@ -93,13 +100,16 @@ class _DisastersScreenState extends State<DisastersScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        _showSnackBar('Location permission denied', Colors.red);
+        _showSnackBar(AppLocalizations.of(context).translate('location_denied'),
+            Colors.red);
         return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      _showSnackBar('Location permission permanently denied', Colors.red);
+      _showSnackBar(
+          AppLocalizations.of(context).translate('location_denied_forever'),
+          Colors.red);
       return false;
     }
     return true;
@@ -135,7 +145,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             Text(
-              'Happening Disasters',
+              AppLocalizations.of(context).translate('happening_disasters'),
               style: TextStyle(
                   color: colors.accent200,
                   fontSize: 18,
@@ -152,7 +162,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Filter by Disaster Type', style: _labelStyle(colors)),
+            Text(AppLocalizations.of(context).translate('filter_by_type'),
+                style: _labelStyle(colors)),
             const SizedBox(height: _spacingSmall),
             _buildTypeFilterChips(colors),
             const SizedBox(height: _spacingLarge),
@@ -184,14 +195,14 @@ class _DisastersScreenState extends State<DisastersScreen> {
       padding: const EdgeInsets.only(right: _spacingSmall),
       child: FilterChip(
         avatar: Icon(
-          type == 'All Types' ? Icons.filter_list : getDisasterIcon(type),
+          type == 'all_types' ? Icons.filter_list : getDisasterIcon(type),
           size: 18,
           color: isSelected ? colors.accent200 : colors.text200,
         ),
-        label: Text(type),
+        label: Text(AppLocalizations.of(context).translate(type)),
         selected: isSelected,
         onSelected: (selected) =>
-            setState(() => _selectedType = selected ? type : 'All Types'),
+            setState(() => _selectedType = selected ? type : 'all_types'),
         backgroundColor: colors.bg100,
         selectedColor: colors.primary100,
         labelStyle:
@@ -211,7 +222,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
         children: [
           Row(
             children: [
-              Text('Sort Disasters By', style: _labelStyle(colors)),
+              Text(AppLocalizations.of(context).translate('sort_by'),
+                  style: _labelStyle(colors)),
               const SizedBox(width: _spacingMedium),
               _buildSortDropdown(colors),
             ],
@@ -227,10 +239,18 @@ class _DisastersScreenState extends State<DisastersScreen> {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: _selectedSort,
-            items: const [
-              DropdownMenuItem(value: 'time', child: Text('Time')),
-              DropdownMenuItem(value: 'severity', child: Text('Severity')),
-              DropdownMenuItem(value: 'distance', child: Text('Distance')),
+            items: [
+              DropdownMenuItem(
+                  value: 'time',
+                  child: Text(AppLocalizations.of(context).translate('time'))),
+              DropdownMenuItem(
+                  value: 'severity',
+                  child:
+                      Text(AppLocalizations.of(context).translate('severity'))),
+              DropdownMenuItem(
+                  value: 'distance',
+                  child:
+                      Text(AppLocalizations.of(context).translate('distance'))),
             ],
             onChanged: (value) => setState(() => _selectedSort = value!),
             style: TextStyle(color: colors.accent200),
@@ -259,10 +279,11 @@ class _DisastersScreenState extends State<DisastersScreen> {
               style: TextStyle(color: colors.warning)));
     }
 
-    final filteredDisasters = _filterAndSortDisasters(service.happeningDisasters);
+    final filteredDisasters =
+        _filterAndSortDisasters(service.happeningDisasters);
     if (filteredDisasters.isEmpty) {
       return Center(
-          child: Text('No happening disasters found',
+          child: Text(AppLocalizations.of(context).translate('no_disasters'),
               style: TextStyle(color: colors.text200)));
     }
 
@@ -297,7 +318,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Happening Disasters ($count)',
+              '${AppLocalizations.of(context).translate('happening_disasters')} ($count)',
               style: TextStyle(
                   color: colors.accent200,
                   fontSize: 16,
@@ -307,7 +328,6 @@ class _DisastersScreenState extends State<DisastersScreen> {
               icon: Icon(Icons.refresh_rounded,
                   color: colors.accent200, size: 20),
               onPressed: () async {
-                // Use the DisasterService to refresh disasters
                 await service.fetchDisasters(onlyHappening: true);
                 await _fetchCurrentLocation();
               },
@@ -337,6 +357,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
                 children: [
                   _buildCardHeader(disaster, colors),
                   const SizedBox(height: _spacingMedium),
+                  // Translate the description if needed
                   Text(disaster.description,
                       style: TextStyle(color: colors.text200, fontSize: 14)),
                   const SizedBox(height: _spacingMedium),
@@ -349,7 +370,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
                   _buildLocationRow(
                       disaster.location, disaster.coordinates, colors),
                   const SizedBox(height: 4),
-                  _buildTimeRow(disaster.formattedTime, colors),
+                  _buildTimeRow(disaster, colors),
                 ],
               ),
             ),
@@ -359,7 +380,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   /// Builds the header section of a disaster card.
   Widget _buildCardHeader(DisasterModel disaster, AppColorTheme colors) {
-    final severityColor = DisasterService.getSeverityColor(disaster.severity, colors);
+    final severityColor =
+        DisasterService.getSeverityColor(disaster.severity, colors);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -371,12 +393,17 @@ class _DisastersScreenState extends State<DisastersScreen> {
                 decoration: BoxDecoration(
                     color: severityColor,
                     borderRadius: BorderRadius.circular(4)),
-                child: Icon(DisasterService.getDisasterIcon(disaster.disasterType),
-                    color: colors.bg100, size: 20),
+                child: Icon(
+                    DisasterService.getDisasterIcon(disaster.disasterType),
+                    color: colors.bg100,
+                    size: 20),
               ),
               const SizedBox(width: _spacingSmall),
               Expanded(
-                child: Text(disaster.disasterType,
+                child: Text(
+                    // Translate the disaster type
+                    AppLocalizations.of(context).translate(
+                        'disaster_type_${disaster.disasterType.toLowerCase().replaceAll(' ', '_')}'),
                     style: TextStyle(color: colors.text200, fontSize: 18)),
               ),
             ],
@@ -387,7 +414,9 @@ class _DisastersScreenState extends State<DisastersScreen> {
               horizontal: _spacingSmall, vertical: 4),
           decoration: BoxDecoration(
               color: severityColor, borderRadius: BorderRadius.circular(12)),
-          child: Text(disaster.severity,
+          child: Text(
+              AppLocalizations.of(context)
+                  .translate('severity_${disaster.severity.toLowerCase()}'),
               style: const TextStyle(color: Colors.white, fontSize: 12)),
         ),
       ],
@@ -399,7 +428,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
         children: [
           Icon(Icons.verified, color: colors.text200, size: 16),
           const SizedBox(width: 4),
-          Text('Status: $status',
+          Text(
+              '${AppLocalizations.of(context).translate('status')}: ${AppLocalizations.of(context).translate('status_${status.toLowerCase().replaceAll(' ', '_')}')}',
               style: TextStyle(color: colors.text200, fontSize: 12)),
         ],
       );
@@ -445,10 +475,12 @@ class _DisastersScreenState extends State<DisastersScreen> {
         coordinates.latitude,
         coordinates.longitude,
       );
-      distanceText = distanceInMeters < 1000
-          ? ' (${distanceInMeters.round()} m)'
-          : ' (${(distanceInMeters / 1000).toStringAsFixed(1)} km)';
+
+      // Use the same approach as in disaster_detail_screen.dart
+      distanceText =
+          ' (${AppLocalizations.of(context).translate('distance_away').replaceAll('{distance}', (distanceInMeters / 1000).toStringAsFixed(1))})';
     }
+
     return Row(
       children: [
         Icon(Icons.location_on, color: colors.text200, size: 16),
@@ -461,14 +493,59 @@ class _DisastersScreenState extends State<DisastersScreen> {
     );
   }
 
-  /// Builds the time row.
-  Widget _buildTimeRow(String time, AppColorTheme colors) => Row(
-        children: [
-          Icon(Icons.access_time, color: colors.text200, size: 16),
-          const SizedBox(width: 4),
-          Text(time, style: TextStyle(color: colors.text200, fontSize: 12)),
-        ],
-      );
+  /// Builds the time row with localized relative time.
+  Widget _buildTimeRow(DisasterModel disaster, AppColorTheme colors) {
+    // Assuming disaster has a method to get the raw timestamp
+    final timestamp = DateTime.parse(disaster.timestamp);
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    String timeText;
+
+    if (difference.inDays > 365) {
+      final years = (difference.inDays / 365).floor();
+      timeText = years == 1
+          ? AppLocalizations.of(context).translate('time_year_ago')
+          : AppLocalizations.of(context)
+              .translate('time_years_ago')
+              .replaceAll('{count}', years.toString());
+    } else if (difference.inDays > 30) {
+      final months = (difference.inDays / 30).floor();
+      timeText = months == 1
+          ? AppLocalizations.of(context).translate('time_month_ago')
+          : AppLocalizations.of(context)
+              .translate('time_months_ago')
+              .replaceAll('{count}', months.toString());
+    } else if (difference.inDays > 0) {
+      timeText = difference.inDays == 1
+          ? AppLocalizations.of(context).translate('time_day_ago')
+          : AppLocalizations.of(context)
+              .translate('time_days_ago')
+              .replaceAll('{count}', difference.inDays.toString());
+    } else if (difference.inHours > 0) {
+      timeText = difference.inHours == 1
+          ? AppLocalizations.of(context).translate('time_hour_ago')
+          : AppLocalizations.of(context)
+              .translate('time_hours_ago')
+              .replaceAll('{count}', difference.inHours.toString());
+    } else if (difference.inMinutes > 0) {
+      timeText = difference.inMinutes == 1
+          ? AppLocalizations.of(context).translate('time_minute_ago')
+          : AppLocalizations.of(context)
+              .translate('time_minutes_ago')
+              .replaceAll('{count}', difference.inMinutes.toString());
+    } else {
+      timeText = AppLocalizations.of(context).translate('time_just_now');
+    }
+
+    return Row(
+      children: [
+        Icon(Icons.access_time, color: colors.text200, size: 16),
+        const SizedBox(width: 4),
+        Text(timeText, style: TextStyle(color: colors.text200, fontSize: 12)),
+      ],
+    );
+  }
 
   /// Builds the back-to-top button.
   Widget _buildBackToTopButton(AppColorTheme colors) => Positioned(
@@ -485,7 +562,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
               curve: Curves.easeInOut,
             ),
             icon: Icon(Icons.arrow_upward, color: colors.bg100),
-            label: Text('Back to top', style: TextStyle(color: colors.bg100)),
+            label: Text(AppLocalizations.of(context).translate('back_to_top'),
+                style: TextStyle(color: colors.bg100)),
           ),
         ),
       );

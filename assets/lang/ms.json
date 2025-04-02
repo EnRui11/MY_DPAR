@@ -152,5 +152,35 @@
   "call_error": "Ralat memanggil {phone}: {error}",
   "photo_update_failed": "Gagal mengemas kini gambar: {error}",
   "delete_contact_confirmation": "Adakah anda pasti mahu memadam {name}?",
-  "logout_confirmation": "Adakah anda pasti mahu log keluar?"
+  "logout_confirmation": "Adakah anda pasti mahu log keluar?",
+
+
+
+
+  "all_disasters_screen":"all_disasters_screen.dart",
+  "happening_disasters": "Bencana Sedang Berlaku",
+  "filter_by_type": "Tapis mengikut Jenis Bencana",
+  "sort_by": "Susun mengikut",
+  "time": "Masa",
+  "distance": "Jarak",
+  "all_types": "Semua Jenis",
+  "heavy_rain": "Hujan Lebat",
+  "earthquake": "Gempa Bumi",
+  "flood": "Banjir",
+  "fire": "Kebakaran",
+  "landslide": "Tanah Runtuh",
+  "haze": "Jerebu",
+  "other": "Lain-lain",
+  "no_disasters": "Tiada bencana sedang berlaku",
+  "location_disabled": "Perkhidmatan lokasi dimatikan",
+  "location_denied": "Kebenaran lokasi ditolak",
+  "location_denied_forever": "Kebenaran lokasi ditolak secara kekal",
+  "error_location": "Ralat mendapatkan lokasi: {error}",
+  "refresh": "Muat Semula",
+  "pull_to_refresh": "Tarik ke bawah untuk muat semula",
+  "status_happening": "Sedang Berlaku",
+  "back_to_top": "Kembali ke Atas",
+  "status": "Status",
+  "meters": "m",
+  "kilometers": "km"
 }

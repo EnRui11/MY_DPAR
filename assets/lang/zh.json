@@ -152,5 +152,35 @@
   "call_error": "呼叫 {phone} 时出错: {error}",
   "photo_update_failed": "更新照片失败: {error}",
   "delete_contact_confirmation": "您确定要删除 {name} 吗？",
-  "logout_confirmation": "您确定要登出吗？"
+  "logout_confirmation": "您确定要登出吗？",
+
+
+
+
+  "all_disasters_screen":"all_disasters_screen.dart",
+  "happening_disasters": "正在发生的灾害",
+  "filter_by_type": "按灾害类型筛选",
+  "sort_by": "排序方式",
+  "time": "时间",
+  "distance": "距离",
+  "all_types": "所有类型",
+  "heavy_rain": "暴雨",
+  "earthquake": "地震",
+  "flood": "洪水",
+  "fire": "火灾",
+  "landslide": "山体滑坡",
+  "haze": "雾霾",
+  "other": "其他",
+  "no_disasters": "没有正在发生的灾害",
+  "location_disabled": "位置服务已禁用",
+  "location_denied": "位置权限被拒绝",
+  "location_denied_forever": "位置权限被永久拒绝",
+  "error_location": "获取位置时出错：{error}",
+  "refresh": "刷新",
+  "pull_to_refresh": "下拉刷新",
+  "status_happening": "正在发生",
+  "back_to_top": "返回顶部",
+  "status": "状态",
+  "meters": "米",
+  "kilometers": "公里"
 }

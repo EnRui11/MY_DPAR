@@ -154,5 +154,34 @@
   "call_error": "Error calling {phone}: {error}",
   "photo_update_failed": "Failed to update photo: {error}",
   "delete_contact_confirmation": "Are you sure you want to delete {name}?",
-  "logout_confirmation": "Are you sure you want to logout?"
+  "logout_confirmation": "Are you sure you want to logout?",
+
+
+
+
+  "all_disasters_screen":"all_disasters_screen.dart",
+  "happening_disasters": "Happening Disasters",
+  "filter_by_type": "Filter by Disaster Type",
+  "sort_by": "Sort Disasters By",
+  "time": "Time",
+  "distance": "Distance",
+  "all_types": "All Types",
+  "heavy_rain": "Heavy Rain",
+  "earthquake": "Earthquake",
+  "flood": "Flood",
+  "fire": "Fire",
+  "landslide": "Landslide",
+  "haze": "Haze",
+  "other": "Other",
+  "no_disasters": "No happening disasters found",
+  "location_disabled": "Location services are disabled",
+  "location_denied": "Location permission denied",
+  "location_denied_forever": "Location permission permanently denied",
+  "error_location": "Error getting location: {error}",
+  "refresh": "Refresh",
+  "pull_to_refresh": "Pull down to refresh","status_happening": "Happening",
+  "back_to_top": "Back to Top",
+  "status": "Status",
+  "meters": "m",
+  "kilometers": "km"
 }

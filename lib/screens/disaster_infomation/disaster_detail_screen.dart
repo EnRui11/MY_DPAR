@@ -9,6 +9,7 @@ import 'package:mydpar/screens/knowledge_base/prepareration_guide/fire_guide_scr
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/flood_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/landslide_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/heavy_rain_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/prepareration_guide/haze_guide_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 
@@ -526,6 +527,9 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
         break;
       case 'heavy rain':
         screen = HeavyRainGuideScreen();
+        break;
+      case 'haze':
+        screen = HazeGuideScreen();
         break;
       // Add other disaster types as needed
     }

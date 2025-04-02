@@ -65,6 +65,18 @@
   "minutes_ago": "{minutes} minutes ago",
   "just_now": "Just now",
   "distance_away": "{distance} km away",
+  "safety_guide_not_available": "Safety guide not available for this disaster type",
+  "time_just_now": "just now",
+  "time_minute_ago": "1 minute ago",
+  "time_minutes_ago": "{count} minutes ago",
+  "time_hour_ago": "1 hour ago",
+  "time_hours_ago": "{count} hours ago",
+  "time_day_ago": "1 day ago",
+  "time_days_ago": "{count} days ago",
+  "time_month_ago": "1 month ago",
+  "time_months_ago": "{count} months ago",
+  "time_year_ago": "1 year ago",
+  "time_years_ago": "{count} years ago",
 
 
 

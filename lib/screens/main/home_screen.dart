@@ -8,7 +8,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
-import 'package:mydpar/screens/disaster_infomation/alert_detail_screen.dart';
+import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -366,49 +366,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
 
-  /// Helper method to get color based on severity
-  Color _getSeverityColor(String severity, AppColorTheme colors) {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return colors.warning;
-      case 'medium':
-        return Color(0xFFFF8C00);
-      case 'low':
-        return Color(0xFF71C4EF);
-      default:
-        return colors.text200;
-    }
-  }
-
-  /// Helper method to get icon based on disaster type
-  IconData _getDisasterIcon(String type) {
-    const IconData flood = IconData(0xf07a3, fontFamily: 'MaterialIcons');
-    const IconData tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
-
-    switch (type.toLowerCase()) {
-      case 'heavy rain':
-        return Icons.thunderstorm_outlined;
-      case 'flood':
-        return flood;
-      case 'fire':
-        return Icons.local_fire_department;
-      case 'earthquake':
-        return Icons.terrain;
-      case 'landslide':
-        return Icons.landslide;
-      case 'tsunami':
-        return tsunami;
-      case 'haze':
-        return Icons.air;
-      case 'typhoon':
-        return Icons.cyclone;
-      case 'weather':
-        return Icons.thunderstorm;
-      default:
-        return Icons.warning_amber_rounded;
-    }
-  }
-
   /// Builds the scrollable list of disasters
   Widget _buildDisastersList(AppColorTheme colors) {
     return Consumer<DisasterService>(
@@ -423,7 +380,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: colors.accent200,
               ),
             );
-            return await disasterService.fetchRecentDisasters(onlyHappening: true);
+            return await disasterService.fetchRecentDisasters(
+                onlyHappening: true);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -456,13 +414,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: disasterService.happeningDisasters.length > 3 
-                            ? 3 
+                        itemCount: disasterService.happeningDisasters.length > 3
+                            ? 3
                             : disasterService.happeningDisasters.length,
                         itemBuilder: (context, index) {
-                          final disaster = disasterService.happeningDisasters[index];
+                          final disaster =
+                              disasterService.happeningDisasters[index];
                           return GestureDetector(
-                            onTap: () => _navigateToDisasterDetail(context, disaster.id),
+                            onTap: () =>
+                                _navigateToDisasterDetail(context, disaster.id),
                             child: _buildDisasterCard(
                               description: disaster.description,
                               severity: disaster.severity,
@@ -480,9 +440,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.info_outline, 
-                                size: 16, 
-                                color: colors.text200),
+                              Icon(Icons.info_outline,
+                                  size: 16, color: colors.text200),
                               const SizedBox(width: 8),
                               Text(
                                 'Showing 3 of ${disasterService.happeningDisasters.length} disasters',
@@ -521,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AlertDetailScreen(disasterId: disasterId),
+        builder: (context) => DisasterDetailScreen(disasterId: disasterId),
       ),
     );
   }
@@ -532,5 +491,15 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(builder: (context) => screen),
     );
+  }
+
+  /// Helper method to get color based on severity
+  Color _getSeverityColor(String severity, AppColorTheme colors) {
+    return DisasterService.getSeverityColor(severity, colors);
+  }
+
+  /// Helper method to get icon based on disaster type
+  IconData _getDisasterIcon(String type) {
+    return DisasterService.getDisasterIcon(type);
   }
 }

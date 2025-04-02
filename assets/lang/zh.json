@@ -98,6 +98,18 @@
   "minutes_ago": "{minutes}分钟前",
   "just_now": "刚刚",
   "distance_away": "距离{distance}公里",
+  "safety_guide_not_available": "此灾害类型没有可用的安全指南",
+  "time_just_now": "刚刚",
+  "time_minute_ago": "1分钟前",
+  "time_minutes_ago": "{count}分钟前",
+  "time_hour_ago": "1小时前",
+  "time_hours_ago": "{count}小时前",
+  "time_day_ago": "1天前",
+  "time_days_ago": "{count}天前",
+  "time_month_ago": "1个月前",
+  "time_months_ago": "{count}个月前",
+  "time_year_ago": "1年前",
+  "time_years_ago": "{count}年前",
 
 
 

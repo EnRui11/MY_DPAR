@@ -868,26 +868,6 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
 
   /// Returns an icon based on the disaster type.
   IconData _getDisasterIcon(String type) {
-    const flood = IconData(0xf07a3, fontFamily: 'MaterialIcons');
-    const tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
-
-    switch (type.toLowerCase()) {
-      case 'heavy rain':
-        return Icons.thunderstorm_outlined;
-      case 'flood':
-        return flood;
-      case 'earthquake':
-        return Icons.terrain;
-      case 'fire':
-        return Icons.local_fire_department;
-      case 'landslide':
-        return Icons.landslide;
-      case 'haze':
-        return Icons.air;
-      case 'other':
-        return Icons.warning_amber_rounded;
-      default:
-        return Icons.error_outline;
-    }
+    return DisasterService.getDisasterIcon(type);
   }
 }

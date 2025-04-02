@@ -12,16 +12,16 @@ import 'package:mydpar/screens/knowledge_base/prepareration_guide/heavy_rain_gui
 import 'package:geolocator/geolocator.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 
-class AlertDetailScreen extends StatefulWidget {
+class DisasterDetailScreen extends StatefulWidget {
   final String disasterId;
 
-  const AlertDetailScreen({super.key, required this.disasterId});
+  const DisasterDetailScreen({super.key, required this.disasterId});
 
   @override
-  State<AlertDetailScreen> createState() => _AlertDetailScreenState();
+  State<DisasterDetailScreen> createState() => _DisasterDetailScreenState();
 }
 
-class _AlertDetailScreenState extends State<AlertDetailScreen> {
+class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
   DisasterModel? _disaster;
   bool _isLoading = true;
   LatLng? _userLocation;
@@ -65,7 +65,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
       });
     }
   }
-  
+
   void _calculateDistance() {
     if (_disaster?.coordinates != null && _userLocation != null) {
       final distance = Geolocator.distanceBetween(
@@ -74,12 +74,19 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
         _disaster!.coordinates!.latitude,
         _disaster!.coordinates!.longitude,
       );
-      
+
+      final localizations = AppLocalizations.of(context);
+
       setState(() {
         if (distance < 1000) {
-          _distanceText = '${distance.toStringAsFixed(0)}m away';
+          // Use localized format for distance
+          _distanceText = localizations
+              .translate('distance_away')
+              .replaceAll('{distance}', (distance / 1000).toStringAsFixed(1));
         } else {
-          _distanceText = '${(distance / 1000).toStringAsFixed(1)}km away';
+          _distanceText = localizations
+              .translate('distance_away')
+              .replaceAll('{distance}', (distance / 1000).toStringAsFixed(1));
         }
       });
     }
@@ -161,62 +168,71 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
         ),
       );
 
-  Widget _buildAlertHeader(AppColorTheme colors) => Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _getSeverityColor(_disaster!.severity, colors)
-                  .withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _getDisasterIcon(_disaster!.disasterType),
-              color: _getSeverityColor(_disaster!.severity, colors),
-              size: 24,
-            ),
+  Widget _buildAlertHeader(AppColorTheme colors) {
+    final localizations = AppLocalizations.of(context);
+
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color:
+                DisasterService.getSeverityColor(_disaster!.severity, colors).withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _disaster!.disasterType,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.text100,
+          child: Icon(
+            DisasterService.getDisasterIcon(_disaster!.disasterType),
+            color: DisasterService.getSeverityColor(_disaster!.severity, colors),
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                // Translate disaster type
+                localizations.translate(
+                    'disaster_type_${_disaster!.disasterType.toLowerCase().replaceAll(' ', '_')}'),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colors.text100,
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: DisasterService.getSeverityColor(
+                          _disaster!.severity, colors),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      // Translate severity
+                      localizations.translate(
+                          'severity_${_disaster!.severity.toLowerCase()}'),
+                      style: TextStyle(color: colors.bg100, fontSize: 12),
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getSeverityColor(_disaster!.severity, colors),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _disaster!.severity,
-                        style: TextStyle(color: colors.bg100, fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '• ${_disaster!.formattedTime}',
-                      style: TextStyle(color: colors.text200, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '• ${_getLocalizedTimeAgo(context, DateTime.parse(_disaster!.timestamp))}',
+                    style: TextStyle(color: colors.text200, fontSize: 12),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
   Widget _buildLocationSection(AppColorTheme colors) => _buildGlassContainer(
         colors,
@@ -299,7 +315,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                             point: _disaster!.coordinates!,
                             builder: (ctx) => Icon(
                               Icons.warning_amber_rounded,
-                              color: _getSeverityColor(
+                              color: DisasterService.getSeverityColor(
                                   _disaster!.severity, colors),
                               size: 40,
                             ),
@@ -401,38 +417,33 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
         ),
       );
 
-  Widget _buildRelatedGuides(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context).translate('safety_tips'),
-            style: TextStyle(
-              color: colors.text100,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildGuideButton(
-            colors,
-            title: '${_disaster!.disasterType} ${AppLocalizations.of(context).translate('safety_tips')}',
-            description:
-                '${AppLocalizations.of(context).translate('learn_handle')} ${_disaster!.disasterType.toLowerCase()} ${AppLocalizations.of(context).translate('situations')}',
-            icon: _getDisasterIcon(_disaster!.disasterType),
-            onTap: () => _navigateToGuide(context, _disaster!.disasterType),
-          ),
-        ],
-      );
+  Widget _buildRelatedGuides(AppColorTheme colors) {
+    final localizations = AppLocalizations.of(context);
 
-  Widget _buildGlassContainer(AppColorTheme colors, Widget child) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.bg100.withOpacity(0.2)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          localizations.translate('safety_tips'),
+          style: TextStyle(
+            color: colors.text100,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        child: child,
-      );
+        const SizedBox(height: 12),
+        _buildGuideButton(
+          colors,
+          title:
+              '${localizations.translate('disaster_type_${_disaster!.disasterType.toLowerCase().replaceAll(' ', '_')}')} ${localizations.translate('safety_tips')}',
+          description:
+              '${localizations.translate('learn_handle')} ${localizations.translate('disaster_type_${_disaster!.disasterType.toLowerCase().replaceAll(' ', '_')}')} ${localizations.translate('situations')}',
+          icon: DisasterService.getDisasterIcon(_disaster!.disasterType),
+          onTap: () => _navigateToGuide(context, _disaster!.disasterType),
+        ),
+      ],
+    );
+  }
 
   Widget _buildGuideButton(
     AppColorTheme colors, {
@@ -441,15 +452,32 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
     required IconData icon,
     required VoidCallback onTap,
   }) =>
-      InkWell(
+      GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: _buildGlassContainer(
-          colors,
-          Row(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.bg100,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: colors.bg300.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
             children: [
-              Icon(icon, color: colors.accent200),
-              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.accent200.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: colors.accent200),
+              ),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,9 +486,10 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                       title,
                       style: TextStyle(
                         color: colors.text100,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       description,
                       style: TextStyle(
@@ -472,8 +501,9 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                 ),
               ),
               Icon(
-                Icons.chevron_right,
+                Icons.arrow_forward_ios,
                 color: colors.accent200,
+                size: 16,
               ),
             ],
           ),
@@ -481,63 +511,86 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
       );
 
   void _navigateToGuide(BuildContext context, String disasterType) {
-    Widget guideScreen;
-    
-    // Use the disaster type to determine which guide to show
+    final localizations = AppLocalizations.of(context);
+
+    Widget? screen;
     switch (disasterType.toLowerCase()) {
       case 'fire':
-        guideScreen = const FireGuideScreen();
+        screen = FireGuideScreen();
         break;
       case 'flood':
-        guideScreen = const FloodGuideScreen();
+        screen = FloodGuideScreen();
         break;
       case 'landslide':
-        guideScreen = const LandslideGuideScreen();
+        screen = LandslideGuideScreen();
         break;
       case 'heavy rain':
-        guideScreen = const HeavyRainGuideScreen();
+        screen = HeavyRainGuideScreen();
         break;
-      default:
-        // Default to a general guide or the most relevant one
-        guideScreen = const FloodGuideScreen();
+      // Add other disaster types as needed
     }
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => guideScreen),
-    );
-  }
 
-  IconData _getDisasterIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'heavy rain':
-        return Icons.thunderstorm_outlined;
-      case 'flood':
-        return IconData(0xf07a3, fontFamily: 'MaterialIcons');
-      case 'fire':
-        return Icons.local_fire_department;
-      case 'earthquake':
-        return Icons.terrain;
-      case 'landslide':
-        return Icons.landslide;
-      case 'haze':
-        return Icons.air_outlined;
-      default:
-        return Icons.warning_amber_rounded;
+    if (screen != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => screen!,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(localizations.translate('safety_guide_not_available')),
+        ),
+      );
     }
   }
 
-  // Update the severity color method
-  Color _getSeverityColor(String severity, AppColorTheme colors) {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return colors.warning;
-      case 'medium':
-        return const Color(0xFFFF8C00);
-      case 'low':
-        return const Color(0xFF71C4EF);
-      default:
-        return colors.accent200;
-    }
-  }
+  Widget _buildGlassContainer(AppColorTheme colors, Widget child) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: colors.bg300.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: child,
+      );
 }
+
+String _getLocalizedTimeAgo(BuildContext context, DateTime timestamp) {
+    final localizations = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+    
+    if (difference.inDays > 365) {
+      final years = (difference.inDays / 365).floor();
+      return years == 1 
+          ? localizations.translate('time_year_ago')
+          : localizations.translate('time_years_ago').replaceAll('{count}', years.toString());
+    } else if (difference.inDays > 30) {
+      final months = (difference.inDays / 30).floor();
+      return months == 1 
+          ? localizations.translate('time_month_ago')
+          : localizations.translate('time_months_ago').replaceAll('{count}', months.toString());
+    } else if (difference.inDays > 0) {
+      return difference.inDays == 1 
+          ? localizations.translate('time_day_ago')
+          : localizations.translate('time_days_ago').replaceAll('{count}', difference.inDays.toString());
+    } else if (difference.inHours > 0) {
+      return difference.inHours == 1 
+          ? localizations.translate('time_hour_ago')
+          : localizations.translate('time_hours_ago').replaceAll('{count}', difference.inHours.toString());
+    } else if (difference.inMinutes > 0) {
+      return difference.inMinutes == 1 
+          ? localizations.translate('time_minute_ago')
+          : localizations.translate('time_minutes_ago').replaceAll('{count}', difference.inMinutes.toString());
+    } else {
+      return localizations.translate('time_just_now');
+    }
+  }

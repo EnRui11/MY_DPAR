@@ -98,6 +98,18 @@
   "minutes_ago": "{minutes} minit yang lalu",
   "just_now": "Baru sahaja",
   "distance_away": "{distance} km jauh",
+  "safety_guide_not_available": "Panduan keselamatan tidak tersedia untuk jenis bencana ini",
+  "time_just_now": "baru sahaja",
+  "time_minute_ago": "1 minit yang lalu",
+  "time_minutes_ago": "{count} minit yang lalu",
+  "time_hour_ago": "1 jam yang lalu",
+  "time_hours_ago": "{count} jam yang lalu",
+  "time_day_ago": "1 hari yang lalu",
+  "time_days_ago": "{count} hari yang lalu",
+  "time_month_ago": "1 bulan yang lalu",
+  "time_months_ago": "{count} bulan yang lalu",
+  "time_year_ago": "1 tahun yang lalu",
+  "time_years_ago": "{count} tahun yang lalu",
 
 
 

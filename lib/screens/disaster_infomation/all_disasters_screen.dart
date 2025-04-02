@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/screens/disaster_infomation/alert_detail_screen.dart';
+import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 
 /// Displays a list of ongoing disasters with filtering and sorting capabilities.
 class DisastersScreen extends StatefulWidget {
@@ -322,7 +322,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => AlertDetailScreen(disasterId: disaster.id),
+            builder: (_) => DisasterDetailScreen(disasterId: disaster.id),
           ),
         ),
         child: Padding(
@@ -359,7 +359,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   /// Builds the header section of a disaster card.
   Widget _buildCardHeader(DisasterModel disaster, AppColorTheme colors) {
-    final severityColor = _getSeverityColor(disaster.severity, colors);
+    final severityColor = DisasterService.getSeverityColor(disaster.severity, colors);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -371,7 +371,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
                 decoration: BoxDecoration(
                     color: severityColor,
                     borderRadius: BorderRadius.circular(4)),
-                child: Icon(getDisasterIcon(disaster.disasterType),
+                child: Icon(DisasterService.getDisasterIcon(disaster.disasterType),
                     color: colors.bg100, size: 20),
               ),
               const SizedBox(width: _spacingSmall),

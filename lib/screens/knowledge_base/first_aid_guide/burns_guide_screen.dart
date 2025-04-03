@@ -4,8 +4,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/screens/knowledge_base/first_aid_guide/cpr_guide_screen.dart';
 
+/// A screen providing guidance on treating burns with multi-language support.
+///
+/// Displays burn type selection, severity assessment (for thermal burns), treatment steps,
+/// and important tips, all localized using [AppLocalizations].
 class BurnsGuideScreen extends StatefulWidget {
   const BurnsGuideScreen({super.key});
 
@@ -14,167 +19,228 @@ class BurnsGuideScreen extends StatefulWidget {
 }
 
 class _BurnsGuideScreenState extends State<BurnsGuideScreen> {
-  // Constants for consistency and easy tweaking
+  // Constants for consistent padding and spacing
   static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
 
+  // State variables with minimal scope
   String _selectedBurnType = 'thermal';
   String _selectedSeverity = 'first';
 
   @override
   Widget build(BuildContext context) {
-    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                _paddingValue,
-                70, // Adjusted for header height
-                _paddingValue,
-                _paddingValue,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: _spacingLarge),
-                  _buildEmergencyWarning(colors),
-                  const SizedBox(height: _spacingLarge),
-                  _buildBurnTypeSelection(colors),
-                  const SizedBox(height: _spacingLarge),
-                  if (_selectedBurnType.isNotEmpty)
-                    _buildTreatmentContent(colors),
-                  const SizedBox(height: _spacingLarge),
-                  _buildImportantTips(colors),
-                ],
-              ),
-            ),
-            _buildHeader(context, colors),
-          ],
+        child: _BurnsGuideContent(
+          colors: colors,
+          selectedBurnType: _selectedBurnType,
+          selectedSeverity: _selectedSeverity,
+          onBurnTypeChanged: (type) => _updateBurnType(type),
+          onSeverityChanged: (severity) => _updateSeverity(severity),
         ),
       ),
     );
   }
 
-  /// Builds the header with back button and title
-  Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          border:
-              Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: _paddingValue,
-          vertical: _paddingValue - 4,
-        ),
-        child: Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back, color: colors.primary300),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const SizedBox(width: _spacingSmall),
-            Expanded(
-              child: Text(
-                'Burns Treatment',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colors.primary300,
+  /// Updates the selected burn type and resets severity if not thermal.
+  void _updateBurnType(String type) {
+    setState(() {
+      _selectedBurnType = type;
+      if (type != 'thermal') _selectedSeverity = 'first';
+    });
+  }
+
+  /// Updates the selected severity for thermal burns.
+  void _updateSeverity(String severity) {
+    setState(() => _selectedSeverity = severity);
+  }
+}
+
+/// Encapsulates the main content of the burns guide screen.
+///
+/// Separates UI logic from state management for better maintainability and testability.
+class _BurnsGuideContent extends StatelessWidget {
+  final AppColorTheme colors;
+  final String selectedBurnType;
+  final String selectedSeverity;
+  final ValueChanged<String> onBurnTypeChanged;
+  final ValueChanged<String> onSeverityChanged;
+
+  const _BurnsGuideContent({
+    required this.colors,
+    required this.selectedBurnType,
+    required this.selectedSeverity,
+    required this.onBurnTypeChanged,
+    required this.onSeverityChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            _BurnsGuideScreenState._paddingValue,
+            70,
+            _BurnsGuideScreenState._paddingValue,
+            _BurnsGuideScreenState._paddingValue,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+              _EmergencyWarning(colors: colors),
+              const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+              _BurnTypeSelection(
+                colors: colors,
+                selectedBurnType: selectedBurnType,
+                selectedSeverity: selectedSeverity,
+                onBurnTypeChanged: onBurnTypeChanged,
+                onSeverityChanged: onSeverityChanged,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+              if (selectedBurnType.isNotEmpty)
+                _TreatmentContent(
+                  colors: colors,
+                  burnType: selectedBurnType,
+                  severity: selectedSeverity,
                 ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+              _ImportantTips(
+                colors: colors,
+                burnType: selectedBurnType,
+                severity: selectedSeverity,
+              ),
+            ],
+          ),
+        ),
+        _Header(colors: colors),
+      ],
+    );
+  }
+}
+
+/// Displays the header with a back button and title.
+class _Header extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _Header({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bg100.withOpacity(0.7),
+        border: Border.all(color: colors.bg300.withOpacity(0.2)),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: _BurnsGuideScreenState._paddingValue,
+        vertical: _BurnsGuideScreenState._paddingValue - 4,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: _BurnsGuideScreenState._spacingSmall),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context).translate('burns_treatment'),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300,
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Displays an emergency warning with a call button.
+class _EmergencyWarning extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _EmergencyWarning({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colors.warning, colors.warning.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(_BurnsGuideScreenState._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildWarningHeader(context),
+          const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+          _buildWarningDetails(context),
+          const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+          _buildEmergencyButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWarningHeader(BuildContext context) => Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colors.bg100, size: 28),
+          const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
+          Text(
+            AppLocalizations.of(context).translate('emergency_warning'),
+            style: TextStyle(
+              color: colors.bg100,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       );
 
-  /// Builds the emergency warning section
-  Widget _buildEmergencyWarning(AppColorTheme colors) => Container(
+  Widget _buildWarningDetails(BuildContext context) => Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [colors.warning, colors.warning.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: const EdgeInsets.all(_paddingValue),
+        padding: const EdgeInsets.all(_BurnsGuideScreenState._paddingValue),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.warning_amber_rounded,
-                    color: colors.bg100, size: 28),
-                const SizedBox(width: _spacingMedium),
-                Text(
-                  'Emergency Warning',
-                  style: TextStyle(
-                    color: colors.bg100,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: _spacingLarge),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(_paddingValue),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Seek Immediate Help If:',
-                    style: TextStyle(
-                      color: colors.bg100,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: _spacingMedium),
-                  _buildWarningItem('Burns cover large areas of the body'),
-                  _buildWarningItem('Burns on face, hands, feet, or genitals'),
-                  _buildWarningItem('Chemical or electrical burns of any size'),
-                  _buildWarningItem('Difficulty breathing or severe pain'),
-                ],
+            Text(
+              AppLocalizations.of(context).translate('seek_immediate_help'),
+              style: TextStyle(
+                color: colors.bg100,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: _spacingLarge),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _makeEmergencyCall(context),
-                icon: Icon(Icons.phone, color: colors.warning),
-                label: Text(
-                  'Call 999',
-                  style: TextStyle(color: colors.warning, fontSize: 16),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.bg100,
-                  padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+            _buildWarningItem(context, 'burns_cover_large_areas'),
+            _buildWarningItem(context, 'burns_on_sensitive_areas'),
+            _buildWarningItem(context, 'chemical_or_electrical_burns'),
+            _buildWarningItem(context, 'difficulty_breathing_or_severe_pain'),
           ],
         ),
       );
 
-  /// Builds a warning item for emergency conditions
-  Widget _buildWarningItem(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: _spacingSmall),
+  Widget _buildWarningItem(BuildContext context, String key) => Padding(
+        padding:
+            const EdgeInsets.only(bottom: _BurnsGuideScreenState._spacingSmall),
         child: Row(
           children: [
             Container(
@@ -184,11 +250,12 @@ class _BurnsGuideScreenState extends State<BurnsGuideScreen> {
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),
-              margin: const EdgeInsets.only(right: _spacingSmall, top: 4),
+              margin: const EdgeInsets.only(
+                  right: _BurnsGuideScreenState._spacingSmall, top: 4),
             ),
             Expanded(
               child: Text(
-                text,
+                AppLocalizations.of(context).translate(key),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
@@ -199,485 +266,456 @@ class _BurnsGuideScreenState extends State<BurnsGuideScreen> {
         ),
       );
 
-  /// Builds the burn type and severity selection section
-  Widget _buildBurnTypeSelection(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            decoration: _buildCardDecoration(colors),
-            padding: const EdgeInsets.all(_paddingValue),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.local_fire_department, color: colors.accent200),
-                    const SizedBox(width: _spacingMedium),
-                    Text(
-                      'Burn Assessment',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: colors.primary300,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: _spacingMedium),
-                Text(
-                  'Select the type of burn:',
-                  style: TextStyle(color: colors.text200, fontSize: 14),
-                ),
-                const SizedBox(height: _spacingMedium),
-                _buildBurnTypeOption(
-                  colors,
-                  'thermal',
-                  'Thermal Burns',
-                  'Heat, fire, or hot objects',
-                  Colors.red,
-                  Icons.local_fire_department,
-                ),
-                const SizedBox(height: _spacingSmall),
-                _buildBurnTypeOption(
-                  colors,
-                  'chemical',
-                  'Chemical Burns',
-                  'Acids, bases, or other chemicals',
-                  Colors.orange,
-                  Icons.science,
-                ),
-                const SizedBox(height: _spacingSmall),
-                _buildBurnTypeOption(
-                  colors,
-                  'electrical',
-                  'Electrical Burns',
-                  'Electric current injuries',
-                  Colors.yellow,
-                  Icons.bolt,
-                ),
-              ],
+  Widget _buildEmergencyButton(BuildContext context) => SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => _makeEmergencyCall(context),
+          icon: Icon(Icons.phone, color: colors.warning),
+          label: Text(
+            AppLocalizations.of(context).translate('call_emergency'),
+            style: TextStyle(color: colors.warning, fontSize: 16),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colors.bg100,
+            padding: const EdgeInsets.symmetric(
+                vertical: _BurnsGuideScreenState._spacingMedium),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          if (_selectedBurnType == 'thermal') ...[
-            const SizedBox(height: _spacingLarge),
-            Container(
-              decoration: _buildCardDecoration(colors),
-              padding: const EdgeInsets.all(_paddingValue),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.local_fire_department,
-                          color: colors.accent200),
-                      const SizedBox(width: _spacingMedium),
-                      Text(
-                        'Burn Severity',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: colors.primary300,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: _spacingMedium),
-                  Text(
-                    'Assess the severity of the thermal burn:',
-                    style: TextStyle(color: colors.text200, fontSize: 14),
-                  ),
-                  const SizedBox(height: _spacingMedium),
-                  _buildSeverityOption(
-                    colors,
-                    'first',
-                    'First Degree: Superficial - Red, painful, no blisters',
-                    Colors.green,
-                  ),
-                  const SizedBox(height: _spacingSmall),
-                  _buildSeverityOption(
-                    colors,
-                    'second',
-                    'Second Degree: Partial thickness - Blisters, very painful',
-                    Colors.orange,
-                  ),
-                  const SizedBox(height: _spacingSmall),
-                  _buildSeverityOption(
-                    colors,
-                    'third',
-                    'Third Degree: Full thickness - White/charred, may be painless',
-                    Colors.red,
-                  ),
-                ],
-              ),
+        ),
+      );
+
+  Future<void> _makeEmergencyCall(BuildContext context) async {
+    const emergencyNumber = 'tel:999';
+    final url = Uri.parse(emergencyNumber);
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        _showErrorSnackBar(context, 'Could not launch emergency call');
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, 'Failed to make call: $e');
+    }
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
+
+/// Allows selection of burn type and severity (for thermal burns).
+class _BurnTypeSelection extends StatelessWidget {
+  final AppColorTheme colors;
+  final String selectedBurnType;
+  final String selectedSeverity;
+  final ValueChanged<String> onBurnTypeChanged;
+  final ValueChanged<String> onSeverityChanged;
+
+  const _BurnTypeSelection({
+    required this.colors,
+    required this.selectedBurnType,
+    required this.selectedSeverity,
+    required this.onBurnTypeChanged,
+    required this.onSeverityChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildBurnTypeSection(context),
+        if (selectedBurnType == 'thermal') ...[
+          const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+          _buildSeveritySection(context),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBurnTypeSection(BuildContext context) => _Card(
+        colors: colors,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader(
+              context,
+              'burn_assessment',
+              Icons.local_fire_department,
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+            Text(
+              AppLocalizations.of(context).translate('select_burn_type'),
+              style: TextStyle(color: colors.text200, fontSize: 14),
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+            _BurnTypeOption(
+              colors: colors,
+              burnType: 'thermal',
+              titleKey: 'thermal_burns',
+              descKey: 'thermal_burns_desc',
+              indicatorColor: Colors.red,
+              icon: Icons.local_fire_department,
+              isSelected: selectedBurnType == 'thermal',
+              onTap: onBurnTypeChanged,
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+            _BurnTypeOption(
+              colors: colors,
+              burnType: 'chemical',
+              titleKey: 'chemical_burns',
+              descKey: 'chemical_burns_desc',
+              indicatorColor: Colors.orange,
+              icon: Icons.science,
+              isSelected: selectedBurnType == 'chemical',
+              onTap: onBurnTypeChanged,
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+            _BurnTypeOption(
+              colors: colors,
+              burnType: 'electrical',
+              titleKey: 'electrical_burns',
+              descKey: 'electrical_burns_desc',
+              indicatorColor: Colors.yellow,
+              icon: Icons.bolt,
+              isSelected: selectedBurnType == 'electrical',
+              onTap: onBurnTypeChanged,
             ),
           ],
-        ],
+        ),
       );
 
-  /// Builds a burn type option with animation
-  Widget _buildBurnTypeOption(
-    AppColorTheme colors,
-    String burnType,
-    String title,
-    String description,
-    Color indicatorColor,
+  Widget _buildSeveritySection(BuildContext context) => _Card(
+        colors: colors,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader(
+              context,
+              'burn_severity',
+              Icons.local_fire_department,
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+            Text(
+              AppLocalizations.of(context).translate('assess_burn_severity'),
+              style: TextStyle(color: colors.text200, fontSize: 14),
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+            _SeverityOption(
+              colors: colors,
+              severity: 'first',
+              textKey: 'first_degree',
+              indicatorColor: Colors.green,
+              isSelected: selectedSeverity == 'first',
+              onTap: onSeverityChanged,
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+            _SeverityOption(
+              colors: colors,
+              severity: 'second',
+              textKey: 'second_degree',
+              indicatorColor: Colors.orange,
+              isSelected: selectedSeverity == 'second',
+              onTap: onSeverityChanged,
+            ),
+            const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+            _SeverityOption(
+              colors: colors,
+              severity: 'third',
+              textKey: 'third_degree',
+              indicatorColor: Colors.red,
+              isSelected: selectedSeverity == 'third',
+              onTap: onSeverityChanged,
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String titleKey,
     IconData icon,
   ) =>
-      InkWell(
-        onTap: () => setState(() {
-          _selectedBurnType = burnType;
-          if (burnType != 'thermal') _selectedSeverity = 'first';
-        }),
-        borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: _selectedBurnType == burnType
-                ? indicatorColor.withOpacity(0.1)
-                : colors.bg100.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: _selectedBurnType == burnType
-                  ? indicatorColor
-                  : colors.bg300.withOpacity(0.2),
-              width: _selectedBurnType == burnType ? 2 : 1,
+      Row(
+        children: [
+          Icon(icon, color: colors.accent200),
+          const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
+          Text(
+            AppLocalizations.of(context).translate(titleKey),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colors.primary300,
             ),
           ),
-          padding: const EdgeInsets.all(_spacingMedium),
-          transform: _selectedBurnType == burnType
-              ? Matrix4.identity().scaled(1.02)
-              : Matrix4.identity(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: indicatorColor, size: 20),
-                  const SizedBox(width: _spacingMedium),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: colors.text200,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              if (_selectedBurnType == burnType) ...[
-                const SizedBox(height: _spacingSmall),
-                Padding(
-                  padding: const EdgeInsets.only(left: 36),
-                  child: Text(
-                    description,
-                    style: TextStyle(
-                      color: colors.text200.withOpacity(0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ).animate().fadeIn(duration: 300.ms),
+        ],
       );
+}
 
-  /// Builds a severity option with animation
-  Widget _buildSeverityOption(
-    AppColorTheme colors,
-    String severity,
-    String text,
-    Color indicatorColor,
-  ) =>
-      InkWell(
-        onTap: () => setState(() => _selectedSeverity = severity),
-        borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: _selectedSeverity == severity
-                ? indicatorColor.withOpacity(0.1)
-                : colors.bg100.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: _selectedSeverity == severity
-                  ? indicatorColor
-                  : colors.bg300.withOpacity(0.2),
-              width: _selectedSeverity == severity ? 2 : 1,
-            ),
-          ),
-          padding: const EdgeInsets.all(_spacingMedium),
-          transform: _selectedSeverity == severity
-              ? Matrix4.identity().scaled(1.02)
-              : Matrix4.identity(),
-          child: Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: indicatorColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: _spacingMedium),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: colors.text200,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
-                ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(duration: 300.ms),
-      );
+/// A selectable burn type option with animation.
+class _BurnTypeOption extends StatelessWidget {
+  final AppColorTheme colors;
+  final String burnType;
+  final String titleKey;
+  final String descKey;
+  final Color indicatorColor;
+  final IconData icon;
+  final bool isSelected;
+  final ValueChanged<String> onTap;
 
-  /// Builds the treatment content section
-  Widget _buildTreatmentContent(AppColorTheme colors) => Container(
-        decoration: _buildCardDecoration(colors),
-        padding: const EdgeInsets.all(_paddingValue),
+  const _BurnTypeOption({
+    required this.colors,
+    required this.burnType,
+    required this.titleKey,
+    required this.descKey,
+    required this.indicatorColor,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onTap(burnType),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? indicatorColor.withOpacity(0.1)
+              : colors.bg100.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? indicatorColor : colors.bg300.withOpacity(0.2),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(_BurnsGuideScreenState._spacingMedium),
+        transform:
+            isSelected ? Matrix4.identity().scaled(1.02) : Matrix4.identity(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  _getTypeIcon(),
-                  color: _getTypeColor(),
-                ),
-                const SizedBox(width: _spacingMedium),
+                Icon(icon, color: indicatorColor, size: 20),
+                const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
                 Text(
-                  'Treatment Steps',
+                  AppLocalizations.of(context).translate(titleKey),
                   style: TextStyle(
-                    fontSize: 18,
+                    color: colors.text200,
                     fontWeight: FontWeight.w600,
-                    color: colors.primary300,
+                    fontSize: 16,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: _spacingLarge),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: child,
+            if (isSelected) ...[
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              Padding(
+                padding: const EdgeInsets.only(left: 36),
+                child: Text(
+                  AppLocalizations.of(context).translate(descKey),
+                  style: TextStyle(
+                    color: colors.text200.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
+                ),
               ),
-              child: Column(
-                key: ValueKey('$_selectedBurnType-$_selectedSeverity'),
-                children: _buildTreatmentSteps(colors),
+            ],
+          ],
+        ),
+      ).animate().fadeIn(duration: 300.ms),
+    );
+  }
+}
+
+/// A selectable severity option with animation.
+class _SeverityOption extends StatelessWidget {
+  final AppColorTheme colors;
+  final String severity;
+  final String textKey;
+  final Color indicatorColor;
+  final bool isSelected;
+  final ValueChanged<String> onTap;
+
+  const _SeverityOption({
+    required this.colors,
+    required this.severity,
+    required this.textKey,
+    required this.indicatorColor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onTap(severity),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? indicatorColor.withOpacity(0.1)
+              : colors.bg100.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? indicatorColor : colors.bg300.withOpacity(0.2),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(_BurnsGuideScreenState._spacingMedium),
+        transform:
+            isSelected ? Matrix4.identity().scaled(1.02) : Matrix4.identity(),
+        child: Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: indicatorColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context).translate(textKey),
+                style: TextStyle(
+                  color: colors.text200,
+                  fontWeight: FontWeight.w500,
+                ),
+                softWrap: true,
+                overflow: TextOverflow.visible,
               ),
             ),
           ],
         ),
-      );
+      ).animate().fadeIn(duration: 300.ms),
+    );
+  }
+}
 
-  /// Builds treatment steps dynamically
-  List<Widget> _buildTreatmentSteps(AppColorTheme colors) {
-    final steps = _getTreatmentSteps();
+/// Displays treatment steps based on burn type and severity.
+class _TreatmentContent extends StatelessWidget {
+  final AppColorTheme colors;
+  final String burnType;
+  final String severity;
+
+  const _TreatmentContent({
+    required this.colors,
+    required this.burnType,
+    required this.severity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      colors: colors,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(_getTypeIcon(burnType),
+                  color: getTypeColor(burnType, severity)),
+              const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
+              Text(
+                AppLocalizations.of(context).translate('treatment_steps'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingLarge),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: Column(
+              key: ValueKey('$burnType-$severity'),
+              children: _buildSteps(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildSteps(BuildContext context) {
+    final steps = _TreatmentStepsProvider.getSteps(context, burnType, severity);
     return steps.asMap().entries.map((entry) {
       final index = entry.key;
       final step = entry.value;
-      return _buildTreatmentStepCard(
-        colors,
+      return _TreatmentStepCard(
+        colors: colors,
         stepNumber: index + 1,
         title: step.title,
-        content: Text(
-          step.description,
-          style: TextStyle(color: colors.text200, fontSize: 14),
-        ),
+        description: step.description,
         icon: _getStepIcon(index),
+        typeColor: getTypeColor(burnType, severity),
+        showCprButton: burnType == 'electrical' &&
+            step.title ==
+                AppLocalizations.of(context).translate('check_vital_signs'),
       ).animate().fadeIn(duration: 400.ms, delay: (index * 100).ms);
     }).toList();
   }
 
-  /// Builds a single treatment step card
-  Widget _buildTreatmentStepCard(
-    AppColorTheme colors, {
-    required int stepNumber,
-    required String title,
-    required Widget content,
-    required IconData icon,
-  }) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: _spacingLarge),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _getTypeColor(),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$stepNumber',
-                      style: TextStyle(
-                        color: colors.bg100,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: _spacingMedium),
-                Icon(icon, color: _getTypeColor()),
-                const SizedBox(width: _spacingSmall),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: colors.primary300,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 16),
-              padding: const EdgeInsets.only(
-                left: 24,
-                top: _spacingMedium,
-                bottom: _spacingMedium,
-              ),
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: _getTypeColor().withOpacity(0.3),
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  content,
-                  if (_selectedBurnType == 'electrical' &&
-                      title == 'Check Vital Signs') ...[
-                    const SizedBox(height: _spacingMedium),
-                    ElevatedButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CPRGuideScreen(),
-                        ),
-                      ),
-                      icon: const Icon(Icons.medical_services),
-                      label: const Text('View CPR Guide'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colors.primary300,
-                        foregroundColor: colors.bg100,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: _paddingValue,
-                          vertical: _spacingSmall,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-
-  /// Builds the important tips section
-  Widget _buildImportantTips(AppColorTheme colors) => Container(
-        decoration: _buildCardDecoration(colors),
-        padding: const EdgeInsets.all(_paddingValue),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.lightbulb, color: colors.accent200),
-                const SizedBox(width: _spacingMedium),
-                Text(
-                  'Important Tips',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: colors.primary300,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: _spacingMedium),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-              child: Column(
-                key: ValueKey('$_selectedBurnType-$_selectedSeverity-tips'),
-                children: _selectedBurnType.isNotEmpty
-                    ? _getImportantTips(colors)
-                    : [
-                        _buildTipCard(
-                          colors,
-                          'Select Burn Type',
-                          Icons.touch_app,
-                          'Please select a burn type above to see specific treatment tips.',
-                          false,
-                        ),
-                      ],
-              ),
-            ),
-          ],
-        ),
-      );
-
-  /// Gets the appropriate icon based on burn type
-  IconData _getTypeIcon() {
-    switch (_selectedBurnType) {
-      case 'thermal':
-        return Icons.local_fire_department;
-      case 'chemical':
-        return Icons.science;
-      case 'electrical':
-        return Icons.bolt;
-      default:
-        return Icons.healing;
-    }
+  IconData _getTypeIcon(String burnType) {
+    return switch (burnType) {
+      'thermal' => Icons.local_fire_department,
+      'chemical' => Icons.science,
+      'electrical' => Icons.bolt,
+      _ => Icons.healing,
+    };
   }
 
-  /// Gets the appropriate color based on burn type
-  Color _getTypeColor() {
-    switch (_selectedBurnType) {
-      case 'thermal':
-        switch (_selectedSeverity) {
-          case 'first':
-            return Colors.green;
-          case 'second':
-            return Colors.orange;
-          case 'third':
-            return Colors.red;
-          default:
-            return Colors.red; // Default for thermal
-        }
-      case 'chemical':
-        return Colors.orange;
-      case 'electrical':
-        return Colors.yellow;
-      default:
-        return Colors.grey;
-    }
+  // Changed from private to public method
+  Color getTypeColor(String burnType, String severity) {
+    return switch (burnType) {
+      'thermal' => switch (severity) {
+          'first' => Colors.green,
+          'second' => Colors.orange,
+          'third' => Colors.red,
+          _ => Colors.red,
+        },
+      'chemical' => Colors.orange,
+      'electrical' => Colors.yellow,
+      _ => Colors.grey,
+    };
   }
 
-  /// Gets the appropriate icon for each step
+  Color _getTypeColor(String burnType, String severity) {
+    return switch (burnType) {
+      'thermal' => switch (severity) {
+          'first' => Colors.green,
+          'second' => Colors.orange,
+          'third' => Colors.red,
+          _ => Colors.red,
+        },
+      'chemical' => Colors.orange,
+      'electrical' => Colors.yellow,
+      _ => Colors.grey,
+    };
+  }
+
   IconData _getStepIcon(int stepIndex) {
     const icons = [
       Icons.healing,
@@ -687,334 +725,258 @@ class _BurnsGuideScreenState extends State<BurnsGuideScreen> {
     ];
     return icons[stepIndex % icons.length];
   }
+}
 
-  /// Returns treatment steps based on burn type and severity
-  List<TreatmentStep> _getTreatmentSteps() {
-    switch (_selectedBurnType) {
-      case 'thermal':
-        switch (_selectedSeverity) {
-          case 'first':
-            return const [
-              TreatmentStep(
-                'Cool the Burn',
-                'Hold under cool running water for 10-15 minutes. The skin may be red and painful.',
+/// A single treatment step card with optional CPR button.
+class _TreatmentStepCard extends StatelessWidget {
+  final AppColorTheme colors;
+  final int stepNumber;
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color typeColor;
+  final bool showCprButton;
+
+  const _TreatmentStepCard({
+    required this.colors,
+    required this.stepNumber,
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.typeColor,
+    required this.showCprButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin:
+          const EdgeInsets.only(bottom: _BurnsGuideScreenState._spacingLarge),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildStepNumber(),
+              const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
+              Icon(icon, color: typeColor),
+              const SizedBox(width: _BurnsGuideScreenState._spacingSmall),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: colors.primary300,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              TreatmentStep(
-                'Clean the Area',
-                'Gently wash with mild soap and water to prevent infection.',
-              ),
-              TreatmentStep(
-                'Apply Moisturizer',
-                'Use aloe vera or moisturizer to soothe the burned area.',
-              ),
-              TreatmentStep(
-                'Protect the Burn',
-                'Cover with loose gauze if needed. Should heal within 3-6 days.',
-              ),
-            ];
-          case 'second':
-            return const [
-              TreatmentStep(
-                'Cool the Burn',
-                'Run cool water over the burn for 15-20 minutes. Do not break any blisters.',
-              ),
-              TreatmentStep(
-                'Clean and Assess',
-                'Gently clean the area. If burn is larger than 3 inches, seek medical attention.',
-              ),
-              TreatmentStep(
-                'Cover the Burn',
-                'Apply antibiotic ointment and cover with sterile gauze. Keep blisters intact.',
-              ),
-              TreatmentStep(
-                'Monitor Healing',
-                'Watch for signs of infection. May take 2-3 weeks to heal completely.',
-              ),
-            ];
-          case 'third':
-            return const [
-              TreatmentStep(
-                'Emergency Action',
-                'Call emergency services immediately. This is a severe medical emergency.',
-              ),
-              TreatmentStep(
-                'Protect the Area',
-                'Cover loosely with clean, sterile cloth or gauze. Do not apply any ointments.',
-              ),
-              TreatmentStep(
-                'Monitor Vital Signs',
-                'Check breathing and circulation. Watch for signs of shock.',
-              ),
-              TreatmentStep(
-                'Wait for Help',
-                'Keep victim warm and comfortable until medical help arrives.',
-              ),
-            ];
-          default:
-            return const [
-              TreatmentStep(
-                'Select Severity',
-                'Please select burn severity to see specific treatment steps.',
-              ),
-            ];
-        }
-      case 'chemical':
-        return const [
-          TreatmentStep(
-            'Remove Chemical Source',
-            'Brush off dry chemicals, then flush with running water immediately.',
+            ],
           ),
-          TreatmentStep(
-            'Continue Rinsing',
-            'Keep rinsing the affected area with cool water for at least 20 minutes.',
-          ),
-          TreatmentStep(
-            'Remove Contaminated Items',
-            'Take off any clothing or jewelry that has chemical residue.',
-          ),
-          TreatmentStep(
-            'Seek Medical Help',
-            'Chemical burns always require professional medical attention.',
-          ),
-        ];
-      case 'electrical':
-        return const [
-          TreatmentStep(
-            'Ensure Safety',
-            'Make sure the power source is off and the person is not in contact.',
-          ),
-          TreatmentStep(
-            'Check Vital Signs',
-            'Monitor breathing and pulse, be prepared to perform CPR if necessary.',
-          ),
-          TreatmentStep(
-            'Cool Any Burns',
-            'If there are thermal burns, cool with clean water.',
-          ),
-          TreatmentStep(
-            'Cover and Monitor',
-            'Cover burns with sterile dressing and watch for signs of shock.',
-          ),
-        ];
-      default:
-        return const [];
-    }
+          _buildStepContent(context),
+        ],
+      ),
+    );
   }
 
-  /// Returns important tips based on burn type and severity
-  List<Widget> _getImportantTips(AppColorTheme colors) {
-    switch (_selectedBurnType) {
-      case 'thermal':
-        switch (_selectedSeverity) {
-          case 'first':
-            return [
-              _buildTipCard(
-                colors,
-                'Home Treatment',
-                Icons.home,
-                'Can usually be treated at home with basic first aid.',
-                false,
-              ),
-              const SizedBox(height: _spacingSmall),
-              _buildTipCard(
-                colors,
-                'What Not to Do',
-                Icons.cancel_outlined,
-                "Don't use ice or very cold water\nDon't apply butter or oils\nDon't use cotton balls",
-                false,
-                isBulletList: true,
-              ),
-              const SizedBox(height: _spacingSmall),
-              _buildTipCard(
-                colors,
-                'When to Seek Help',
-                Icons.medical_services,
-                'If the burn affects a large area or shows signs of infection.',
-                false,
-              ),
-            ];
-          case 'second':
-            return [
-              _buildTipCard(
-                colors,
-                'Medical Attention',
-                Icons.local_hospital,
-                'Seek medical help if burn is large or on sensitive areas.',
-                false,
-              ),
-              const SizedBox(height: _spacingSmall),
-              _buildTipCard(
-                colors,
-                'Important Warnings',
-                Icons.warning_amber_rounded,
-                "Don't pop blisters\nDon't remove stuck clothing\nDon't apply home remedies\nDon't use ice",
-                false,
-                isBulletList: true,
-              ),
-              const SizedBox(height: _spacingSmall),
-              _buildTipCard(
-                colors,
-                'Critical Signs',
-                Icons.warning_amber_rounded,
-                'Seek immediate medical care if you notice infection or severe pain.',
-                true,
-              ),
-            ];
-          case 'third':
-            return [
-              _buildTipCard(
-                colors,
-                'Emergency',
-                Icons.emergency,
-                'This is a medical emergency requiring immediate professional care.',
-                true,
-              ),
-              const SizedBox(height: _spacingSmall),
-              _buildTipCard(
-                colors,
-                'Critical Don\'ts',
-                Icons.dangerous,
-                "Don't remove stuck clothing\nDon't apply any ointments\nDon't attempt home treatment\nDon't delay medical care",
-                false,
-                isBulletList: true,
-              ),
-              const SizedBox(height: _spacingSmall),
-              _buildTipCard(
-                colors,
-                'While Waiting',
-                Icons.access_time_filled,
-                'Keep victim warm and watch for signs of shock while waiting for emergency services.',
-                true,
-              ),
-            ];
-          default:
-            return [
-              _buildTipCard(
-                colors,
-                'Select Severity',
-                Icons.touch_app,
-                'Please select burn severity to see specific treatment tips.',
-                false,
-              ),
-            ];
-        }
-      case 'chemical':
-        return [
-          _buildTipCard(
-            colors,
-            'Initial Response',
-            Icons.cleaning_services,
-            'Remove contaminated clothing immediately while protecting yourself. Brush off dry chemicals before rinsing.',
-            false,
-          ),
-          const SizedBox(height: _spacingSmall),
-          _buildTipCard(
-            colors,
-            'What Not to Do',
-            Icons.cancel_outlined,
-            "Don't try to neutralize the chemical\nDon't apply any creams or ointments\nDon't delay water irrigation\nDon't cover the burn tightly",
-            false,
-            isBulletList: true,
-          ),
-          const SizedBox(height: _spacingSmall),
-          _buildTipCard(
-            colors,
-            'Important',
-            Icons.warning_amber_rounded,
-            'All chemical burns require professional medical attention. Bring the chemical container or name to the hospital.',
-            true,
-          ),
-        ];
-      case 'electrical':
-        return [
-          _buildTipCard(
-            colors,
-            'Safety First',
-            Icons.security,
-            "Ensure the power source is off before approaching. Never touch the person if they're still in contact with the electrical source.",
-            false,
-          ),
-          const SizedBox(height: _spacingSmall),
-          _buildTipCard(
-            colors,
-            'What Not to Do',
-            Icons.cancel_outlined,
-            "Don't move the person unless in immediate danger\nDon't touch the burn areas directly\nDon't remove clothing stuck to burns\nDon't apply any creams or ice",
-            false,
-            isBulletList: true,
-          ),
-          const SizedBox(height: _spacingSmall),
-          _buildTipCard(
-            colors,
-            'Critical Warning',
-            Icons.warning_amber_rounded,
-            'All electrical burns require immediate emergency care. Internal damage may be more severe than visible burns.',
-            true,
-          ),
-        ];
-      default:
-        return [];
-    }
-  }
-
-  /// Builds a tip card with optional bullet points
-  Widget _buildTipCard(
-    AppColorTheme colors,
-    String title,
-    IconData icon,
-    String content,
-    bool isWarning, {
-    bool isBulletList = false,
-  }) =>
-      Container(
-        padding: const EdgeInsets.all(_paddingValue),
+  Widget _buildStepNumber() => Container(
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(
-          color: isWarning
-              ? colors.warning.withOpacity(0.1)
-              : colors.bg100.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: isWarning
-              ? Border.all(color: colors.warning.withOpacity(0.3))
-              : null,
+          color: typeColor,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Text(
+            '$stepNumber',
+            style: TextStyle(
+              color: colors.bg100,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildStepContent(BuildContext context) => Container(
+        margin: const EdgeInsets.only(left: 16),
+        padding: const EdgeInsets.only(
+          left: 24,
+          top: _BurnsGuideScreenState._spacingMedium,
+          bottom: _BurnsGuideScreenState._spacingMedium,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: typeColor.withOpacity(0.3),
+              width: 2,
+            ),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isWarning ? colors.warning : colors.accent200,
-                  size: 20,
-                ),
-                const SizedBox(width: _spacingSmall),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: isWarning ? colors.warning : colors.text200,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            Text(
+              description,
+              style: TextStyle(color: colors.text200, fontSize: 14),
             ),
-            const SizedBox(height: _spacingSmall),
-            isBulletList
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: content.split('\n').map((line) {
-                      return _buildBulletPoint(colors, line);
-                    }).toList(),
-                  )
-                : Text(
-                    content,
-                    style: TextStyle(color: colors.text200, fontSize: 14),
+            if (showCprButton) ...[
+              const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CPRGuideScreen()),
+                ),
+                icon: const Icon(Icons.medical_services),
+                label: Text(
+                    AppLocalizations.of(context).translate('view_cpr_guide')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.primary300,
+                  foregroundColor: colors.bg100,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _BurnsGuideScreenState._paddingValue,
+                    vertical: _BurnsGuideScreenState._spacingSmall,
                   ),
+                ),
+              ),
+            ],
           ],
         ),
       );
+}
 
-  /// Builds a bullet point for the list
-  Widget _buildBulletPoint(AppColorTheme colors, String text) => Padding(
+/// Displays important tips based on burn type and severity.
+class _ImportantTips extends StatelessWidget {
+  final AppColorTheme colors;
+  final String burnType;
+  final String severity;
+
+  const _ImportantTips({
+    required this.colors,
+    required this.burnType,
+    required this.severity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      colors: colors,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lightbulb, color: colors.accent200),
+              const SizedBox(width: _BurnsGuideScreenState._spacingMedium),
+              Text(
+                AppLocalizations.of(context).translate('important_tips'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingMedium),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: Column(
+              key: ValueKey('$burnType-$severity-tips'),
+              children: burnType.isNotEmpty
+                  ? _TipsProvider.getTips(context, colors, burnType, severity)
+                  : [
+                      _TipCard(
+                        colors: colors,
+                        title: AppLocalizations.of(context)
+                            .translate('select_burn_type'),
+                        icon: Icons.touch_app,
+                        content:
+                            'Please select a burn type above to see specific treatment tips.',
+                        isWarning: false,
+                      ),
+                    ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single tip card with optional bullet list formatting.
+class _TipCard extends StatelessWidget {
+  final AppColorTheme colors;
+  final String title;
+  final IconData icon;
+  final String content;
+  final bool isWarning;
+  final bool isBulletList;
+
+  const _TipCard({
+    required this.colors,
+    required this.title,
+    required this.icon,
+    required this.content,
+    required this.isWarning,
+    this.isBulletList = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(_BurnsGuideScreenState._paddingValue),
+      decoration: BoxDecoration(
+        color: isWarning
+            ? colors.warning.withOpacity(0.1)
+            : colors.bg100.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: isWarning
+            ? Border.all(color: colors.warning.withOpacity(0.3))
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: isWarning ? colors.warning : colors.accent200,
+                size: 20,
+              ),
+              const SizedBox(width: _BurnsGuideScreenState._spacingSmall),
+              Text(
+                title,
+                style: TextStyle(
+                  color: isWarning ? colors.warning : colors.text200,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+          isBulletList
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: content
+                      .split('\n')
+                      .map((line) => _buildBulletPoint(line))
+                      .toList(),
+                )
+              : Text(
+                  content,
+                  style: TextStyle(color: colors.text200, fontSize: 14),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulletPoint(String text) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1037,9 +999,19 @@ class _BurnsGuideScreenState extends State<BurnsGuideScreen> {
           ],
         ),
       );
+}
 
-  /// Returns a reusable card decoration
-  BoxDecoration _buildCardDecoration(AppColorTheme colors) => BoxDecoration(
+/// A reusable card widget for consistent styling.
+class _Card extends StatelessWidget {
+  final AppColorTheme colors;
+  final Widget child;
+
+  const _Card({required this.colors, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
         color: colors.bg100.withOpacity(0.85),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colors.accent200.withOpacity(0.1)),
@@ -1050,37 +1022,234 @@ class _BurnsGuideScreenState extends State<BurnsGuideScreen> {
             offset: const Offset(0, 2),
           ),
         ],
-      );
-
-  /// Initiates an emergency phone call
-  Future<void> _makeEmergencyCall(BuildContext context) async {
-    final Uri url = Uri.parse('tel:999');
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        _showSnackBar(context, 'Could not launch emergency call', Colors.red);
-      }
-    } catch (e) {
-      _showSnackBar(context, 'Failed to make call: $e', Colors.red);
-    }
-  }
-
-  /// Displays a snackbar with a message
-  void _showSnackBar(
-      BuildContext context, String message, Color backgroundColor) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-        duration: const Duration(seconds: 2),
       ),
+      padding: const EdgeInsets.all(_BurnsGuideScreenState._paddingValue),
+      child: child,
     );
   }
 }
 
-/// Represents a single treatment step with a title and description
+/// Provides treatment steps based on burn type and severity.
+///
+/// Centralizes step data for consistency and reusability.
+class _TreatmentStepsProvider {
+  static List<TreatmentStep> getSteps(
+      BuildContext context, String burnType, String severity) {
+    final l = AppLocalizations.of(context);
+    return switch (burnType) {
+      'thermal' => switch (severity) {
+          'first' => [
+              TreatmentStep(
+                  l.translate('cool_burn'), l.translate('cool_burn_first')),
+              TreatmentStep(
+                  l.translate('clean_area'), l.translate('clean_area_first')),
+              TreatmentStep(l.translate('apply_moisturizer'),
+                  l.translate('apply_moisturizer_first')),
+              TreatmentStep(l.translate('protect_burn'),
+                  l.translate('protect_burn_first')),
+            ],
+          'second' => [
+              TreatmentStep(
+                  l.translate('cool_burn'), l.translate('cool_burn_second')),
+              TreatmentStep(l.translate('clean_assess'),
+                  l.translate('clean_assess_second')),
+              TreatmentStep(
+                  l.translate('cover_burn'), l.translate('cover_burn_second')),
+              TreatmentStep(l.translate('monitor_healing'),
+                  l.translate('monitor_healing_second')),
+            ],
+          'third' => [
+              TreatmentStep(l.translate('emergency_action'),
+                  l.translate('emergency_action_third')),
+              TreatmentStep(l.translate('protect_area'),
+                  l.translate('protect_area_third')),
+              TreatmentStep(l.translate('monitor_vital_signs'),
+                  l.translate('monitor_vital_signs_third')),
+              TreatmentStep(l.translate('wait_for_help'),
+                  l.translate('wait_for_help_third')),
+            ],
+          _ => const [],
+        },
+      'chemical' => [
+          TreatmentStep(
+            l.translate('remove_chemical_source'),
+            l.translate('remove_chemical_source_chemical'),
+          ),
+          TreatmentStep(l.translate('continue_rinsing'),
+              l.translate('continue_rinsing_chemical')),
+          TreatmentStep(
+            l.translate('remove_contaminated_items'),
+            l.translate('remove_contaminated_items_chemical'),
+          ),
+          TreatmentStep(l.translate('seek_medical_help'),
+              l.translate('seek_medical_help_chemical')),
+        ],
+      'electrical' => [
+          TreatmentStep(l.translate('ensure_safety'),
+              l.translate('ensure_safety_electrical')),
+          TreatmentStep(l.translate('check_vital_signs'),
+              l.translate('check_vital_signs_electrical')),
+          TreatmentStep(l.translate('cool_any_burns'),
+              l.translate('cool_any_burns_electrical')),
+          TreatmentStep(l.translate('cover_and_monitor'),
+              l.translate('cover_and_monitor_electrical')),
+        ],
+      _ => const [],
+    };
+  }
+}
+
+/// Provides important tips based on burn type and severity.
+///
+/// Centralizes tip data for consistency and reusability.
+class _TipsProvider {
+  static List<Widget> getTips(
+    BuildContext context,
+    AppColorTheme colors,
+    String burnType,
+    String severity,
+  ) {
+    final l = AppLocalizations.of(context);
+    return switch (burnType) {
+      'thermal' => switch (severity) {
+          'first' => [
+              _TipCard(
+                colors: colors,
+                title: l.translate('home_treatment'),
+                icon: Icons.home,
+                content: l.translate('home_treatment_first'),
+                isWarning: false,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              _TipCard(
+                colors: colors,
+                title: l.translate('what_not_to_do'),
+                icon: Icons.cancel_outlined,
+                content: l.translate('what_not_to_do_thermal_first'),
+                isWarning: false,
+                isBulletList: true,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              _TipCard(
+                colors: colors,
+                title: l.translate('when_to_seek_help'),
+                icon: Icons.medical_services,
+                content: l.translate('when_to_seek_help_first'),
+                isWarning: false,
+              ),
+            ],
+          'second' => [
+              _TipCard(
+                colors: colors,
+                title: l.translate('medical_attention'),
+                icon: Icons.local_hospital,
+                content: l.translate('medical_attention_second'),
+                isWarning: false,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              _TipCard(
+                colors: colors,
+                title: l.translate('critical_donts'),
+                icon: Icons.dangerous,
+                content: l.translate('important_warnings_second'),
+                isWarning: false,
+                isBulletList: true,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              _TipCard(
+                colors: colors,
+                title: l.translate('critical_signs'),
+                icon: Icons.warning_amber_rounded,
+                content: l.translate('critical_signs_second'),
+                isWarning: true,
+              ),
+            ],
+          'third' => [
+              _TipCard(
+                colors: colors,
+                title: l.translate('emergency'),
+                icon: Icons.emergency,
+                content: l.translate('emergency_third'),
+                isWarning: true,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              _TipCard(
+                colors: colors,
+                title: l.translate('critical_donts'),
+                icon: Icons.dangerous,
+                content: l.translate('critical_donts_third'),
+                isWarning: false,
+                isBulletList: true,
+              ),
+              const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+              _TipCard(
+                colors: colors,
+                title: l.translate('while_waiting'),
+                icon: Icons.access_time_filled,
+                content: l.translate('while_waiting_third'),
+                isWarning: true,
+              ),
+            ],
+          _ => const [],
+        },
+      'chemical' => [
+          _TipCard(
+            colors: colors,
+            title: l.translate('initial_response'),
+            icon: Icons.cleaning_services,
+            content: l.translate('initial_response_chemical'),
+            isWarning: false,
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+          _TipCard(
+            colors: colors,
+            title: l.translate('what_not_to_do'),
+            icon: Icons.cancel_outlined,
+            content: l.translate('what_not_to_do_chemical'),
+            isWarning: false,
+            isBulletList: true,
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+          _TipCard(
+            colors: colors,
+            title: l.translate('important_chemical'),
+            icon: Icons.warning_amber_rounded,
+            content: l.translate('important_chemical_desc'),
+            isWarning: true,
+          ),
+        ],
+      'electrical' => [
+          _TipCard(
+            colors: colors,
+            title: l.translate('safety_first'),
+            icon: Icons.security,
+            content: l.translate('safety_first_electrical'),
+            isWarning: false,
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+          _TipCard(
+            colors: colors,
+            title: l.translate('what_not_to_do'),
+            icon: Icons.cancel_outlined,
+            content: l.translate('what_not_to_do_electrical'),
+            isWarning: false,
+            isBulletList: true,
+          ),
+          const SizedBox(height: _BurnsGuideScreenState._spacingSmall),
+          _TipCard(
+            colors: colors,
+            title: l.translate('critical_warning'),
+            icon: Icons.warning_amber_rounded,
+            content: l.translate('critical_warning_electrical'),
+            isWarning: true,
+          ),
+        ],
+      _ => const [],
+    };
+  }
+}
+
+/// Represents a single treatment step with a title and description.
 class TreatmentStep {
   final String title;
   final String description;

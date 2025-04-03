@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // Import flutter_animate
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 class FracturesGuideScreen extends StatelessWidget {
   const FracturesGuideScreen({super.key});
 
-  // Constants for consistency and easy tweaking
+  // Constants for consistency and maintainability
   static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
@@ -16,8 +17,9 @@ class FracturesGuideScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = themeProvider.currentTheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -27,7 +29,7 @@ class FracturesGuideScreen extends StatelessWidget {
             SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
                 _paddingValue,
-                70, // Adjusted for header height
+                70, // Space for header
                 _paddingValue,
                 _paddingValue,
               ),
@@ -35,136 +37,146 @@ class FracturesGuideScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: _spacingLarge),
-                  _buildEmergencyWarning(context, colors),
+                  _EmergencyWarning(colors: colors),
                   const SizedBox(height: _spacingLarge),
-                  _buildInitialAssessment(colors),
+                  _InitialAssessment(colors: colors),
                   const SizedBox(height: _spacingLarge),
-                  _buildRiceMethod(context, colors),
+                  _RiceMethod(colors: colors),
                   const SizedBox(height: _spacingLarge),
-                  _buildAdditionalCare(colors),
+                  _AdditionalCare(colors: colors),
                   const SizedBox(height: _spacingLarge),
-                  _buildWhenToSeekHelp(colors),
+                  _WhenToSeekHelp(colors: colors),
                 ],
               ),
             ),
-            _buildHeader(context, colors),
+            _Header(colors: colors),
           ],
         ),
       ),
     );
   }
+}
 
-  /// Builds the header with back button and title
-  Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg100.withOpacity(0.7),
-      border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
-    ),
-    padding: const EdgeInsets.symmetric(
-      horizontal: _paddingValue,
-      vertical: _paddingValue - 4,
-    ),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.primary300),
-          onPressed: () => Navigator.pop(context),
-        ),
-        const SizedBox(width: _spacingSmall),
-        Expanded(
-          child: Text(
-            'Fractures & Sprains',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: colors.primary300,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
+class _Header extends StatelessWidget {
+  final AppColorTheme colors;
 
-  /// Builds the emergency warning section
-  Widget _buildEmergencyWarning(BuildContext context, AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [colors.warning, colors.warning.withOpacity(0.8)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+  const _Header({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bg100.withOpacity(0.7),
+        border: Border.all(color: colors.bg300.withOpacity(0.2)),
       ),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: colors.bg100, size: 28),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'Emergency Warning',
+      padding: const EdgeInsets.symmetric(
+        horizontal: FracturesGuideScreen._paddingValue,
+        vertical: FracturesGuideScreen._paddingValue - 4,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: FracturesGuideScreen._spacingSmall),
+          Expanded(
+            child: Text(
+              l.translate('fractures_sprains'),
               style: TextStyle(
-                color: colors.bg100,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: _spacingLarge),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.all(_paddingValue),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+    );
+  }
+}
+
+class _EmergencyWarning extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _EmergencyWarning({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _buildCardDecoration(colors, isWarning: true),
+      padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
+              Icon(Icons.warning_amber_rounded, color: colors.bg100, size: 28),
+              const SizedBox(width: FracturesGuideScreen._spacingMedium),
               Text(
-                'Seek Immediate Help If:',
+                l.translate('emergency_warning'),
                 style: TextStyle(
                   color: colors.bg100,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: _spacingMedium),
-              _buildWarningItem('Suspected spinal or neck injury'),
-              _buildWarningItem('Bone protruding through skin'),
-              _buildWarningItem('Severe deformity or uncontrollable pain'),
-              _buildWarningItem('Loss of pulse or sensation below injury'),
             ],
           ),
-        ),
-        const SizedBox(height: _spacingLarge),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => _makeEmergencyCall(context),
-            icon: Icon(Icons.phone, color: colors.warning),
-            label: Text(
-              'Call 999',
-              style: TextStyle(color: colors.warning, fontSize: 16),
+          const SizedBox(height: FracturesGuideScreen._spacingLarge),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colors.bg100,
-              padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.translate('seek_immediate_help'),
+                  style: TextStyle(
+                    color: colors.bg100,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: FracturesGuideScreen._spacingMedium),
+                _buildWarningItem(l.translate('suspected_spinal_neck_injury'), colors),
+                _buildWarningItem(l.translate('bone_protruding'), colors),
+                _buildWarningItem(l.translate('severe_deformity_pain'), colors),
+                _buildWarningItem(l.translate('loss_pulse_sensation'), colors),
+              ],
+            ),
+          ),
+          const SizedBox(height: FracturesGuideScreen._spacingLarge),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _makeEmergencyCall(context),
+              icon: Icon(Icons.phone, color: colors.warning),
+              label: Text(
+                l.translate('call_emergency'),
+                style: TextStyle(color: colors.warning, fontSize: 16),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.bg100,
+                padding: const EdgeInsets.symmetric(vertical: FracturesGuideScreen._spacingMedium),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  ).animate().fadeIn(duration: 300.ms);
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
 
-  /// Builds a warning item for emergency conditions
-  Widget _buildWarningItem(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: _spacingSmall),
+  Widget _buildWarningItem(String text, AppColorTheme colors) => Padding(
+    padding: const EdgeInsets.only(bottom: FracturesGuideScreen._spacingSmall),
     child: Row(
       children: [
         Container(
@@ -174,7 +186,7 @@ class FracturesGuideScreen extends StatelessWidget {
             color: Colors.red,
             shape: BoxShape.circle,
           ),
-          margin: const EdgeInsets.only(right: _spacingSmall, top: 4),
+          margin: const EdgeInsets.only(right: FracturesGuideScreen._spacingSmall, top: 4),
         ),
         Expanded(
           child: Text(
@@ -189,109 +201,150 @@ class FracturesGuideScreen extends StatelessWidget {
     ),
   );
 
-  /// Builds the initial assessment section
-  Widget _buildInitialAssessment(AppColorTheme colors) => Container(
-    decoration: _buildCardDecoration(colors),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.personal_injury, color: colors.accent200),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'Initial Assessment',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: colors.primary300,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingMedium),
-        _buildAssessmentItem(
-          colors,
-          Icons.visibility,
-          'Look for Signs',
-          'Swelling or bruising\nDeformity or abnormal position\nOpen wounds near injury',
-        ),
-        const SizedBox(height: _spacingMedium),
-        _buildAssessmentItem(
-          colors,
-          Icons.hearing,
-          'Listen for',
-          'Cracking or popping sounds\nPatient\'s description of pain\nWhen and how injury occurred',
-        ),
-      ],
-    ),
-  ).animate().fadeIn(duration: 400.ms);
+  Future<void> _makeEmergencyCall(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final Uri url = Uri.parse('tel:999');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        _showSnackBar(context, l.translate('call_error_no_launch'), Colors.red);
+      }
+    } catch (e) {
+      _showSnackBar(context, l.translate('call_error', {'error': e.toString()}), Colors.red);
+    }
+  }
 
-  /// Builds an assessment item
-  Widget _buildAssessmentItem(AppColorTheme colors, IconData icon, String title, String content) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Icon(icon, color: colors.accent200, size: 20),
-      const SizedBox(width: _spacingMedium),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: colors.primary300,
-              ),
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              content,
-              style: TextStyle(
-                color: colors.text200,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
+  void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+        duration: const Duration(seconds: 2),
       ),
-    ],
-  );
+    );
+  }
+}
 
-  /// Builds the RICE method section
-  Widget _buildRiceMethod(BuildContext context, AppColorTheme colors) => Container(
-    decoration: _buildCardDecoration(colors),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.healing, color: colors.accent200),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'RICE Method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: colors.primary300,
+class _InitialAssessment extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _InitialAssessment({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _buildCardDecoration(colors),
+      padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.personal_injury, color: colors.accent200),
+              const SizedBox(width: FracturesGuideScreen._spacingMedium),
+              Text(
+                l.translate('initial_assessment'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: FracturesGuideScreen._spacingMedium),
+          _buildAssessmentItem(
+            colors,
+            Icons.visibility,
+            l.translate('look_for_signs'),
+            l.translate('swelling_bruising_deformity_wounds'),
+          ),
+          const SizedBox(height: FracturesGuideScreen._spacingMedium),
+          _buildAssessmentItem(
+            colors,
+            Icons.hearing,
+            l.translate('listen_for'),
+            l.translate('cracking_pain_description'),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildAssessmentItem(AppColorTheme colors, IconData icon, String title, String content) =>
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: colors.accent200, size: 20),
+          const SizedBox(width: FracturesGuideScreen._spacingMedium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary300,
+                  ),
+                ),
+                const SizedBox(height: FracturesGuideScreen._spacingSmall),
+                Text(
+                  content,
+                  style: TextStyle(
+                    color: colors.text200,
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: _spacingLarge),
-        ...[
+          ),
+        ],
+      );
+}
+
+class _RiceMethod extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _RiceMethod({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _buildCardDecoration(colors),
+      padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.healing, color: colors.accent200),
+              const SizedBox(width: FracturesGuideScreen._spacingMedium),
+              Text(
+                l.translate('rice_method'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: FracturesGuideScreen._spacingLarge),
           _buildStep(
-            context: context,
             colors: colors,
             stepInitial: 'R',
-            title: 'Rest',
+            title: l.translate('rest'),
             icon: Icons.hotel,
             content: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(_paddingValue),
+                  padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
                   decoration: BoxDecoration(
                     color: colors.bg100.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -300,19 +353,19 @@ class FracturesGuideScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Stop all activity and avoid movement of the injured area.',
+                        l.translate('stop_activity'),
                         style: TextStyle(color: colors.text200),
                       ),
-                      const SizedBox(height: _spacingSmall),
+                      const SizedBox(height: FracturesGuideScreen._spacingSmall),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(_paddingValue),
+                        padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
                         decoration: BoxDecoration(
                           color: colors.bg100,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Continuing to move or put weight on the injury can cause further damage.',
+                          l.translate('continuing_movement_warning'),
                           style: TextStyle(
                             color: colors.accent200,
                             fontSize: 14,
@@ -326,52 +379,30 @@ class FracturesGuideScreen extends StatelessWidget {
             ),
           ),
           _buildStep(
-            context: context,
             colors: colors,
             stepInitial: 'I',
-            title: 'Ice',
+            title: l.translate('ice'),
             icon: Icons.ac_unit,
             content: Column(
               children: [
-                _buildCheckItem(
-                  icon: Icons.access_time,
-                  text: 'Apply for 15-20 minutes',
-                  colors: colors,
-                ),
-                _buildCheckItem(
-                  icon: Icons.wrap_text,
-                  text: 'Wrap ice pack in thin towel',
-                  colors: colors,
-                ),
-                _buildCheckItem(
-                  icon: Icons.update,
-                  text: 'Repeat every 2-3 hours for 48-72 hours',
-                  colors: colors,
-                ),
+                _buildCheckItem(Icons.access_time, l.translate('apply_15_20_minutes'), colors),
+                _buildCheckItem(Icons.wrap_text, l.translate('wrap_ice_pack'), colors),
+                _buildCheckItem(Icons.update, l.translate('repeat_2_3_hours'), colors),
               ],
             ),
           ),
           _buildStep(
-            context: context,
             colors: colors,
             stepInitial: 'C',
-            title: 'Compression',
+            title: l.translate('compression'),
             icon: Icons.compress,
             content: Column(
               children: [
-                _buildCheckItem(
-                  icon: Icons.medical_services,
-                  text: 'Use elastic bandage',
-                  colors: colors,
-                ),
-                _buildCheckItem(
-                  icon: Icons.warning,
-                  text: 'Not too tight - should be snug',
-                  colors: colors,
-                ),
+                _buildCheckItem(Icons.medical_services, l.translate('use_elastic_bandage'), colors),
+                _buildCheckItem(Icons.warning, l.translate('not_too_tight'), colors),
                 Container(
-                  margin: const EdgeInsets.only(top: _spacingMedium),
-                  padding: const EdgeInsets.all(_paddingValue),
+                  margin: const EdgeInsets.only(top: FracturesGuideScreen._spacingMedium),
+                  padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
                   decoration: BoxDecoration(
                     color: colors.primary100,
                     borderRadius: BorderRadius.circular(8),
@@ -382,9 +413,9 @@ class FracturesGuideScreen extends StatelessWidget {
                       Row(
                         children: [
                           Icon(Icons.warning_amber_rounded, color: colors.warning, size: 20),
-                          const SizedBox(width: _spacingSmall),
+                          const SizedBox(width: FracturesGuideScreen._spacingSmall),
                           Text(
-                            'Warning Signs',
+                            l.translate('warning_signs'),
                             style: TextStyle(
                               color: colors.warning,
                               fontWeight: FontWeight.w600,
@@ -393,37 +424,10 @@ class FracturesGuideScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: _spacingMedium),
-                      ...[
-                        'Numbness or tingling',
-                        'Increased pain',
-                        'Cold or bluish skin',
-                      ].map((text) => Padding(
-                        padding: const EdgeInsets.only(bottom: _spacingSmall),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              margin: const EdgeInsets.only(right: 8, top: 4),
-                              decoration: BoxDecoration(
-                                color: colors.warning.withOpacity(0.7),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                text,
-                                style: TextStyle(
-                                  color: colors.text200,
-                                  fontSize: 14,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
+                      const SizedBox(height: FracturesGuideScreen._spacingMedium),
+                      _buildSubItem(l.translate('numbness_tingling'), colors),
+                      _buildSubItem(l.translate('increased_pain'), colors),
+                      _buildSubItem(l.translate('cold_bluish_skin'), colors),
                     ],
                   ),
                 ),
@@ -431,34 +435,23 @@ class FracturesGuideScreen extends StatelessWidget {
             ),
           ),
           _buildStep(
-            context: context,
             colors: colors,
             stepInitial: 'E',
-            title: 'Elevation',
+            title: l.translate('elevation'),
             icon: Icons.arrow_upward,
             content: Column(
               children: [
-                _buildCheckItem(
-                  icon: Icons.height,
-                  text: 'Keep injured area above heart level',
-                  colors: colors,
-                ),
-                _buildCheckItem(
-                  icon: Icons.timer,
-                  text: 'Maintain elevation for first 24-48 hours',
-                  colors: colors,
-                ),
+                _buildCheckItem(Icons.height, l.translate('above_heart_level'), colors),
+                _buildCheckItem(Icons.timer, l.translate('maintain_24_48_hours'), colors),
               ],
             ),
           ),
-        ].asMap().entries.map((entry) => entry.value.animate().fadeIn(duration: 400.ms, delay: (entry.key * 100).ms)).toList(),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 
-  /// Builds a single step in the RICE method
   Widget _buildStep({
-    required BuildContext context,
     required AppColorTheme colors,
     required String stepInitial,
     required String title,
@@ -466,7 +459,7 @@ class FracturesGuideScreen extends StatelessWidget {
     required Widget content,
   }) =>
       Container(
-        margin: const EdgeInsets.only(bottom: _spacingLarge),
+        margin: const EdgeInsets.only(bottom: FracturesGuideScreen._spacingLarge),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -490,9 +483,9 @@ class FracturesGuideScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: _spacingMedium),
+                const SizedBox(width: FracturesGuideScreen._spacingMedium),
                 Icon(icon, color: colors.accent200),
-                const SizedBox(width: _spacingSmall),
+                const SizedBox(width: FracturesGuideScreen._spacingSmall),
                 Expanded(
                   child: Text(
                     title,
@@ -509,8 +502,8 @@ class FracturesGuideScreen extends StatelessWidget {
               margin: const EdgeInsets.only(left: 16),
               padding: const EdgeInsets.only(
                 left: 24,
-                top: _spacingMedium,
-                bottom: _spacingMedium,
+                top: FracturesGuideScreen._spacingMedium,
+                bottom: FracturesGuideScreen._spacingMedium,
               ),
               decoration: BoxDecoration(
                 border: Border(
@@ -524,222 +517,273 @@ class FracturesGuideScreen extends StatelessWidget {
             ),
           ],
         ),
-      );
+      ).animate().fadeIn(duration: 400.ms);
 
-  /// Builds a check item with icon and text
-  Widget _buildCheckItem({
-    required IconData icon,
-    required String text,
-    required AppColorTheme colors,
-  }) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: _spacingMedium),
-        child: Row(
-          children: [
-            Icon(icon, color: colors.accent200, size: 20),
-            const SizedBox(width: _spacingMedium),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(color: colors.text200),
-              ),
-            ),
-          ],
-        ),
-      );
-
-  /// Builds the additional care section
-  Widget _buildAdditionalCare(AppColorTheme colors) => Container(
-    decoration: _buildCardDecoration(colors),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCheckItem(IconData icon, String text, AppColorTheme colors) => Padding(
+    padding: const EdgeInsets.only(bottom: FracturesGuideScreen._spacingMedium),
+    child: Row(
       children: [
-        Row(
-          children: [
-            Icon(Icons.medical_services, color: colors.accent200),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'Additional Care',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: colors.primary300,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingLarge),
-        Container(
-          padding: const EdgeInsets.all(_paddingValue),
-          decoration: BoxDecoration(
-            color: colors.bg100.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: [
-              _buildCareItem(
-                colors,
-                Icons.medical_services,
-                'Immobilization',
-                'Use splints or slings to prevent movement of injured area.',
-              ),
-              const SizedBox(height: _spacingMedium),
-              _buildCareItem(
-                colors,
-                Icons.medication,
-                'Pain Management',
-                'Over-the-counter pain relievers if needed (e.g., ibuprofen, paracetamol).',
-              ),
-              const SizedBox(height: _spacingMedium),
-              _buildCareItem(
-                colors,
-                Icons.monitor_heart,
-                'Monitor',
-                'Check circulation, sensation, and movement regularly.',
-              ),
-            ],
+        Icon(icon, color: colors.accent200, size: 20),
+        const SizedBox(width: FracturesGuideScreen._spacingMedium),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(color: colors.text200),
           ),
         ),
       ],
     ),
-  ).animate().fadeIn(duration: 400.ms);
-
-  /// Builds a care item with icon and text
-  Widget _buildCareItem(AppColorTheme colors, IconData icon, String title, String description) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        children: [
-          Icon(icon, color: colors.accent200, size: 20),
-          const SizedBox(width: _spacingMedium),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: colors.primary300,
-            ),
-          ),
-        ],
-      ),
-      Padding(
-        padding: const EdgeInsets.only(left: 32, top: _spacingSmall),
-        child: Text(
-          description,
-          style: TextStyle(
-            color: colors.text200,
-            height: 1.3,
-          ),
-        ),
-      ),
-    ],
   );
 
-  /// Builds the "When to Seek Help" section
-  Widget _buildWhenToSeekHelp(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.warning.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: colors.warning.withOpacity(0.3)),
-    ),
-    padding: const EdgeInsets.all(_paddingValue),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.local_hospital, color: colors.warning),
-            const SizedBox(width: _spacingMedium),
-            Text(
-              'When to Seek Medical Help',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: colors.primary300, // Changed to primary300 for consistency
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingLarge),
-        Container(
-          padding: const EdgeInsets.all(_paddingValue),
-          decoration: BoxDecoration(
-            color: colors.bg100.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: [
-              _buildHelpItem(colors, 'Unable to bear weight or move the injured area'),
-              _buildHelpItem(colors, 'Severe pain or swelling'),
-              _buildHelpItem(colors, 'Numbness or tingling'),
-              _buildHelpItem(colors, 'Visible deformity'),
-              _buildHelpItem(colors, 'Open wounds or bleeding'),
-            ],
-          ),
-        ),
-      ],
-    ),
-  ).animate().fadeIn(duration: 400.ms);
-
-  /// Builds a help item with icon and text
-  Widget _buildHelpItem(AppColorTheme colors, String text) => Padding(
-    padding: const EdgeInsets.only(bottom: _spacingMedium),
+  Widget _buildSubItem(String text, AppColorTheme colors) => Padding(
+    padding: const EdgeInsets.only(bottom: FracturesGuideScreen._spacingSmall),
     child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.error_outline, color: colors.warning, size: 20),
-        const SizedBox(width: _spacingMedium),
+        Container(
+          width: 6,
+          height: 6,
+          margin: const EdgeInsets.only(right: 8, top: 4),
+          decoration: BoxDecoration(
+            color: colors.warning.withOpacity(0.7),
+            shape: BoxShape.circle,
+          ),
+        ),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               color: colors.text200,
-              height: 1.3,
+              fontSize: 14,
+              height: 1.5,
             ),
           ),
         ),
       ],
     ),
   );
-
-  /// Returns a reusable card decoration
-  BoxDecoration _buildCardDecoration(AppColorTheme colors) => BoxDecoration(
-    color: colors.bg100.withOpacity(0.85),
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: colors.accent200.withOpacity(0.1)),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ],
-  );
-
-  /// Initiates an emergency phone call
-  Future<void> _makeEmergencyCall(BuildContext context) async {
-    final Uri url = Uri.parse('tel:999');
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        _showSnackBar(context, 'Could not launch emergency call', Colors.red);
-      }
-    } catch (e) {
-      _showSnackBar(context, 'Failed to make call: $e', Colors.red);
-    }
-  }
-
-  /// Displays a snackbar with a message
-  void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(_paddingValue),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 }
+
+class _AdditionalCare extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _AdditionalCare({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _buildCardDecoration(colors),
+      padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.medical_services, color: colors.accent200),
+              const SizedBox(width: FracturesGuideScreen._spacingMedium),
+              Text(
+                l.translate('additional_care'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: FracturesGuideScreen._spacingLarge),
+          Container(
+            padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+            decoration: BoxDecoration(
+              color: colors.bg100.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                _buildCareItem(
+                  colors,
+                  Icons.medical_services,
+                  l.translate('immobilization'),
+                  l.translate('use_splints_slings'),
+                ),
+                const SizedBox(height: FracturesGuideScreen._spacingMedium),
+                _buildCareItem(
+                  colors,
+                  Icons.medication,
+                  l.translate('pain_management'),
+                  l.translate('pain_relievers_info'),
+                ),
+                const SizedBox(height: FracturesGuideScreen._spacingMedium),
+                _buildCareItem(
+                  colors,
+                  Icons.monitor_heart,
+                  l.translate('monitor'),
+                  l.translate('check_circulation'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildCareItem(AppColorTheme colors, IconData icon, String title, String description) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: colors.accent200, size: 20),
+              const SizedBox(width: FracturesGuideScreen._spacingMedium),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 32, top: FracturesGuideScreen._spacingSmall),
+            child: Text(
+              description,
+              style: TextStyle(
+                color: colors.text200,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      );
+}
+
+class _WhenToSeekHelp extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _WhenToSeekHelp({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bg100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.accent200.withOpacity(0.5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: colors.accent200.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.accent200.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.local_hospital, color: colors.accent200, size: 24),
+              ),
+              const SizedBox(width: FracturesGuideScreen._spacingMedium),
+              Text(
+                l.translate('when_to_seek_help'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: FracturesGuideScreen._spacingLarge),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(FracturesGuideScreen._paddingValue),
+            decoration: BoxDecoration(
+              color: colors.bg200.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border(
+                left: BorderSide(
+                  color: colors.accent200,
+                  width: 4,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHelpItem(colors, l.translate('unable_bear_weight')),
+                _buildHelpItem(colors, l.translate('severe_pain_swelling')),
+                _buildHelpItem(colors, l.translate('numbness_tingling')),
+                _buildHelpItem(colors, l.translate('visible_deformity')),
+                _buildHelpItem(colors, l.translate('open_wounds_bleeding')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildHelpItem(AppColorTheme colors, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: FracturesGuideScreen._spacingMedium),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          margin: const EdgeInsets.only(right: FracturesGuideScreen._spacingMedium, top: 6),
+          decoration: BoxDecoration(
+            color: colors.accent200,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: colors.text100,
+              height: 1.3,
+              fontSize: 15,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Utility function for card decoration
+BoxDecoration _buildCardDecoration(AppColorTheme colors, {bool isWarning = false}) =>
+    BoxDecoration(
+      gradient: isWarning
+          ? LinearGradient(
+        colors: [colors.warning, colors.warning.withOpacity(0.8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      )
+          : null,
+      color: isWarning ? null : colors.bg100.withOpacity(0.85),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isWarning ? colors.warning.withOpacity(0.3) : colors.accent200.withOpacity(0.1),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );

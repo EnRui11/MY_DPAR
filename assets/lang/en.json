@@ -185,7 +185,7 @@
   "meters": "m",
   "kilometers": "km",
 
-  
+
 
 
 
@@ -231,5 +231,71 @@
   "safety_warnings": "Important Safety Warnings",
   "no_suck_venom": "Never attempt to suck out venom",
   "no_tourniquet": "Do not apply a tourniquet",
-  "no_ice": "Avoid applying ice to the bite area"
+  "no_ice": "Avoid applying ice to the bite area",
+
+
+
+
+
+  "bleeding_guide_screen": "bleeding_guide_screen.dart",
+  "bleeding_control": "Bleeding Control",
+  "emergency_warning": "Emergency Warning",
+  "seek_immediate_help": "Seek Immediate Help If:",
+  "uncontrollable_bleeding": "Uncontrollable bleeding or spurting blood",
+  "signs_of_shock": "Signs of shock (pale, cold, sweaty skin)",
+  "deep_wounds_exposed": "Deep wounds or exposed internal tissue",
+  "call_emergency": "Call 999",
+  "wound_assessment": "Wound Assessment",
+  "severe_bleeding_desc": "Severe: Deep cuts, arterial bleeding",
+  "moderate_bleeding_desc": "Moderate: Continuous bleeding, large cuts",
+  "minor_bleeding_desc": "Minor: Small cuts, scrapes",
+  "treatment_by_severity": "Treatment by Severity",
+  "requires_immediate_attention": "Requires immediate medical attention!",
+  "seek_medical_attention": "Seek medical attention if bleeding doesn't stop",
+  "can_be_treated_at_home": "Can usually be treated at home",
+  "apply_direct_pressure": "Apply direct pressure with clean cloth or sterile gauze",
+  "press_firmly_description": "Press firmly on the wound. If blood soaks through, add more layers without removing the original dressing.",
+  "elevate_wound": "Elevate the wounded area above the heart if possible",
+  "use_pressure_points": "Use pressure points if direct pressure isn't enough",
+  "apply_pressure_description": "For arm wounds, press inside of the upper arm. For leg wounds, press in the groin area where the leg meets the body.",
+  "clean_wound": "Clean the wound",
+  "clean_wound_description": "Rinse with clean water and wash around the wound with soap. Pat dry with clean cloth.",
+  "apply_antiseptic": "Apply antiseptic and bandage",
+  "antiseptic_description": "Use antiseptic ointment and cover with sterile bandage or adhesive bandage.",
+  "apply_pressure": "Apply pressure for 15-30 minutes",
+  "pressure_description": "Use a clean cloth or bandage and apply firm pressure until bleeding stops.",
+  "rinse_with_water": "Rinse with clean water and mild soap",
+  "apply_antibiotic": "Apply antibiotic ointment",
+  "antibiotic_description": "Apply a thin layer of antibiotic ointment to prevent infection.",
+  "cover_with_bandage": "Cover with adhesive bandage",
+  "bandage_description": "Use an appropriate-sized bandage and change daily or when dirty.",
+  "important_tips": "Important Tips",
+  "elevate_wound": "Elevate the wounded area above heart level when possible",
+  "avoid_tourniquet": "Avoid using tourniquets except in life-threatening situations",
+  "monitor_for_shock": "Monitor for signs of shock (rapid breathing, confusion, cold skin)",
+  "elevate_injured_area": "Elevate the injured area",
+  "keep_wound_above_heart": "Keep the wound above heart level if possible to reduce blood flow.",
+  "apply_tourniquet_if_necessary": "Apply tourniquet if necessary",
+  "tourniquet_placement_description": "For life-threatening limb bleeding, place 2-3 inches above wound, not on a joint.",
+  "monitor_vital_signs": "Monitor vital signs",
+  "watch_for_shock_signs": "Watch for shock signs: rapid breathing, pale skin, confusion. Keep person warm and calm.",
+  "clean_dress_wound_promptly": "Clean and dress the wound promptly",
+  "clean_wound_thoroughly": "Clean the wound thoroughly",
+  "wash_remove_debris": "Wash with clean water and mild soap. Remove visible debris to prevent infection.",
+  "use_sterile_gauze": "Use sterile gauze or clean cloth. Maintain pressure for 10-15 minutes without lifting.",
+  "monitor_for_infection": "Monitor for infection",
+  "watch_for_infection_signs": "Watch for increased pain, redness, swelling, or warmth. Seek care if these appear.",
+  "basic_first_aid_sufficient": "Basic first aid is sufficient",
+  "gently_wash_wound": "Gently wash with soap and water. Pat dry with clean cloth or gauze.",
+  "use_antiseptic_wipes": "Use antiseptic wipes or solution to prevent infection. Let it air dry briefly.",
+  "cover_wound": "Cover the wound",
+  "apply_bandage": "Apply an appropriately sized adhesive bandage or gauze. Change daily or when wet.",
+  "keep_clean": "Keep it clean",
+  "keep_wound_clean_dry": "Keep wound clean and dry. Avoid touching it directly. Wash hands before changing dressing.",
+  "protect_yourself": "Protect Yourself",
+  "wear_gloves_description": "Always wear disposable gloves when treating bleeding wounds to prevent infection transmission.",
+  "what_not_to_do": "What Not to Do",
+  "dont_remove_objects": "Don't remove large embedded objects\nDon't apply tourniquet unless trained\nDon't use cotton wool directly on wounds",
+  "seek_professional_care": "Seek Professional Care",
+  "when_in_doubt": "When in doubt, always seek medical attention. Better safe than sorry, especially with deep or heavily bleeding wounds."
 }

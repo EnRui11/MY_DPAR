@@ -3,110 +3,112 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
-// Data model for guide sections
 class GuideSection {
-  final String title;
+  final String titleKey; // Changed to use localization key
   final List<GuideCardData> cards;
 
-  const GuideSection({required this.title, required this.cards});
+  const GuideSection({required this.titleKey, required this.cards});
 }
 
-// Data model for guide cards
 class GuideCardData {
   final IconData icon;
-  final String title;
-  final List<String> items;
+  final String titleKey; // Changed to use localization key
+  final List<String> itemKeys; // Changed to use localization keys
 
-  const GuideCardData({required this.icon, required this.title, required this.items});
+  const GuideCardData({required this.icon, required this.titleKey, required this.itemKeys});
 }
 
-// Data model for emergency contacts
 class EmergencyContact {
-  final String label;
+  final String labelKey; // Changed to use localization key
   final String number;
   final IconData icon;
-  final String description;
+  final String descriptionKey; // Changed to use localization key
 
-  const EmergencyContact({required this.label, required this.number, required this.icon, required this.description});
+  const EmergencyContact({
+    required this.labelKey,
+    required this.number,
+    required this.icon,
+    required this.descriptionKey,
+  });
 }
 
-// Centralized data tailored to Malaysia
 const _guideSections = [
   GuideSection(
-    title: 'Before Heavy Rain',
+    titleKey: 'before_heavy_rain',
     cards: [
       GuideCardData(
         icon: Icons.home,
-        title: 'Home Preparation',
-        items: [
-          'Clear drains, gutters, and longkang (canals) to prevent clogging',
-          'Secure outdoor items like furniture, pots, and zinc sheets',
-          'Prepare sandbags or barriers for flood-prone areas',
-          'Store valuables and electronics on higher shelves or upstairs',
-          'Check roof for leaks and reinforce weak spots',
+        titleKey: 'home_preparation',
+        itemKeys: [
+          'clear_drains',
+          'secure_outdoor_items',
+          'prepare_sandbags',
+          'store_valuables',
+          'check_roof',
         ],
       ),
       GuideCardData(
         icon: Icons.radio,
-        title: 'Stay Informed',
-        items: [
-          'Follow MET Malaysia updates (www.met.gov.my) or MyCuaca app',
-          'Register for NADMA SMS alerts or local council notices',
-          'Identify flood-prone zones via JUPEM maps or local knowledge',
-          'Plan evacuation routes and inform family or kampung members',
+        titleKey: 'stay_informed',
+        itemKeys: [
+          'follow_met_updates',
+          'register_nadma_alerts',
+          'identify_flood_zones',
+          'plan_evacuation',
         ],
       ),
     ],
   ),
   GuideSection(
-    title: 'During Heavy Rain',
+    titleKey: 'during_heavy_rain',
     cards: [
       GuideCardData(
         icon: Icons.shield_outlined,
-        title: 'Indoor Safety',
-        items: [
-          'Stay indoors, away from windows during thunderstorms',
-          'Switch off and unplug appliances to avoid lightning damage',
-          'Avoid bathing or using taps during lightning strikes',
-          'Monitor rising water levels near rivers or drains',
-          'Prepare to move to higher floors if flooding begins',
+        titleKey: 'indoor_safety',
+        itemKeys: [
+          'stay_indoors_thunder',
+          'unplug_appliances',
+          'avoid_taps',
+          'monitor_water_levels',
+          'move_higher_floors',
         ],
       ),
       GuideCardData(
         icon: Icons.directions_car,
-        title: 'If Outside',
-        items: [
-          'Avoid driving through flooded roads—15 cm of water can disable a car',
-          'Don’t walk in floodwater; it may hide potholes or debris',
-          'Stay clear of trees, poles, and metal during lightning',
-          'Move to higher ground if flash floods approach',
+        titleKey: 'if_outside',
+        itemKeys: [
+          'avoid_flooded_roads',
+          'dont_walk_floodwater',
+          'stay_clear_trees',
+          'move_higher_ground',
         ],
       ),
     ],
   ),
   GuideSection(
-    title: 'After Heavy Rain',
+    titleKey: 'after_heavy_rain',
     cards: [
       GuideCardData(
         icon: Icons.check_circle_outline,
-        title: 'Safety Checks',
-        items: [
-          'Inspect home for water damage, cracks, or landslides',
-          'Report fallen power lines to TNB (15454) immediately',
-          'Take photos of damage for insurance or aid claims',
-          'Follow NADMA or PDRM updates for safe return instructions',
+        titleKey: 'safety_checks',
+        itemKeys: [
+          'inspect_damage',
+          'report_power_lines',
+          'photograph_damage',
+          'follow_updates',
         ],
       ),
       GuideCardData(
         icon: Icons.favorite_border,
-        title: 'Recovery',
-        items: [
-          'Avoid floodwater—it may contain sewage or leptospirosis',
-          'Boil or use bottled water until supply is confirmed safe',
-          'Help neighbors, especially elderly or OKU (disabled) residents',
-          'Dry out home quickly to prevent mold and mosquito breeding',
-          'Dispose of debris safely to avoid clogging drains',
+        titleKey: 'recovery',
+        itemKeys: [
+          'avoid_floodwater_health',
+          'use_safe_water',
+          'help_neighbors',
+          'dry_home',
+          'dispose_debris',
         ],
       ),
     ],
@@ -115,36 +117,35 @@ const _guideSections = [
 
 const _emergencyContacts = [
   EmergencyContact(
-    label: 'Emergency (Police/Ambulance)',
+    labelKey: 'emergency_police_ambulance',
     number: '999',
     icon: Icons.local_hospital,
-    description: 'Nationwide Emergency Services (24/7)',
+    descriptionKey: 'nationwide_emergency',
   ),
   EmergencyContact(
-    label: 'Fire & Rescue (Bomba)',
+    labelKey: 'fire_rescue_bomba',
     number: '994',
     icon: Icons.fire_truck,
-    description: 'Fire Department Emergency',
+    descriptionKey: 'fire_department',
   ),
   EmergencyContact(
-    label: 'NADMA Hotline',
+    labelKey: 'nadma_hotline',
     number: '03-80642400',
     icon: Icons.support_agent,
-    description: 'National Disaster Management Agency',
+    descriptionKey: 'national_disaster_management',
   ),
   EmergencyContact(
-    label: 'Tenaga Nasional (TNB)',
+    labelKey: 'tenaga_nasional_tnb',
     number: '15454',
     icon: Icons.electrical_services,
-    description: 'Report Power Outages',
+    descriptionKey: 'report_power_outages',
   ),
 ];
 
 class HeavyRainGuideScreen extends StatelessWidget {
   const HeavyRainGuideScreen({super.key});
 
-  // Spacing constants
-  static const double _padding = 16.0;
+  static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
@@ -152,6 +153,7 @@ class HeavyRainGuideScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -159,251 +161,306 @@ class HeavyRainGuideScreen extends StatelessWidget {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(_padding, 70, _padding, _padding),
+              padding: const EdgeInsets.fromLTRB(_paddingValue, 70, _paddingValue, _paddingValue),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: _spacingLarge),
-                  _buildWarningBanner(colors),
+                  _WarningBanner(colors: colors),
                   const SizedBox(height: _spacingLarge),
-                  ..._guideSections.map((section) => _buildSection(colors, section)),
+                  ..._guideSections.map((section) => _Section(colors: colors, section: section)),
                   const SizedBox(height: _spacingLarge),
-                  _buildEmergencyContacts(colors, context),
+                  _EmergencyContacts(colors: colors),
                 ],
               ),
             ),
-            _buildHeader(context, colors),
+            _Header(colors: colors),
           ],
         ),
       ),
     );
   }
+}
 
-  /// Builds the header with a back button and title.
-  Widget _buildHeader(BuildContext context, AppColorTheme colors) => Container(
-    decoration: _cardDecoration(colors, opacity: 0.7),
-    padding: const EdgeInsets.all(_padding),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.primary300),
-          onPressed: () => Navigator.pop(context),
-          tooltip: 'Back',
-        ),
-        const SizedBox(width: _spacingSmall),
-        Text(
-          'Heavy Rain Safety Guide',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
-        ),
-      ],
-    ),
-  );
+class _Header extends StatelessWidget {
+  final AppColorTheme colors;
 
-  /// Builds a warning banner with a Malaysia-specific safety message.
-  Widget _buildWarningBanner(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.warning,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    padding: const EdgeInsets.all(_padding),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: colors.bg100),
-            const SizedBox(width: _spacingSmall),
-            Text(
-              'Safety Alert',
-              style: TextStyle(color: colors.bg100, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingSmall),
-        Text(
-          'Heavy rain can trigger flash floods and landslides in minutes. Move to safety if water rises or thunder roars!',
-          style: TextStyle(color: colors.bg100, fontSize: 14),
-        ),
-      ],
-    ),
-  );
+  const _Header({required this.colors});
 
-  /// Builds a section with a title and guide cards.
-  Widget _buildSection(AppColorTheme colors, GuideSection section) => Padding(
-    padding: const EdgeInsets.only(bottom: _padding),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          section.title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.primary300),
-        ),
-        const SizedBox(height: _spacingMedium),
-        ...section.cards.map((card) => _buildGuideCard(colors, card)),
-      ],
-    ),
-  );
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _buildCardDecoration(colors, opacity: 0.7),
+      padding: const EdgeInsets.all(HeavyRainGuideScreen._paddingValue),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
+            onPressed: () => Navigator.pop(context),
+            tooltip: l.translate('back'),
+          ),
+          const SizedBox(width: HeavyRainGuideScreen._spacingSmall),
+          Text(
+            l.translate('heavy_rain_safety_guide'),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-  /// Builds a guide card with an icon, title, and list of items.
-  Widget _buildGuideCard(AppColorTheme colors, GuideCardData card) => Container(
-    margin: const EdgeInsets.only(bottom: _spacingMedium),
-    decoration: _cardDecoration(colors),
-    padding: const EdgeInsets.all(_padding),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(card.icon, color: colors.accent200, size: 20),
-            const SizedBox(width: _spacingSmall),
-            Text(
-              card.title,
-              style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary300),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingSmall),
-        ...card.items.map(
-              (item) => Padding(
-            padding: const EdgeInsets.only(bottom: _spacingSmall),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('• ', style: TextStyle(color: colors.text200)),
-                Expanded(
-                  child: Semantics(
-                    label: item,
-                    child: Text(
-                      item,
-                      style: TextStyle(color: colors.text200, height: 1.5),
+class _WarningBanner extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _WarningBanner({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.warning,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(HeavyRainGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: colors.bg100),
+              const SizedBox(width: HeavyRainGuideScreen._spacingSmall),
+              Text(
+                l.translate('safety_alert'),
+                style: TextStyle(color: colors.bg100, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: HeavyRainGuideScreen._spacingSmall),
+          Text(
+            l.translate('heavy_rain_warning'),
+            style: TextStyle(color: colors.bg100, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  final AppColorTheme colors;
+  final GuideSection section;
+
+  const _Section({required this.colors, required this.section});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: HeavyRainGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.translate(section.titleKey),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.primary300),
+          ),
+          const SizedBox(height: HeavyRainGuideScreen._spacingMedium),
+          ...section.cards.map((card) => _GuideCard(colors: colors, card: card)),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuideCard extends StatelessWidget {
+  final AppColorTheme colors;
+  final GuideCardData card;
+
+  const _GuideCard({required this.colors, required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: HeavyRainGuideScreen._spacingMedium),
+      decoration: _buildCardDecoration(colors),
+      padding: const EdgeInsets.all(HeavyRainGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(card.icon, color: colors.accent200, size: 20),
+              const SizedBox(width: HeavyRainGuideScreen._spacingSmall),
+              Text(
+                l.translate(card.titleKey),
+                style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary300),
+              ),
+            ],
+          ),
+          const SizedBox(height: HeavyRainGuideScreen._spacingSmall),
+          ...card.itemKeys.map(
+                (itemKey) => Padding(
+              padding: const EdgeInsets.only(bottom: HeavyRainGuideScreen._spacingSmall),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: TextStyle(color: colors.text200)),
+                  Expanded(
+                    child: Semantics(
+                      label: l.translate(itemKey),
+                      child: Text(
+                        l.translate(itemKey),
+                        style: TextStyle(color: colors.text200, height: 1.5),
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmergencyContacts extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _EmergencyContacts({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _buildCardDecoration(colors),
+      padding: const EdgeInsets.all(HeavyRainGuideScreen._paddingValue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emergency, color: colors.accent200, size: 24),
+              const SizedBox(width: HeavyRainGuideScreen._spacingSmall),
+              Text(
+                l.translate('emergency_contacts'),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
+              ),
+            ],
+          ),
+          const SizedBox(height: HeavyRainGuideScreen._spacingMedium),
+          ..._emergencyContacts.map((contact) => _ContactItem(colors: colors, contact: contact)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactItem extends StatelessWidget {
+  final AppColorTheme colors;
+  final EmergencyContact contact;
+
+  const _ContactItem({required this.colors, required this.contact});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: HeavyRainGuideScreen._spacingMedium),
+      decoration: BoxDecoration(
+        color: colors.bg200,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.bg300.withOpacity(0.2)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _launchPhone(context, contact.number),
+          child: Padding(
+            padding: const EdgeInsets.all(HeavyRainGuideScreen._paddingValue),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.accent200.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(contact.icon, color: colors.accent200, size: 24),
+                ),
+                const SizedBox(width: HeavyRainGuideScreen._spacingMedium),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.translate(contact.labelKey),
+                        style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary300, fontSize: 16),
+                      ),
+                      Text(
+                        l.translate(contact.descriptionKey),
+                        style: TextStyle(color: colors.text200, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colors.accent200,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(Icons.call, color: colors.bg100, size: 20),
                 ),
               ],
             ),
           ),
         ),
-      ],
-    ),
-  );
-
-  /// Builds the emergency contacts section.
-  Widget _buildEmergencyContacts(AppColorTheme colors, BuildContext context) => Container(
-    decoration: _cardDecoration(colors),
-    padding: const EdgeInsets.all(_padding),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.emergency, color: colors.accent200, size: 24),
-            const SizedBox(width: _spacingSmall),
-            Text(
-              'Emergency Contacts',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingMedium),
-        ..._emergencyContacts.map((contact) => _buildContactItem(colors, context, contact)),
-      ],
-    ),
-  );
-
-  /// Builds a tappable emergency contact item.
-  Widget _buildContactItem(AppColorTheme colors, BuildContext context, EmergencyContact contact) => Container(
-    margin: const EdgeInsets.only(bottom: _spacingMedium),
-    decoration: BoxDecoration(
-      color: colors.bg200,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: colors.bg300.withOpacity(0.2)),
-    ),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => _launchPhone(context, contact.number),
-        child: Padding(
-          padding: const EdgeInsets.all(_padding),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colors.accent200.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(contact.icon, color: colors.accent200, size: 24),
-              ),
-              const SizedBox(width: _spacingMedium),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      contact.label,
-                      style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary300, fontSize: 16),
-                    ),
-                    Text(
-                      contact.description,
-                      style: TextStyle(color: colors.text200, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colors.accent200,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(Icons.call, color: colors.bg100, size: 20),
-              ),
-            ],
-          ),
-        ),
       ),
-    ),
-  );
+    );
+  }
 
-  /// Launches the phone dialer and handles errors.
   Future<void> _launchPhone(BuildContext context, String number) async {
+    final l = AppLocalizations.of(context);
     final Uri phoneUri = Uri(scheme: 'tel', path: number);
     try {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
       } else {
-        _showSnackBar(context, 'Could not dial $number', Colors.redAccent);
+        _showSnackBar(context, l.translate('dial_error', {'number': number}), Colors.redAccent);
       }
     } catch (e) {
-      _showSnackBar(context, 'Error dialing $number: $e', Colors.redAccent);
+      _showSnackBar(context, l.translate('dial_error_with_exception', {'number': number, 'error': e.toString()}), Colors.redAccent);
     }
   }
 
-  /// Displays a snackbar with a custom message and color.
   void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(_padding),
+        margin: const EdgeInsets.all(HeavyRainGuideScreen._paddingValue),
         duration: const Duration(seconds: 3),
       ),
     );
   }
-
-  /// Provides a reusable card decoration.
-  BoxDecoration _cardDecoration(AppColorTheme colors, {double opacity = 0.7}) => BoxDecoration(
-    color: colors.bg100.withOpacity(opacity),
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: colors.bg300.withOpacity(0.2)),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ],
-  );
 }
+
+BoxDecoration _buildCardDecoration(AppColorTheme colors, {double opacity = 0.85}) => BoxDecoration(
+  color: colors.bg100.withOpacity(opacity),
+  borderRadius: BorderRadius.circular(12),
+  border: Border.all(color: colors.bg300.withOpacity(0.2)),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ],
+);

@@ -908,5 +908,24 @@
   "tenaga_nasional_tnb": "Tenaga Nasional (TNB)",
   "report_power_lines": "Laporkan Masalah Talian Kuasa",
   "dial_error": "Tidak dapat mendail {number}",
-  "dial_error_with_exception": "Ralat mendail {number}: {error}"
+  "dial_error_with_exception": "Ralat mendail {number}: {error}",
+
+
+
+
+
+  "emergency_contacts": "Kenalan Kecemasan",
+  "back": "Kembali",
+  "emergency_numbers": "Nombor Kecemasan",
+  "national_emergency": "Kecemasan Kebangsaan",
+  "alternative_emergency": "Kecemasan Alternatif",
+  "disaster_response": "Tindak Balas Bencana",
+  "nadma": "NADMA",
+  "national_disaster_management": "Pengurusan Bencana Kebangsaan",
+  "metmalaysia": "MetMalaysia",
+  "meteorological_department": "Jabatan Meteorologi",
+  "call_error": "Tidak dapat membuat panggilan ke {number}",
+  "call_error_with_exception": "Gagal membuat panggilan ke {number}: {error}",
+  "url_error": "Tidak dapat membuka URL {url}",
+  "url_error_with_exception": "Gagal membuka URL {url}: {error}"
 }

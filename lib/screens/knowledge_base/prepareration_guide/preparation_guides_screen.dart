@@ -99,26 +99,26 @@ class PreparationGuidesScreen extends StatelessWidget {
 
   /// Builds the header with a back button and title.
   Widget _buildHeader(AppColorTheme colors, BuildContext context) => Container(
-        padding: const EdgeInsets.all(_padding),
-        decoration: _cardDecoration(colors, opacity: 0.7),
-        child: Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back, color: colors.primary300),
-              onPressed: () => Navigator.pop(context),
-              tooltip: 'Back',
-            ),
-            const SizedBox(width: _spacingSmall),
-            Text(
-              'Preparation Guides',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colors.primary300),
-            ),
-          ],
+    padding: const EdgeInsets.all(_padding),
+    decoration: _cardDecoration(colors, opacity: 0.7),
+    child: Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.arrow_back, color: colors.primary300),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Back',
         ),
-      );
+        const SizedBox(width: _spacingSmall),
+        Text(
+          'Preparation Guides',
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colors.primary300),
+        ),
+      ],
+    ),
+  );
 
   /// Builds the featured guide card for the emergency kit.
   Widget _buildFeaturedGuide(AppColorTheme colors, BuildContext context) =>
@@ -186,7 +186,7 @@ class PreparationGuidesScreen extends StatelessWidget {
 
   /// Builds a single disaster type card with an icon, title, and tap action.
   Widget _buildDisasterTypeCard(
-          AppColorTheme colors, BuildContext context, DisasterType disaster) =>
+      AppColorTheme colors, BuildContext context, DisasterType disaster) =>
       Padding(
         padding: const EdgeInsets.only(bottom: _spacingSmall),
         child: Material(

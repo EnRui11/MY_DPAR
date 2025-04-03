@@ -903,5 +903,24 @@
   "tenaga_nasional_tnb": "Tenaga Nasional (TNB)",
   "report_power_lines": "Report Power Line Issues",
   "dial_error": "Could not dial {number}",
-  "dial_error_with_exception": "Error dialing {number}: {error}"
+  "dial_error_with_exception": "Error dialing {number}: {error}",
+
+
+
+
+
+  "emergency_contacts": "Emergency Contacts",
+  "back": "Back",
+  "emergency_numbers": "Emergency Numbers",
+  "national_emergency": "National Emergency",
+  "alternative_emergency": "Alternative Emergency",
+  "disaster_response": "Disaster Response",
+  "nadma": "NADMA",
+  "national_disaster_management": "National Disaster Management",
+  "metmalaysia": "MetMalaysia",
+  "meteorological_department": "Meteorological Department",
+  "call_error": "Could not launch phone call to {number}",
+  "call_error_with_exception": "Failed to make call to {number}: {error}",
+  "url_error": "Could not launch URL {url}",
+  "url_error_with_exception": "Failed to launch URL {url}: {error}"
 }

@@ -908,5 +908,24 @@
   "tenaga_nasional_tnb": "国家能源（TNB）",
   "report_power_lines": "报告电线问题",
   "dial_error": "无法拨打 {number}",
-  "dial_error_with_exception": "拨打 {number} 时出错：{error}"
+  "dial_error_with_exception": "拨打 {number} 时出错：{error}",
+
+
+
+
+
+  "emergency_contacts": "紧急联系方式",
+  "back": "返回",
+  "emergency_numbers": "紧急号码",
+  "national_emergency": "国家紧急情况",
+  "alternative_emergency": "备用紧急情况",
+  "disaster_response": "灾难响应",
+  "nadma": "NADMA",
+  "national_disaster_management": "国家灾害管理",
+  "metmalaysia": "MetMalaysia",
+  "meteorological_department": "气象部门",
+  "call_error": "无法拨打 {number}",
+  "call_error_with_exception": "拨打 {number} 失败：{error}",
+  "url_error": "无法打开URL {url}",
+  "url_error_with_exception": "打开URL {url} 失败：{error}"
 }

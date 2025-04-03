@@ -922,5 +922,25 @@
   "call_error": "Could not launch phone call to {number}",
   "call_error_with_exception": "Failed to make call to {number}: {error}",
   "url_error": "Could not launch URL {url}",
-  "url_error_with_exception": "Failed to launch URL {url}: {error}"
+  "url_error_with_exception": "Failed to launch URL {url}: {error}",
+
+
+
+
+
+
+  "preparation_guides": "Preparation Guides",
+  "back": "Back",
+  "featured_guide": "Featured Guide",
+  "emergency_preparedness_kit": "Emergency Preparedness Kit",
+  "emergency_kit_description": "Must-have items for disasters like floods and fires",
+  "view_checklist": "View Checklist",
+  "disaster_types": "Disaster Types",
+  "heavy_rain": "Heavy Rain",
+  "flood": "Flood",
+  "fire": "Fire",
+  "landslide": "Landslide",
+  "earthquake": "Earthquake",
+  "haze": "Haze",
+  "guide_coming_soon": "{title} guide coming soon"
 }

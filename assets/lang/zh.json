@@ -927,5 +927,24 @@
   "call_error": "无法拨打 {number}",
   "call_error_with_exception": "拨打 {number} 失败：{error}",
   "url_error": "无法打开URL {url}",
-  "url_error_with_exception": "打开URL {url} 失败：{error}"
+  "url_error_with_exception": "打开URL {url} 失败：{error}",
+
+
+
+
+
+  "preparation_guides": "准备指南",
+  "back": "返回",
+  "featured_guide": "特色指南",
+  "emergency_preparedness_kit": "紧急准备套件",
+  "emergency_kit_description": "洪水和火灾等灾难的必备物品",
+  "view_checklist": "查看清单",
+  "disaster_types": "灾害类型",
+  "heavy_rain": "暴雨",
+  "flood": "洪水",
+  "fire": "火灾",
+  "landslide": "山体滑坡",
+  "earthquake": "地震",
+  "haze": "雾霾",
+  "guide_coming_soon": "{title}指南即将来临"
 }

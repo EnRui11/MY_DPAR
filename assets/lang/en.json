@@ -1016,5 +1016,24 @@
   "medical_emergency_basics": "Medical emergency basics",
   "home_safety_checklist": "Home Safety Checklist",
   "ensure_home_safety": "Ensure your home is safe",
-  "not_implemented": "{title} not yet implemented"
+  "not_implemented": "{title} not yet implemented",
+
+
+
+
+  "home_screen": "home_screen.dart",
+  "hello_user": "Hello, {name}",
+  "user": "User",
+  "welcome_to_app": "Welcome to MY_DPAR",
+  "app_description": "Your Disaster Preparedness and Response Assistant",
+  "sos_emergency": "SOS Emergency",
+  "report_disaster": "Report Disaster",
+  "knowledge_base": "Knowledge Base",
+  "disasters_happening_now": "Disasters Happening Now",
+  "view_all": "View All",
+  "no_active_disasters": "No active disasters at the moment",
+  "refreshing_disaster_info": "Refreshing disaster information...",
+  "error": "Error",
+  "pull_to_refresh": "Pull down to refresh",
+  "showing_x_of_y_disasters": "Showing {shown} of {total} disasters"
 }

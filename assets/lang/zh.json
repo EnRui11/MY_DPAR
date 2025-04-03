@@ -1020,5 +1020,24 @@
   "medical_emergency_basics": "医疗紧急基础知识",
   "home_safety_checklist": "家庭安全检查清单",
   "ensure_home_safety": "确保您的家庭安全",
-  "not_implemented": "{title}尚未实现"
+  "not_implemented": "{title}尚未实现",
+
+
+
+
+  "home_screen": "home_screen.dart",
+  "hello_user": "您好，{name}",
+  "user": "用户",
+  "welcome_to_app": "欢迎使用 MY_DPAR",
+  "app_description": "您的灾害准备和响应助手",
+  "sos_emergency": "SOS 紧急情况",
+  "report_disaster": "报告灾害",
+  "knowledge_base": "知识库",
+  "disasters_happening_now": "正在发生的灾害",
+  "view_all": "查看全部",
+  "no_active_disasters": "目前没有活跃的灾害",
+  "refreshing_disaster_info": "正在刷新灾害信息...",
+  "error": "错误",
+  "pull_to_refresh": "下拉刷新",
+  "showing_x_of_y_disasters": "显示 {total} 个灾害中的 {shown} 个"
 }

@@ -10,6 +10,7 @@ import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool showNavBar;
@@ -43,14 +44,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
     final AppColorTheme colors = themeProvider.currentTheme;
+    final AppLocalizations localize = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
         child: Stack(
           children: [
-            _buildContent(context, colors),
-            _buildHeader(colors),
+            _buildContent(context, colors, localize),
+            _buildHeader(colors, localize),
           ],
         ),
       ),
@@ -58,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Builds the header with gradient and welcome message
-  Widget _buildHeader(AppColorTheme colors) => Container(
+  Widget _buildHeader(AppColorTheme colors, AppLocalizations localize) =>
+      Container(
+        width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -80,7 +84,9 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Hello, ${userService.lastName ?? 'User'}',
+                localize.translate('hello_user', {
+                  'name': userService.lastName ?? localize.translate('user')
+                }),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -89,11 +95,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: _spacingSmall),
               Text(
-                'Welcome to MY_DPAR',
+                localize.translate('welcome_to_app'),
                 style: TextStyle(fontSize: 16, color: colors.primary100),
               ),
               Text(
-                'Your Disaster Preparedness and Response Assistant',
+                localize.translate('app_description'),
                 style: TextStyle(fontSize: 16, color: colors.primary100),
               ),
             ],
@@ -102,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   /// Builds the scrollable main content area
-  Widget _buildContent(BuildContext context, AppColorTheme colors) =>
+  Widget _buildContent(BuildContext context, AppColorTheme colors,
+          AppLocalizations localize) =>
       SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
             _paddingValue, 120, _paddingValue, _paddingValue),
@@ -110,18 +117,19 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 64),
-            _buildQuickActions(context, colors),
+            _buildQuickActions(context, colors, localize),
             const SizedBox(height: _spacingLarge),
-            _buildSOSButton(context, colors),
+            _buildSOSButton(context, colors, localize),
             const SizedBox(height: _spacingLarge),
-            _buildRecentDisastersSection(context, colors),
+            _buildRecentDisastersSection(context, colors, localize),
             const SizedBox(height: 80), // Space for bottom nav
           ],
         ),
       );
 
   /// Builds the animated SOS emergency button
-  Widget _buildSOSButton(BuildContext context, AppColorTheme colors) =>
+  Widget _buildSOSButton(BuildContext context, AppColorTheme colors,
+          AppLocalizations localize) =>
       TweenAnimationBuilder<double>(
         tween: Tween(begin: 0.95, end: 1.0),
         duration: const Duration(seconds: 2),
@@ -153,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: colors.bg100, size: 24),
                   const SizedBox(width: _spacingSmall),
                   Text(
-                    'SOS Emergency',
+                    localize.translate('sos_emergency'),
                     style: TextStyle(
                       color: colors.bg100,
                       fontSize: 16,
@@ -168,12 +176,14 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   /// Builds the quick action cards (Report Disaster, Knowledge Base)
-  Widget _buildQuickActions(BuildContext context, AppColorTheme colors) => Row(
+  Widget _buildQuickActions(BuildContext context, AppColorTheme colors,
+          AppLocalizations localize) =>
+      Row(
         children: [
           Expanded(
             child: _buildActionCard(
               icon: Icons.location_on_outlined,
-              label: 'Report Disaster',
+              label: localize.translate('report_disaster'),
               colors: colors,
               onTap: () => _navigateTo(context, const ReportDisasterScreen()),
             ),
@@ -182,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: _buildActionCard(
               icon: Icons.book_outlined,
-              label: 'Knowledge Base',
+              label: localize.translate('knowledge_base'),
               colors: colors,
               onTap: () => _navigateTo(context, const KnowledgeBaseScreen()),
             ),
@@ -226,25 +236,28 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   /// Builds the recent disasters section with a header and list
-  Widget _buildRecentDisastersSection(
-          BuildContext context, AppColorTheme colors) =>
+  Widget _buildRecentDisastersSection(BuildContext context,
+          AppColorTheme colors, AppLocalizations localize) =>
       Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Disasters Happening Now',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colors.primary300,
+              Expanded(
+                child: Text(
+                  localize.translate('disasters_happening_now'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colors.primary300,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               TextButton(
                 onPressed: () => _navigateTo(context, const DisastersScreen()),
                 child: Text(
-                  'View All',
+                  localize.translate('view_all'),
                   style: TextStyle(
                     color: colors.accent200,
                     fontWeight: FontWeight.w500,
@@ -254,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: _spacingMedium),
-          _buildDisastersList(colors),
+          _buildDisastersList(colors, localize),
         ],
       );
 
@@ -367,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   /// Builds the scrollable list of disasters
-  Widget _buildDisastersList(AppColorTheme colors) {
+  Widget _buildDisastersList(AppColorTheme colors, AppLocalizations localize) {
     return Consumer<DisasterService>(
       builder: (context, disasterService, child) {
         return RefreshIndicator(
@@ -375,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Show a snackbar to indicate refresh is happening
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Refreshing disaster information...'),
+                content: Text(localize.translate('refreshing_disaster_info')),
                 duration: Duration(seconds: 1),
                 backgroundColor: colors.accent200,
               ),
@@ -394,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 else if (disasterService.error != null)
                   Center(
                     child: Text(
-                      'Error: ${disasterService.error}',
+                      '${localize.translate('error')}: ${disasterService.error}',
                       style: TextStyle(color: colors.warning),
                     ),
                   )
@@ -403,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(_spacingLarge),
                       child: Text(
-                        'No active disasters at the moment',
+                        localize.translate('no_active_disasters'),
                         style: TextStyle(color: colors.text200),
                       ),
                     ),
@@ -444,7 +457,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   size: 16, color: colors.text200),
                               const SizedBox(width: 8),
                               Text(
-                                'Showing 3 of ${disasterService.happeningDisasters.length} disasters',
+                                localize.translate('showing_x_of_y_disasters', {
+                                  'shown': '3',
+                                  'total': disasterService
+                                      .happeningDisasters.length
+                                      .toString()
+                                }),
                                 style: TextStyle(
                                   color: colors.text200,
                                   fontSize: 14,
@@ -459,7 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    'Pull down to refresh',
+                    localize.translate('pull_to_refresh'),
                     style: TextStyle(
                       color: colors.text200,
                       fontSize: 12,

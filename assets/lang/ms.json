@@ -1020,5 +1020,24 @@
   "medical_emergency_basics": "Asas kecemasan perubatan",
   "home_safety_checklist": "Senarai Semak Keselamatan Rumah",
   "ensure_home_safety": "Pastikan rumah anda selamat",
-  "not_implemented": "{title} belum dilaksanakan"
+  "not_implemented": "{title} belum dilaksanakan",
+
+
+
+
+  "home_screen": "home_screen.dart",
+  "hello_user": "Halo, {name}",
+  "user": "Pengguna",
+  "welcome_to_app": "Selamat datang ke MY_DPAR",
+  "app_description": "Pembantu Persediaan dan Tindak Balas Bencana Anda",
+  "sos_emergency": "Kecemasan SOS",
+  "report_disaster": "Laporkan Bencana",
+  "knowledge_base": "Pangkalan Pengetahuan",
+  "disasters_happening_now": "Bencana Sedang Berlaku Sekarang",
+  "view_all": "Lihat Semua",
+  "no_active_disasters": "Tiada bencana aktif pada masa ini",
+  "refreshing_disaster_info": "Menyegarkan maklumat bencana...",
+  "error": "Ralat",
+  "pull_to_refresh": "Tarik ke bawah untuk menyegarkan",
+  "showing_x_of_y_disasters": "Menunjukkan {shown} daripada {total} bencana"
 }

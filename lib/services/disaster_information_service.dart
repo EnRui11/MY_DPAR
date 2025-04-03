@@ -164,6 +164,7 @@ class DisasterService with ChangeNotifier {
 
     return switch (type.toLowerCase()) {
       'heavy rain' => Icons.thunderstorm_outlined,
+      'heavy_rain' => Icons.thunderstorm_outlined,
       'flood' => flood,
       'fire' => Icons.local_fire_department,
       'earthquake' => Icons.terrain,

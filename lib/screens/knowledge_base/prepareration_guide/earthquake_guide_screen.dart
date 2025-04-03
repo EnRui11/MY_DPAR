@@ -3,144 +3,144 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
-// Data model for guide sections
 class GuideSection {
-  final String title;
+  final String titleKey; // Changed to use localization key
   final List<GuideCardData> cards;
 
-  const GuideSection({required this.title, required this.cards});
+  const GuideSection({required this.titleKey, required this.cards});
 }
 
-// Data model for guide cards
 class GuideCardData {
   final IconData icon;
-  final String title;
-  final List<String> items;
+  final String titleKey; // Changed to use localization key
+  final List<String> itemKeys; // Changed to use localization keys
 
-  const GuideCardData({required this.icon, required this.title, required this.items});
+  const GuideCardData({required this.icon, required this.titleKey, required this.itemKeys});
 }
 
-// Data model for emergency contacts
 class EmergencyContact {
-  final String label;
+  final String labelKey; // Changed to use localization key
   final String number;
   final IconData icon;
-  final String description;
+  final String descriptionKey; // Changed to use localization key
 
-  const EmergencyContact({required this.label, required this.number, required this.icon, required this.description});
+  const EmergencyContact({
+    required this.labelKey,
+    required this.number,
+    required this.icon,
+    required this.descriptionKey,
+  });
 }
 
-// Centralized data tailored to Malaysia's earthquake context
 const _guideSections = [
   GuideSection(
-    title: 'Before an Earthquake',
+    titleKey: 'before_earthquake',
     cards: [
       GuideCardData(
         icon: Icons.home,
-        title: 'Home Preparation',
-        items: [
-          'Secure heavy furniture to walls',
-          'Know where and how to shut off utilities',
-          'Keep emergency supplies ready',
-          'Identify safe spots in each room',
+        titleKey: 'home_preparation',
+        itemKeys: [
+          'secure_furniture',
+          'know_utilities',
+          'keep_supplies',
+          'identify_safe_spots',
         ],
       ),
       GuideCardData(
         icon: Icons.map,
-        title: 'Emergency Plan',
-        items: [
-          'Create a family emergency plan',
-          'Establish meeting points',
-          'Practice earthquake drills',
-          'Keep emergency contact numbers handy',
+        titleKey: 'emergency_plan',
+        itemKeys: [
+          'create_plan',
+          'establish_meeting_points',
+          'practice_drills',
+          'keep_contacts',
         ],
       ),
     ],
   ),
   GuideSection(
-    title: 'During an Earthquake',
+    titleKey: 'during_earthquake',
     cards: [
       GuideCardData(
         icon: Icons.shield,
-        title: 'Drop, Cover, Hold On',
-        items: [
-          'Drop to your hands and knees',
-          'Take cover under sturdy furniture',
-          'Hold on until shaking stops',
-          'Stay away from glass and windows',
+        titleKey: 'drop_cover_hold',
+        itemKeys: [
+          'drop_hands_knees',
+          'take_cover',
+          'hold_on',
+          'stay_away_glass',
         ],
       ),
       GuideCardData(
         icon: Icons.business,
-        title: 'If Indoors',
-        items: [
-          'Stay inside',
-          'Stay away from bookcases',
-          'Don\'t use elevators',
-          'Protect your head and neck',
+        titleKey: 'if_indoors',
+        itemKeys: [
+          'stay_inside',
+          'avoid_bookcases',
+          'no_elevators',
+          'protect_head',
         ],
       ),
       GuideCardData(
         icon: Icons.park,
-        title: 'If Outdoors',
-        items: [
-          'Move to open area',
-          'Stay away from buildings',
-          'Avoid power lines',
-          'Watch for falling objects',
+        titleKey: 'if_outdoors',
+        itemKeys: [
+          'move_open_area',
+          'avoid_buildings',
+          'avoid_power_lines',
+          'watch_falling_objects',
         ],
       ),
     ],
   ),
   GuideSection(
-    title: 'After an Earthquake',
+    titleKey: 'after_earthquake',
     cards: [
       GuideCardData(
         icon: Icons.check_circle_outline,
-        title: 'Safety Checks',
-        items: [
-          'Check for injuries',
-          'Look for fire hazards',
-          'Check utilities',
-          'Listen to emergency broadcasts',
+        titleKey: 'safety_checks',
+        itemKeys: [
+          'check_injuries',
+          'look_fire_hazards',
+          'check_utilities',
+          'listen_broadcasts',
         ],
       ),
       GuideCardData(
         icon: Icons.warning_amber_rounded,
-        title: 'Be Prepared For',
-        items: [
-          'Aftershocks',
-          'Building damage',
-          'Power outages',
-          'Emergency response delays',
+        titleKey: 'be_prepared_for',
+        itemKeys: [
+          'aftershocks',
+          'building_damage',
+          'power_outages',
+          'response_delays',
         ],
       ),
     ],
   ),
 ];
 
-// Emergency contacts relevant to earthquake situations in Malaysia
 const _emergencyContacts = [
   EmergencyContact(
-    label: 'National Disaster Command Center',
-    number: '03-8064 2400',
+    labelKey: 'national_disaster_center',
+    number: '03-80642400',
     icon: Icons.emergency,
-    description: 'NADMA\'s disaster management center',
+    descriptionKey: 'nadma_center',
   ),
   EmergencyContact(
-    label: 'Emergency Response',
+    labelKey: 'emergency_response',
     number: '999',
     icon: Icons.local_hospital,
-    description: 'Police, ambulance, and fire services',
+    descriptionKey: 'police_ambulance_fire',
   ),
 ];
 
 class EarthquakeGuideScreen extends StatelessWidget {
   const EarthquakeGuideScreen({super.key});
 
-  // Spacing constants
-  static const double _padding = 16.0;
+  static const double _paddingValue = 16.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
@@ -148,24 +148,25 @@ class EarthquakeGuideScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(colors, context),
+            _Header(colors: colors),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(_padding),
+                padding: const EdgeInsets.all(_paddingValue),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildWarningBanner(colors),
+                    _WarningBanner(colors: colors),
                     const SizedBox(height: _spacingMedium),
-                    ..._guideSections.map((section) => _buildSection(colors, context, section)),
+                    ..._guideSections.map((section) => _Section(colors: colors, section: section)),
                     const SizedBox(height: _spacingLarge),
-                    _buildEmergencyContactsSection(colors, context),
+                    _EmergencyContactsSection(colors: colors),
                   ],
                 ),
               ),
@@ -175,187 +176,243 @@ class EarthquakeGuideScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  /// Builds the header with a back button and title.
-  Widget _buildHeader(AppColorTheme colors, BuildContext context) => Container(
-        padding: const EdgeInsets.all(_padding),
-        decoration: _cardDecoration(colors, opacity: 0.7),
-        child: Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back, color: colors.primary300),
-              onPressed: () => Navigator.pop(context),
-              tooltip: 'Back',
-            ),
-            const SizedBox(width: _spacingSmall),
-            Text(
-              'Earthquake Safety',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colors.primary300),
-            ),
-          ],
-        ),
-      );
+class _Header extends StatelessWidget {
+  final AppColorTheme colors;
 
-  /// Builds a warning banner for immediate actions during an earthquake.
-  Widget _buildWarningBanner(AppColorTheme colors) => Container(
-        padding: const EdgeInsets.all(_padding),
-        decoration: BoxDecoration(
-          color: colors.warning,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, color: colors.bg100),
-                const SizedBox(width: _spacingSmall),
-                Text(
-                  'Earthquake Warning',
-                  style: TextStyle(
-                      color: colors.bg100,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              'Drop, Cover, and Hold On! Stay away from windows and exterior walls.',
-              style: TextStyle(color: colors.bg100),
-            ),
-          ],
-        ),
-      );
+  const _Header({required this.colors});
 
-  /// Builds a section with a title and cards.
-  Widget _buildSection(AppColorTheme colors, BuildContext context, GuideSection section) => Column(
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(EarthquakeGuideScreen._paddingValue),
+      decoration: _buildCardDecoration(colors, opacity: 0.7),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
+            onPressed: () => Navigator.pop(context),
+            tooltip: l.translate('back'),
+          ),
+          const SizedBox(width: EarthquakeGuideScreen._spacingSmall),
+          Text(
+            l.translate('earthquake_safety'),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WarningBanner extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _WarningBanner({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(EarthquakeGuideScreen._paddingValue),
+      decoration: BoxDecoration(
+        color: colors.warning,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
-            child: Text(
-              section.title,
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colors.primary300),
-            ),
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: colors.bg100),
+              const SizedBox(width: EarthquakeGuideScreen._spacingSmall),
+              Text(
+                l.translate('earthquake_warning'),
+                style: TextStyle(color: colors.bg100, fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ],
           ),
-          ...section.cards.map((card) => _buildGuideCard(colors, card)),
-          const SizedBox(height: _spacingMedium),
+          const SizedBox(height: EarthquakeGuideScreen._spacingSmall),
+          Text(
+            l.translate('earthquake_action'),
+            style: TextStyle(color: colors.bg100),
+          ),
         ],
-      );
+      ),
+    );
+  }
+}
 
-  /// Builds a guide card with an icon, title, and items.
-  Widget _buildGuideCard(AppColorTheme colors, GuideCardData card) => Container(
-        margin: const EdgeInsets.only(bottom: _spacingMedium),
-        padding: const EdgeInsets.all(_padding),
-        decoration: _cardDecoration(colors),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(card.icon, color: colors.accent200),
-                const SizedBox(width: _spacingMedium),
-                Text(
-                  card.title,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600, color: colors.primary300),
-                ),
-              ],
-            ),
-            const SizedBox(height: _spacingMedium),
-            ...card.items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: _spacingSmall),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('• ', style: TextStyle(color: colors.accent200)),
-                    Expanded(
-                      child: Text(
-                        item,
-                        style: TextStyle(color: colors.text200),
-                      ),
+class _Section extends StatelessWidget {
+  final AppColorTheme colors;
+  final GuideSection section;
+
+  const _Section({required this.colors, required this.section});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: EarthquakeGuideScreen._spacingMedium),
+          child: Text(
+            l.translate(section.titleKey),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.primary300),
+          ),
+        ),
+        ...section.cards.map((card) => _GuideCard(colors: colors, card: card)),
+        const SizedBox(height: EarthquakeGuideScreen._spacingMedium),
+      ],
+    );
+  }
+}
+
+class _GuideCard extends StatelessWidget {
+  final AppColorTheme colors;
+  final GuideCardData card;
+
+  const _GuideCard({required this.colors, required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: EarthquakeGuideScreen._spacingMedium),
+      padding: const EdgeInsets.all(EarthquakeGuideScreen._paddingValue),
+      decoration: _buildCardDecoration(colors),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(card.icon, color: colors.accent200),
+              const SizedBox(width: EarthquakeGuideScreen._spacingMedium),
+              Text(
+                l.translate(card.titleKey),
+                style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary300),
+              ),
+            ],
+          ),
+          const SizedBox(height: EarthquakeGuideScreen._spacingMedium),
+          ...card.itemKeys.map(
+                (itemKey) => Padding(
+              padding: const EdgeInsets.only(bottom: EarthquakeGuideScreen._spacingSmall),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: TextStyle(color: colors.accent200)),
+                  Expanded(
+                    child: Text(
+                      l.translate(itemKey),
+                      style: TextStyle(color: colors.text200),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      );
-
-  /// Builds the emergency contacts section.
-  Widget _buildEmergencyContactsSection(AppColorTheme colors, BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Emergency Contacts',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colors.primary300),
           ),
-          const SizedBox(height: _spacingMedium),
-          ..._emergencyContacts.map((contact) => _buildContactCard(colors, context, contact)),
         ],
-      );
-
-  /// Builds a contact card with a phone number and description.
-  Widget _buildContactCard(AppColorTheme colors, BuildContext context, EmergencyContact contact) => Container(
-        margin: const EdgeInsets.only(bottom: _spacingMedium),
-        decoration: _cardDecoration(colors),
-        child: ListTile(
-          leading: Icon(contact.icon, color: colors.accent200),
-          title: Text(
-            contact.label,
-            style: TextStyle(
-                fontWeight: FontWeight.w600, color: colors.primary300),
-          ),
-          subtitle: Text(
-            contact.description,
-            style: TextStyle(color: colors.text200, fontSize: 12),
-          ),
-          trailing: IconButton(
-            icon: Icon(Icons.phone, color: colors.accent200),
-            onPressed: () => _makePhoneCall(contact.number),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: _padding, vertical: _spacingSmall),
-        ),
-      );
-
-  /// Makes a phone call to the specified number.
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
+      ),
     );
+  }
+}
+
+class _EmergencyContactsSection extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _EmergencyContactsSection({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.translate('emergency_contacts'),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.primary300),
+        ),
+        const SizedBox(height: EarthquakeGuideScreen._spacingMedium),
+        ..._emergencyContacts.map((contact) => _ContactCard(colors: colors, contact: contact)),
+      ],
+    );
+  }
+}
+
+class _ContactCard extends StatelessWidget {
+  final AppColorTheme colors;
+  final EmergencyContact contact;
+
+  const _ContactCard({required this.colors, required this.contact});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: EarthquakeGuideScreen._spacingMedium),
+      decoration: _buildCardDecoration(colors),
+      child: ListTile(
+        leading: Icon(contact.icon, color: colors.accent200),
+        title: Text(
+          l.translate(contact.labelKey),
+          style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary300),
+        ),
+        subtitle: Text(
+          l.translate(contact.descriptionKey),
+          style: TextStyle(color: colors.text200, fontSize: 12),
+        ),
+        trailing: IconButton(
+          icon: Icon(Icons.phone, color: colors.accent200),
+          onPressed: () => _makePhoneCall(context, contact.number),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: EarthquakeGuideScreen._paddingValue,
+          vertical: EarthquakeGuideScreen._spacingSmall,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
+    final l = AppLocalizations.of(context);
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     try {
-      await launchUrl(launchUri);
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        _showSnackBar(context, l.translate('dial_error', {'number': phoneNumber}), Colors.redAccent);
+      }
     } catch (e) {
-      debugPrint('Could not launch $launchUri: $e');
+      _showSnackBar(context, l.translate('dial_error_with_exception', {'number': phoneNumber, 'error': e.toString()}), Colors.redAccent);
     }
   }
 
-  /// Provides a reusable card decoration with a subtle shadow.
-  BoxDecoration _cardDecoration(AppColorTheme colors, {double opacity = 0.85}) =>
-      BoxDecoration(
-        color: colors.bg100.withOpacity(opacity),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.accent200.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      );
+  void _showSnackBar(BuildContext context, String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(EarthquakeGuideScreen._paddingValue),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 }
+
+BoxDecoration _buildCardDecoration(AppColorTheme colors, {double opacity = 0.85}) => BoxDecoration(
+  color: colors.bg100.withOpacity(opacity),
+  borderRadius: BorderRadius.circular(12),
+  border: Border.all(color: colors.accent200.withOpacity(0.1)),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ],
+);

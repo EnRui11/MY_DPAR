@@ -387,5 +387,43 @@
   "burns_on_sensitive_areas": "烧伤在脸部、手部、脚部或生殖器上",
   "chemical_or_electrical_burns": "任何大小的化学或电烧伤",
   "difficulty_breathing_or_severe_pain": "呼吸困难或严重疼痛",
-  "view_cpr_guide": "查看心肺复苏指南"
+  "view_cpr_guide": "查看心肺复苏指南",
+
+
+
+
+
+  "cpr_guide": "心肺复苏指南",
+  "call_emergency_services": "先拨打紧急服务电话！",
+  "call_before_cpr": "在开始心肺复苏前，确保救援正在路上",
+  "check_response": "检查反应",
+  "shake_and_ask": "轻轻摇晃人的肩膀并大声询问：",
+  "are_you_okay": "你没事吧？",
+  "check_breathing": "检查呼吸",
+  "look_chest_movement": "观察胸部运动",
+  "listen_breathing": "聆听呼吸声",
+  "feel_breath": "感受脸颊上的呼吸",
+  "chest_compressions": "胸部按压",
+  "place_hands_center": "将手置于胸部中央",
+  "push_hard_fast": "用力快速按压（100-120次/分钟）",
+  "allow_chest_recoil": "让胸部完全回弹",
+  "compression_rhythm": "按压节奏",
+  "follow_stayin_alive": "跟随《Stayin' Alive》的节拍以获得完美节奏！",
+  "play_rhythm": "播放节奏",
+  "pause_rhythm": "暂停节奏",
+  "important_notice": "重要通知",
+  "ribs_may_break": "在心肺复苏期间肋骨可能断裂，尤其是老年人。这是正常的—优先救命。",
+  "rescue_breaths": "救援呼吸",
+  "tilt_head_back": "轻轻向后倾斜头部",
+  "pinch_nose": "捏住鼻子",
+  "give_two_breaths": "给予2次呼吸（每次1秒）",
+  "continue_cpr": "继续心肺复苏循环",
+  "cpr_cycle_pattern": "心肺复苏循环模式",
+  "thirty_compressions": "30次胸部按压",
+  "two_rescue_breaths": "2次救援呼吸",
+  "repeat_until_help": "重复直到救援到达",
+  "remember": "记住",
+  "stay_calm_focused": "你的努力可以救命。保持冷静和专注。",
+  "call_error_no_launch": "无法启动紧急呼叫",
+  "call_error": "呼叫紧急服务时出错：{error}"
 }

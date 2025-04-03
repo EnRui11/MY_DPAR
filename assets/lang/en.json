@@ -388,5 +388,43 @@
   "burns_on_sensitive_areas": "Burns on face, hands, feet, or genitals",
   "chemical_or_electrical_burns": "Chemical or electrical burns of any size",
   "difficulty_breathing_or_severe_pain": "Difficulty breathing or severe pain",
-  "view_cpr_guide": "View CPR Guide"
+  "view_cpr_guide": "View CPR Guide",
+
+
+
+
+
+  "cpr_guide": "CPR Guide",
+  "call_emergency_services": "Call Emergency Services First!",
+  "call_before_cpr": "Before starting CPR, ensure help is on the way",
+  "check_response": "Check Response",
+  "shake_and_ask": "Gently shake the person's shoulders and ask loudly:",
+  "are_you_okay": "Are you okay?",
+  "check_breathing": "Check Breathing",
+  "look_chest_movement": "Look for chest movement",
+  "listen_breathing": "Listen for breathing sounds",
+  "feel_breath": "Feel for breath on your cheek",
+  "chest_compressions": "Chest Compressions",
+  "place_hands_center": "Place hands in center of chest",
+  "push_hard_fast": "Push hard and fast (100-120/min)",
+  "allow_chest_recoil": "Allow chest to fully recoil",
+  "compression_rhythm": "Compression Rhythm",
+  "follow_stayin_alive": "Follow the beat of 'Stayin' Alive' for perfect tempo!",
+  "play_rhythm": "Play Rhythm",
+  "pause_rhythm": "Pause Rhythm",
+  "important_notice": "Important Notice",
+  "ribs_may_break": "Ribs may break during CPR, especially in older adults. This is normal—prioritize saving a life.",
+  "rescue_breaths": "Rescue Breaths",
+  "tilt_head_back": "Tilt head back gently",
+  "pinch_nose": "Pinch nose closed",
+  "give_two_breaths": "Give 2 breaths (1 sec each)",
+  "continue_cpr": "Continue CPR Cycles",
+  "cpr_cycle_pattern": "CPR Cycle Pattern",
+  "thirty_compressions": "30 chest compressions",
+  "two_rescue_breaths": "2 rescue breaths",
+  "repeat_until_help": "Repeat until help arrives",
+  "remember": "Remember",
+  "stay_calm_focused": "Your efforts can save a life. Stay calm and focused.",
+  "call_error_no_launch": "Could not launch emergency call",
+  "call_error": "Error calling emergency: {error}"
 }

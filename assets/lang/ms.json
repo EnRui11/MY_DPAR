@@ -387,5 +387,43 @@
   "burns_on_sensitive_areas": "Luka bakar pada muka, tangan, kaki, atau alat kelamin",
   "chemical_or_electrical_burns": "Luka bakar kimia atau elektrik dalam sebarang saiz",
   "difficulty_breathing_or_severe_pain": "Kesukaran bernafas atau kesakitan teruk",
-  "view_cpr_guide": "Lihat Panduan CPR"
+  "view_cpr_guide": "Lihat Panduan CPR",
+
+
+
+
+
+  "cpr_guide": "Panduan CPR",
+  "call_emergency_services": "Panggil Perkhidmatan Kecemasan Dahulu!",
+  "call_before_cpr": "Sebelum memulakan CPR, pastikan bantuan sedang dalam perjalanan",
+  "check_response": "Periksa Respons",
+  "shake_and_ask": "Goncang bahu orang itu dengan lembut dan tanya dengan kuat:",
+  "are_you_okay": "Adakah anda okay?",
+  "check_breathing": "Periksa Pernafasan",
+  "look_chest_movement": "Lihat pergerakan dada",
+  "listen_breathing": "Dengar bunyi pernafasan",
+  "feel_breath": "Rasa nafas di pipi anda",
+  "chest_compressions": "Mampatan Dada",
+  "place_hands_center": "Letakkan tangan di tengah dada",
+  "push_hard_fast": "Tekan kuat dan cepat (100-120/min)",
+  "allow_chest_recoil": "Benarkan dada pulih sepenuhnya",
+  "compression_rhythm": "Irama Mampatan",
+  "follow_stayin_alive": "Ikut rentak 'Stayin' Alive' untuk tempo yang sempurna!",
+  "play_rhythm": "Mainkan Irama",
+  "pause_rhythm": "Jeda Irama",
+  "important_notice": "Notis Penting",
+  "ribs_may_break": "Tulang rusuk mungkin patah semasa CPR, terutama pada orang tua. Ini normal—utamakan menyelamatkan nyawa.",
+  "rescue_breaths": "Nafas Penyelamat",
+  "tilt_head_back": "Condongkan kepala ke belakang dengan lembut",
+  "pinch_nose": "Cubit hidung ditutup",
+  "give_two_breaths": "Berikan 2 nafas (1 saat setiap satu)",
+  "continue_cpr": "Teruskan Kitaran CPR",
+  "cpr_cycle_pattern": "Pola Kitaran CPR",
+  "thirty_compressions": "30 mampatan dada",
+  "two_rescue_breaths": "2 nafas penyelamat",
+  "repeat_until_help": "Ulang sehingga bantuan tiba",
+  "remember": "Ingat",
+  "stay_calm_focused": "Usaha anda boleh menyelamatkan nyawa. Kekal tenang dan fokus.",
+  "call_error_no_launch": "Tidak dapat melancarkan panggilan kecemasan",
+  "call_error": "Ralat memanggil kecemasan: {error}"
 }

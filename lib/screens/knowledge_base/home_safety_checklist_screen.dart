@@ -3,45 +3,44 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
-/// Represents a single checklist item with a title and completion status.
+// Move constants to file level so they can be accessed by all classes
+const double _paddingValue = 16.0;
+const double _spacingSmall = 8.0;
+const double _spacingMedium = 12.0;
+const double _spacingLarge = 24.0;
+
 class ChecklistItem {
-  final String title;
+  final String titleKey; // Changed to use localization key
   bool isChecked;
 
-  ChecklistItem({required this.title, this.isChecked = false});
+  ChecklistItem({required this.titleKey, this.isChecked = false});
 }
 
-/// Represents a section of the checklist with a title, icon, and items.
 class ChecklistSection {
-  final String title;
+  final String titleKey; // Changed to use localization key
   final IconData icon;
   final List<ChecklistItem> items;
   bool isExpanded;
 
   ChecklistSection({
-    required this.title,
+    required this.titleKey,
     required this.icon,
     required this.items,
     this.isExpanded = false,
   });
 }
 
-/// A screen displaying a home safety checklist tailored for Malaysia.
 class HomeSafetyChecklistScreen extends StatefulWidget {
   const HomeSafetyChecklistScreen({super.key});
 
   @override
-  State<HomeSafetyChecklistScreen> createState() => _HomeSafetyChecklistScreenState();
+  State<HomeSafetyChecklistScreen> createState() =>
+      _HomeSafetyChecklistScreenState();
 }
 
 class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
-  // Constants for consistent spacing and padding
-  static const double _paddingValue = 16.0;
-  static const double _spacingSmall = 8.0;
-  static const double _spacingMedium = 12.0;
-  static const double _spacingLarge = 24.0;
-
   late List<ChecklistSection> _sections;
   int _totalItems = 0;
   int _completedItems = 0;
@@ -54,84 +53,81 @@ class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
     _loadProgress();
   }
 
-  /// Initializes checklist sections with items tailored for Malaysia.
   void _initializeSections() {
     _sections = [
       ChecklistSection(
-        title: 'Fire Prevention',
+        titleKey: 'fire_prevention',
         icon: Icons.local_fire_department,
         items: [
-          ChecklistItem(title: 'Avoid overloading electrical circuits with multiple devices'),
-          ChecklistItem(title: 'Install and test smoke alarms monthly'),
-          ChecklistItem(title: 'Keep Class B or K fire extinguishers in kitchen and living areas'),
-          ChecklistItem(title: 'Plan and practice a fire escape route with family'),
-          ChecklistItem(title: 'Store flammable items (e.g., gas cylinders) safely away from heat'),
-          // Removed smoking-related items as smoking indoors is less common in Malaysia
-          ChecklistItem(title: 'Never smoke in bed or when drowsy'),
-          ChecklistItem(title: 'Use stable ashtrays and douse cigarettes with water'),
+          ChecklistItem(titleKey: 'avoid_overloading_circuits'),
+          ChecklistItem(titleKey: 'install_smoke_alarms'),
+          ChecklistItem(titleKey: 'keep_fire_extinguishers'),
+          ChecklistItem(titleKey: 'plan_fire_escape'),
+          ChecklistItem(titleKey: 'store_flammable_items'),
+          ChecklistItem(titleKey: 'never_smoke_in_bed'),
+          ChecklistItem(titleKey: 'use_stable_ashtrays'),
         ],
       ),
       ChecklistSection(
-        title: 'Carbon Monoxide & Gas Safety',
+        titleKey: 'carbon_monoxide_gas_safety',
         icon: Icons.gas_meter_outlined,
         items: [
-          ChecklistItem(title: 'Install carbon monoxide and gas leak detectors'),
-          ChecklistItem(title: 'Inspect gas stoves and heaters annually'),
-          ChecklistItem(title: 'Never use gas stoves for heating during power outages'),
-          ChecklistItem(title: 'Ventilate kitchens when using gas appliances'),
-          // Adjusted for Malaysia where gas leaks from LPG are a bigger concern than CO from cars
-          ChecklistItem(title: 'Never run vehicles with fueled engines in closed spaces'),
+          ChecklistItem(titleKey: 'install_co_detectors'),
+          ChecklistItem(titleKey: 'inspect_gas_appliances'),
+          ChecklistItem(titleKey: 'no_gas_stoves_for_heating'),
+          ChecklistItem(titleKey: 'ventilate_kitchens'),
+          ChecklistItem(titleKey: 'no_vehicles_in_closed_spaces'),
         ],
       ),
       ChecklistSection(
-        title: 'Kitchen Safety',
+        titleKey: 'kitchen_safety',
         icon: Icons.kitchen,
         items: [
-          ChecklistItem(title: 'Never leave cooking unattended, especially with oil'),
-          ChecklistItem(title: 'Turn pot handles inward to prevent spills'),
-          ChecklistItem(title: 'Keep sharp knives in a rack or guarded separately'),
-          ChecklistItem(title: 'Use non-slip mats near the sink and stove'),
-          ChecklistItem(title: 'Check gas hoses and regulators regularly'),
+          ChecklistItem(titleKey: 'never_leave_cooking'),
+          ChecklistItem(titleKey: 'turn_pot_handles'),
+          ChecklistItem(titleKey: 'keep_knives_safe'),
+          ChecklistItem(titleKey: 'use_non_slip_mats'),
+          ChecklistItem(titleKey: 'check_gas_hoses'),
         ],
       ),
       ChecklistSection(
-        title: 'Bathroom Safety',
+        titleKey: 'bathroom_safety',
         icon: Icons.bathroom,
         items: [
-          ChecklistItem(title: 'Use non-slip mats or decals in wet areas'),
-          ChecklistItem(title: 'Keep floors dry and clean spills immediately'),
-          ChecklistItem(title: 'Install GFCI outlets near water sources'),
-          ChecklistItem(title: 'Set water heater to 48°C (120°F) to prevent burns'),
-          ChecklistItem(title: 'Ensure proper ventilation to reduce mould growth'),
+          ChecklistItem(titleKey: 'use_non_slip_mats_bathroom'),
+          ChecklistItem(titleKey: 'keep_floors_dry'),
+          ChecklistItem(titleKey: 'install_gfci_outlets'),
+          ChecklistItem(titleKey: 'set_water_heater'),
+          ChecklistItem(titleKey: 'ensure_ventilation'),
         ],
       ),
       ChecklistSection(
-        title: 'Burglar-Proofing',
+        titleKey: 'burglar_proofing',
         icon: Icons.security,
         items: [
-          ChecklistItem(title: 'Install ANSI Grade 1 deadbolts on all doors'),
-          ChecklistItem(title: 'Secure windows with locks and grilles'),
-          ChecklistItem(title: 'Use motion sensor lights around the perimeter'),
-          ChecklistItem(title: 'Join a local "Rukun Tetangga" or neighborhood watch'),
-          ChecklistItem(title: 'Install CCTV or a video doorbell'),
+          ChecklistItem(titleKey: 'install_deadbolts'),
+          ChecklistItem(titleKey: 'secure_windows'),
+          ChecklistItem(titleKey: 'use_motion_lights'),
+          ChecklistItem(titleKey: 'join_neighborhood_watch'),
+          ChecklistItem(titleKey: 'install_cctv'),
         ],
       ),
       ChecklistSection(
-        title: 'Monsoon & Flood Safety',
+        titleKey: 'monsoon_flood_safety',
         icon: Icons.water,
         items: [
-          ChecklistItem(title: 'Elevate electrical appliances above flood levels'),
-          ChecklistItem(title: 'Clear drains and gutters before monsoon season'),
-          ChecklistItem(title: 'Prepare an emergency kit with food and water'),
-          ChecklistItem(title: 'Know your local flood evacuation route'),
+          ChecklistItem(titleKey: 'elevate_appliances'),
+          ChecklistItem(titleKey: 'clear_drains'),
+          ChecklistItem(titleKey: 'prepare_emergency_kit'),
+          ChecklistItem(titleKey: 'know_evacuation_route'),
         ],
       ),
     ];
 
-    _totalItems = _sections.fold(0, (sum, section) => sum + section.items.length);
+    _totalItems =
+        _sections.fold(0, (sum, section) => sum + section.items.length);
   }
 
-  /// Loads saved progress from SharedPreferences and updates counts.
   Future<void> _loadProgress() async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
@@ -141,7 +137,7 @@ class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
       _completedItems = 0;
       for (var section in _sections) {
         for (var item in section.items) {
-          final key = '${section.title}_${item.title}';
+          final key = '${section.titleKey}_${item.titleKey}';
           item.isChecked = prefs.getBool(key) ?? false;
           if (item.isChecked) _completedItems++;
         }
@@ -150,28 +146,28 @@ class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
     });
   }
 
-  /// Saves the progress of a checklist item to SharedPreferences.
-  Future<void> _saveProgress(ChecklistItem item, ChecklistSection section) async {
+  Future<void> _saveProgress(
+      ChecklistItem item, ChecklistSection section) async {
     final prefs = await SharedPreferences.getInstance();
-    final key = '${section.title}_${item.title}';
+    final key = '${section.titleKey}_${item.titleKey}';
     await prefs.setBool(key, item.isChecked);
   }
 
-  /// Resets all checklist items to their default unchecked state with confirmation.
   Future<void> _resetToDefaults() async {
+    final l = AppLocalizations.of(context);
     final shouldReset = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Confirmation'),
-        content: const Text('Are you sure you want to reset all progress? This will clear all your checked items.'),
+        title: Text(l.translate('reset_confirmation')),
+        content: Text(l.translate('reset_confirmation_message')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.translate('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset'),
+            child: Text(l.translate('reset')),
           ),
         ],
       ),
@@ -184,7 +180,7 @@ class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Reset all progress'),
+            content: Text(l.translate('reset_progress_message')),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.all(_paddingValue),
@@ -202,142 +198,228 @@ class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final colors = themeProvider.currentTheme;
+    final colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(colors),
-            if (!_isLoading) _buildProgressBar(colors),
+            _Header(colors: colors, onReset: _resetToDefaults),
+            if (!_isLoading)
+              _ProgressBar(
+                  colors: colors,
+                  completedItems: _completedItems,
+                  totalItems: _totalItems),
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: colors.accent200))
+                  ? Center(
+                      child: CircularProgressIndicator(color: colors.accent200))
                   : ListView.builder(
-                padding: const EdgeInsets.all(_paddingValue),
-                itemCount: _sections.length,
-                itemBuilder: (context, index) => _buildSection(_sections[index], colors),
-              ),
+                      padding: const EdgeInsets.all(_paddingValue),
+                      itemCount: _sections.length,
+                      itemBuilder: (context, index) => _Section(
+                        section: _sections[index],
+                        colors: colors,
+                        onItemChanged: (item) =>
+                            _saveProgress(item, _sections[index]),
+                      ),
+                    ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  /// Builds the header with back button, title, and reset button.
-  Widget _buildHeader(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: _paddingValue, vertical: _paddingValue - 4),
-    decoration: BoxDecoration(
-      color: colors.bg100.withOpacity(0.7),
-      border: Border(bottom: BorderSide(color: colors.bg300.withOpacity(0.2))),
-    ),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.primary300),
-          onPressed: () => Navigator.pop(context),
-        ),
-        const SizedBox(width: _spacingSmall),
-        Expanded(
-          child: Text(
-            'Home Safety Checklist',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.primary300),
+class _Header extends StatelessWidget {
+  final AppColorTheme colors;
+  final VoidCallback onReset;
+
+  const _Header({required this.colors, required this.onReset});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: _paddingValue, vertical: _paddingValue - 4),
+      decoration: _buildCardDecoration(colors),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
+            onPressed: () => Navigator.pop(context),
+            tooltip: l.translate('back'),
           ),
-        ),
-        IconButton(
-          icon: Icon(Icons.restore, color: colors.primary300),
-          onPressed: _resetToDefaults,
-          tooltip: 'Reset to defaults',
-        ),
-      ],
-    ),
-  );
-
-  /// Builds the progress bar showing overall completion status.
-  Widget _buildProgressBar(AppColorTheme colors) => Container(
-    margin: const EdgeInsets.all(_paddingValue),
-    padding: const EdgeInsets.all(_paddingValue),
-    decoration: _buildCardDecoration(colors),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Your Progress',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.primary300),
+          const SizedBox(width: _spacingSmall),
+          Expanded(
+            child: Text(
+              l.translate('home_safety_checklist'),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.primary300),
             ),
-            Text(
-              '$_completedItems/$_totalItems Complete',
-              style: TextStyle(color: colors.accent200, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        const SizedBox(height: _spacingMedium),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: _totalItems > 0 ? (_completedItems / _totalItems).toDouble() : 0.0,
-            backgroundColor: colors.primary100,
-            valueColor: AlwaysStoppedAnimation<Color>(colors.accent200),
-            minHeight: 8,
           ),
-        ),
-      ],
-    ),
-  );
+          IconButton(
+            icon: Icon(Icons.restore, color: colors.primary300),
+            onPressed: onReset,
+            tooltip: l.translate('reset_to_defaults'),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-  /// Builds a collapsible section with checklist items and progress.
-  Widget _buildSection(ChecklistSection section, AppColorTheme colors) {
-    final sectionTotal = section.items.length;
-    final sectionCompleted = section.items.where((item) => item.isChecked).length;
-    final progress = sectionTotal > 0 ? (sectionCompleted / sectionTotal).toDouble() : 0.0;
+class _ProgressBar extends StatelessWidget {
+  final AppColorTheme colors;
+  final int completedItems;
+  final int totalItems;
+
+  const _ProgressBar(
+      {required this.colors,
+      required this.completedItems,
+      required this.totalItems});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.all(_paddingValue),
+      padding: const EdgeInsets.all(_paddingValue),
+      decoration: _buildCardDecoration(colors),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l.translate('your_progress'),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colors.primary300),
+              ),
+              Text(
+                l.translate('progress_status', {
+                  'completed': completedItems.toString(),
+                  'total': totalItems.toString()
+                }),
+                style: TextStyle(
+                    color: colors.accent200, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: _spacingMedium),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: totalItems > 0
+                  ? (completedItems / totalItems).toDouble()
+                  : 0.0,
+              backgroundColor: colors.primary100,
+              valueColor: AlwaysStoppedAnimation<Color>(colors.accent200),
+              minHeight: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Section extends StatefulWidget {
+  final ChecklistSection section;
+  final AppColorTheme colors;
+  final Function(ChecklistItem) onItemChanged;
+
+  const _Section(
+      {required this.section,
+      required this.colors,
+      required this.onItemChanged});
+
+  @override
+  State<_Section> createState() => _SectionState();
+}
+
+class _SectionState extends State<_Section> {
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final sectionTotal = widget.section.items.length;
+    final sectionCompleted =
+        widget.section.items.where((item) => item.isChecked).length;
+    final progress =
+        sectionTotal > 0 ? (sectionCompleted / sectionTotal).toDouble() : 0.0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: _spacingMedium),
-      decoration: _buildCardDecoration(colors),
+      decoration: _buildCardDecoration(widget.colors),
       child: Column(
         children: [
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              leading: Icon(section.icon, color: colors.accent200),
+              leading:
+                  Icon(widget.section.icon, color: widget.colors.accent200),
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    section.title,
-                    style: TextStyle(color: colors.primary300, fontWeight: FontWeight.w600),
+                    l.translate(widget.section.titleKey),
+                    style: TextStyle(
+                        color: widget.colors.primary300,
+                        fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: _spacingSmall),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(2),
                     child: LinearProgressIndicator(
                       value: progress,
-                      backgroundColor: colors.bg300.withOpacity(0.2),
+                      backgroundColor: widget.colors.bg300.withOpacity(0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        progress == 1.0 ? colors.accent200 : colors.accent200.withOpacity(0.5),
+                        progress == 1.0
+                            ? widget.colors.accent200
+                            : widget.colors.accent200.withOpacity(0.5),
                       ),
                       minHeight: 4,
                     ),
                   ),
                 ],
               ),
-              children: section.items.map((item) => _buildChecklistItem(item, section, colors)).toList(),
+              children: widget.section.items
+                  .map((item) => _ChecklistItem(
+                        item: item,
+                        colors: widget.colors,
+                        onChanged: (value) {
+                          setState(() {
+                            item.isChecked = value;
+                            widget.onItemChanged(item);
+                          });
+                        },
+                      ))
+                  .toList(),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(_paddingValue, 0, _paddingValue, _spacingSmall),
+            padding: const EdgeInsets.fromLTRB(
+                _paddingValue, 0, _paddingValue, _spacingSmall),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  '$sectionCompleted/$sectionTotal items completed',
-                  style: TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 12),
+                  l.translate('section_progress', {
+                    'completed': sectionCompleted.toString(),
+                    'total': sectionTotal.toString(),
+                  }),
+                  style: TextStyle(
+                      color: widget.colors.text200.withOpacity(0.7),
+                      fontSize: 12),
                 ),
               ],
             ),
@@ -346,60 +428,61 @@ class _HomeSafetyChecklistScreenState extends State<HomeSafetyChecklistScreen> {
       ),
     );
   }
-
-  /// Builds a single checklist item with a tappable checkbox and description.
-  Widget _buildChecklistItem(ChecklistItem item, ChecklistSection section, AppColorTheme colors) => InkWell(
-    onTap: () {
-      setState(() {
-        item.isChecked = !item.isChecked; // Toggle the state
-        _completedItems += item.isChecked ? 1 : -1; // Update count in memory
-        _saveProgress(item, section);
-      });
-    },
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(_paddingValue, 0, _paddingValue, _spacingMedium),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: Checkbox(
-              value: item.isChecked,
-              activeColor: colors.accent200,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              onChanged: (bool? value) {
-                setState(() {
-                  item.isChecked = value ?? false;
-                  _completedItems += item.isChecked ? 1 : -1; // Update count in memory
-                  _saveProgress(item, section);
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: _spacingMedium),
-          Expanded(
-            child: Text(
-              item.title,
-              style: TextStyle(color: colors.text200, fontSize: 14),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-
-  /// Returns a reusable card decoration for consistent styling.
-  BoxDecoration _buildCardDecoration(AppColorTheme colors) => BoxDecoration(
-    color: colors.bg100.withOpacity(0.85),
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: colors.accent200.withOpacity(0.1)),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ],
-  );
 }
+
+class _ChecklistItem extends StatelessWidget {
+  final ChecklistItem item;
+  final AppColorTheme colors;
+  final ValueChanged<bool> onChanged;
+
+  const _ChecklistItem(
+      {required this.item, required this.colors, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return InkWell(
+      onTap: () => onChanged(!item.isChecked),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+            _paddingValue, 0, _paddingValue, _spacingMedium),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: item.isChecked,
+                activeColor: colors.accent200,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+                onChanged: (bool? value) => onChanged(value ?? false),
+              ),
+            ),
+            const SizedBox(width: _spacingMedium),
+            Expanded(
+              child: Text(
+                l.translate(item.titleKey),
+                style: TextStyle(color: colors.text200, fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+BoxDecoration _buildCardDecoration(AppColorTheme colors) => BoxDecoration(
+      color: colors.bg100.withOpacity(0.85),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: colors.accent200.withOpacity(0.1)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );

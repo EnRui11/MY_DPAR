@@ -27,7 +27,7 @@
 
 
 
-  
+
   "alert_detail_screen": "alert_detail_screen.dart",
   "disaster_details": "Disaster Details",
   "location": "Location",
@@ -116,7 +116,7 @@
 
 
 
-  
+
   "profile_screen":"profile_screen.dart",
   "emergency_contacts": "Emergency Contacts",
   "add_contact": "Add Contact",
@@ -302,7 +302,7 @@
 
 
 
-  
+
   "burns_guide_screen": "burns_guide_screen.dart",
   "burns_treatment": "Burns Treatment",
   "burn_assessment": "Burn Assessment",
@@ -995,5 +995,26 @@
   "elevate_appliances": "Elevate electrical appliances above flood levels",
   "clear_drains": "Clear drains and gutters before monsoon season",
   "prepare_emergency_kit": "Prepare an emergency kit with food and water",
-  "know_evacuation_route": "Know your local flood evacuation route"
+  "know_evacuation_route": "Know your local flood evacuation route",
+
+
+
+
+
+  "knowledge_base": "Knowledge Base",
+  "back": "Back",
+  "featured_guide": "Featured Guide",
+  "emergency_preparedness_flood": "Emergency Preparedness For Flood",
+  "flood_preparation_description": "Essential steps to prepare for flood",
+  "learn_more": "Learn More",
+  "quick_access": "Quick Access",
+  "preparation_guides": "Preparation Guides",
+  "step_by_step_disaster_guides": "Step-by-step disaster guides",
+  "emergency_contacts": "Emergency Contacts",
+  "important_numbers_contacts": "Important numbers & contacts",
+  "first_aid_guide": "First Aid Guide",
+  "medical_emergency_basics": "Medical emergency basics",
+  "home_safety_checklist": "Home Safety Checklist",
+  "ensure_home_safety": "Ensure your home is safe",
+  "not_implemented": "{title} not yet implemented"
 }

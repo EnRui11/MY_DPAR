@@ -999,5 +999,26 @@
   "elevate_appliances": "将电器抬高至洪水水位以上",
   "clear_drains": "在季风雨季前清理排水沟和下水道",
   "prepare_emergency_kit": "准备包含食物和水的紧急套件",
-  "know_evacuation_route": "了解当地的洪水疏散路线"
+  "know_evacuation_route": "了解当地的洪水疏散路线",
+
+
+
+
+
+  "knowledge_base": "知识库",
+  "back": "返回",
+  "featured_guide": "特色指南",
+  "emergency_preparedness_flood": "洪水紧急准备",
+  "flood_preparation_description": "为洪水准备的基本步骤",
+  "learn_more": "了解更多",
+  "quick_access": "快速访问",
+  "preparation_guides": "准备指南",
+  "step_by_step_disaster_guides": "逐步灾难指南",
+  "emergency_contacts": "紧急联系方式",
+  "important_numbers_contacts": "重要号码和联系人",
+  "first_aid_guide": "急救指南",
+  "medical_emergency_basics": "医疗紧急基础知识",
+  "home_safety_checklist": "家庭安全检查清单",
+  "ensure_home_safety": "确保您的家庭安全",
+  "not_implemented": "{title}尚未实现"
 }

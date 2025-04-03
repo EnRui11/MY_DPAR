@@ -999,5 +999,26 @@
   "elevate_appliances": "Angkat perkakas elektrik melebihi paras banjir",
   "clear_drains": "Bersihkan saluran dan longkang sebelum musim tengkujuh",
   "prepare_emergency_kit": "Sediakan kit kecemasan dengan makanan dan air",
-  "know_evacuation_route": "Ketahui laluan pemindahan banjir tempatan anda"
+  "know_evacuation_route": "Ketahui laluan pemindahan banjir tempatan anda",
+
+
+
+
+
+  "knowledge_base": "Pangkalan Pengetahuan",
+  "back": "Kembali",
+  "featured_guide": "Panduan Utama",
+  "emergency_preparedness_flood": "Persediaan Kecemasan Untuk Banjir",
+  "flood_preparation_description": "Langkah penting untuk bersedia menghadapi banjir",
+  "learn_more": "Ketahui Lebih Lanjut",
+  "quick_access": "Akses Pantas",
+  "preparation_guides": "Panduan Persediaan",
+  "step_by_step_disaster_guides": "Panduan bencana langkah demi langkah",
+  "emergency_contacts": "Kenalan Kecemasan",
+  "important_numbers_contacts": "Nombor & kenalan penting",
+  "first_aid_guide": "Panduan Pertolongan Cemas",
+  "medical_emergency_basics": "Asas kecemasan perubatan",
+  "home_safety_checklist": "Senarai Semak Keselamatan Rumah",
+  "ensure_home_safety": "Pastikan rumah anda selamat",
+  "not_implemented": "{title} belum dilaksanakan"
 }

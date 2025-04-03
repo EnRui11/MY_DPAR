@@ -640,13 +640,9 @@ class _DisastersScreenState extends State<DisastersScreen> {
       };
 
   /// Determines the color based on severity.
-  Color _getSeverityColor(String severity, AppColorTheme colors) =>
-      switch (severity.toLowerCase()) {
-        'high' => colors.warning,
-        'medium' => const Color(0xFFFF8C00),
-        'low' => const Color(0xFF71C4EF),
-        _ => colors.text200,
-      };
+  Color _getSeverityColor(String severity, AppColorTheme colors) {
+    return DisasterService.getSeverityColor(severity, colors);
+  }
 
   /// Displays a snackbar with a message.
   void _showSnackBar(String message, Color backgroundColor) {
@@ -694,20 +690,6 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   /// Returns an icon based on the disaster type.
   IconData getDisasterIcon(String type) {
-    const flood = IconData(0xf07a3, fontFamily: 'MaterialIcons');
-    const tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
-
-    return switch (type.toLowerCase()) {
-      'heavy rain' => Icons.thunderstorm_outlined,
-      'flood' => flood,
-      'fire' => Icons.local_fire_department,
-      'earthquake' => Icons.terrain,
-      'landslide' => Icons.landslide,
-      'tsunami' => tsunami,
-      'haze' => Icons.air,
-      'typhoon' => Icons.cyclone,
-      'other' => Icons.warning_amber_rounded,
-      _ => Icons.error_outline,
-    };
+    return DisasterService.getDisasterIcon(type);
   }
 }

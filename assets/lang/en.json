@@ -426,5 +426,25 @@
   "remember": "Remember",
   "stay_calm_focused": "Your efforts can save a life. Stay calm and focused.",
   "call_error_no_launch": "Could not launch emergency call",
-  "call_error": "Error calling emergency: {error}"
+  "call_error": "Error calling emergency: {error}",
+
+
+
+
+
+  "first_aid_guide": "First Aid Guide",
+  "emergency_actions": "Emergency Actions",
+  "quick_response": "Quick Response",
+  "cpr_guide_desc": "Step-by-step CPR instructions",
+  "bleeding_control_desc": "Wound care and bleeding control",
+  "common_emergencies": "Common Emergencies",
+  "burns_treatment_desc": "First aid for different types of burns",
+  "fractures_sprains": "Fractures & Sprains",
+  "fractures_sprains_desc": "Immediate care for bone and joint injuries",
+  "bites_stings_desc": "Treatment for insect and animal bites",
+  "first_aid_kit_checklist": "First Aid Kit Checklist",
+  "bandages_gauze": "Bandages and gauze",
+  "antiseptic_wipes": "Antiseptic wipes",
+  "medical_tape": "Medical tape",
+  "view_full_list": "View Full List"
 }

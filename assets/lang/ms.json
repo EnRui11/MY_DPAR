@@ -425,5 +425,25 @@
   "remember": "Ingat",
   "stay_calm_focused": "Usaha anda boleh menyelamatkan nyawa. Kekal tenang dan fokus.",
   "call_error_no_launch": "Tidak dapat melancarkan panggilan kecemasan",
-  "call_error": "Ralat memanggil kecemasan: {error}"
+  "call_error": "Ralat memanggil kecemasan: {error}",
+
+
+
+
+
+  "first_aid_guide": "Panduan Pertolongan Cemas",
+  "emergency_actions": "Tindakan Kecemasan",
+  "quick_response": "Tindak Balas Pantas",
+  "cpr_guide_desc": "Arahan CPR langkah demi langkah",
+  "bleeding_control_desc": "Penjagaan luka dan kawalan pendarahan",
+  "common_emergencies": "Kecemasan Biasa",
+  "burns_treatment_desc": "Pertolongan cemas untuk pelbagai jenis luka bakar",
+  "fractures_sprains": "Patah & Terkilir",
+  "fractures_sprains_desc": "Penjagaan segera untuk kecederaan tulang dan sendi",
+  "bites_stings_desc": "Rawatan untuk gigitan serangga dan haiwan",
+  "first_aid_kit_checklist": "Senarai Semak Kit Pertolongan Cemas",
+  "bandages_gauze": "Bebat dan kain kasa",
+  "antiseptic_wipes": "Lap antiseptik",
+  "medical_tape": "Pita perubatan",
+  "view_full_list": "Lihat Senarai Penuh"
 }

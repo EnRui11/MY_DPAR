@@ -425,5 +425,25 @@
   "remember": "记住",
   "stay_calm_focused": "你的努力可以救命。保持冷静和专注。",
   "call_error_no_launch": "无法启动紧急呼叫",
-  "call_error": "呼叫紧急服务时出错：{error}"
+  "call_error": "呼叫紧急服务时出错：{error}",
+
+
+
+
+
+  "first_aid_guide": "急救指南",
+  "emergency_actions": "紧急行动",
+  "quick_response": "快速反应",
+  "cpr_guide_desc": "逐步心肺复苏指导",
+  "bleeding_control_desc": "伤口护理和出血控制",
+  "common_emergencies": "常见紧急情况",
+  "burns_treatment_desc": "不同类型烧伤的急救",
+  "fractures_sprains": "骨折与扭伤",
+  "fractures_sprains_desc": "骨骼和关节损伤的即时护理",
+  "bites_stings_desc": "昆虫和动物咬伤的治疗",
+  "first_aid_kit_checklist": "急救包清单",
+  "bandages_gauze": "绷带和纱布",
+  "antiseptic_wipes": "消毒湿巾",
+  "medical_tape": "医用胶带",
+  "view_full_list": "查看完整清单"
 }

@@ -8,16 +8,16 @@ import 'package:mydpar/screens/knowledge_base/prepareration_guide/flood_guide_sc
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/fire_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/landslide_guide_screen.dart';
 import 'package:mydpar/screens/knowledge_base/prepareration_guide/haze_guide_screen.dart';
+import 'package:mydpar/screens/knowledge_base/prepareration_guide/earthquake_guide_screen.dart';
+import 'package:mydpar/services/disaster_information_service.dart';
 
 // Data model for disaster types
 class DisasterType {
   final String title;
-  final IconData icon;
   final Widget? destinationScreen;
 
   const DisasterType({
     required this.title,
-    required this.icon,
     this.destinationScreen,
   });
 }
@@ -26,28 +26,27 @@ class DisasterType {
 const _disasterTypes = [
   DisasterType(
     title: 'Heavy Rain',
-    icon: Icons.thunderstorm_outlined,
     destinationScreen: HeavyRainGuideScreen(),
   ),
   DisasterType(
     title: 'Flood',
-    icon: IconData(0xf07a3, fontFamily: 'MaterialIcons'), // Flood icon
     destinationScreen: FloodGuideScreen(),
   ),
   DisasterType(
     title: 'Fire',
-    icon: Icons.local_fire_department,
     destinationScreen: FireGuideScreen(),
   ),
   DisasterType(
     title: 'Landslide',
-    icon: Icons.landslide,
     destinationScreen: LandslideGuideScreen(),
   ),
   DisasterType(
+    title: 'Earthquake',
+    destinationScreen: EarthquakeGuideScreen(),
+  ),
+  DisasterType(
     title: 'Haze',
-    icon: Icons.air_outlined,
-    destinationScreen: HazeGuideScreen(), // Coming soon
+    destinationScreen: HazeGuideScreen(),
   ),
 ];
 
@@ -200,7 +199,11 @@ class PreparationGuidesScreen extends StatelessWidget {
               padding: const EdgeInsets.all(_padding),
               child: Row(
                 children: [
-                  Icon(disaster.icon, color: colors.accent200, size: 24),
+                  Icon(
+                    DisasterService.getDisasterIcon(disaster.title.toLowerCase()),
+                    color: colors.accent200,
+                    size: 24,
+                  ),
                   const SizedBox(width: _spacingMedium),
                   Text(
                     disaster.title,

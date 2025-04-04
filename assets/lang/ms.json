@@ -1039,5 +1039,17 @@
   "refreshing_disaster_info": "Menyegarkan maklumat bencana...",
   "error": "Ralat",
   "pull_to_refresh": "Tarik ke bawah untuk menyegarkan",
-  "showing_x_of_y_disasters": "Menunjukkan {shown} daripada {total} bencana"
+  "showing_x_of_y_disasters": "Menunjukkan {shown} daripada {total} bencana",
+  "severity_low": "Rendah",
+  "severity_medium": "Sederhana",
+  "severity_high": "Tinggi",
+  "severity_critical": "Kritikal",
+  "disaster_type_fire": "Kebakaran",
+  "disaster_type_flood": "Banjir",
+  "disaster_type_landslide": "Tanah Runtuh",
+  "disaster_type_earthquake": "Gempa Bumi",
+  "disaster_type_heavy_rain": "Hujan Lebat",
+  "disaster_type_haze": "Jerebu",
+  "disaster_type_other": "Lain-lain",
+  "time_ago": "{time} lalu"
 }

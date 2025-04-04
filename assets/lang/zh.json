@@ -1039,5 +1039,17 @@
   "refreshing_disaster_info": "正在刷新灾害信息...",
   "error": "错误",
   "pull_to_refresh": "下拉刷新",
-  "showing_x_of_y_disasters": "显示 {total} 个灾害中的 {shown} 个"
+  "showing_x_of_y_disasters": "显示 {total} 个灾害中的 {shown} 个",
+  "severity_low": "低",
+  "severity_medium": "中",
+  "severity_high": "高",
+  "severity_critical": "危急",
+  "disaster_type_fire": "火灾",
+  "disaster_type_flood": "洪水",
+  "disaster_type_landslide": "山体滑坡",
+  "disaster_type_earthquake": "地震",
+  "disaster_type_heavy_rain": "暴雨",
+  "disaster_type_haze": "雾霾",
+  "disaster_type_other": "其他",
+  "time_ago": "{time}前"
 }

@@ -1035,5 +1035,17 @@
   "refreshing_disaster_info": "Refreshing disaster information...",
   "error": "Error",
   "pull_to_refresh": "Pull down to refresh",
-  "showing_x_of_y_disasters": "Showing {shown} of {total} disasters"
+  "showing_x_of_y_disasters": "Showing {shown} of {total} disasters",
+  "severity_low": "Low",
+  "severity_medium": "Medium",
+  "severity_high": "High",
+  "severity_critical": "Critical",
+  "disaster_type_fire": "Fire",
+  "disaster_type_flood": "Flood",
+  "disaster_type_landslide": "Landslide",
+  "disaster_type_earthquake": "Earthquake",
+  "disaster_type_heavy_rain": "Heavy Rain",
+  "disaster_type_haze": "Haze",
+  "disaster_type_other": "Other",
+  "time_ago": "{time}"
 }

@@ -279,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String time,
     required String disasterType,
     required AppColorTheme colors,
+    required AppLocalizations localize,
   }) =>
       Container(
         margin: const EdgeInsets.only(bottom: _spacingMedium),
@@ -308,7 +309,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       Text(
-                        disasterType,
+                        localize.translate(
+                            'disaster_type_${disasterType.toLowerCase()}'),
                         style: TextStyle(
                           color: colors.primary300,
                           fontWeight: FontWeight.w500,
@@ -327,7 +329,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          severity,
+                          localize
+                              .translate('severity_${severity.toLowerCase()}'),
                           style: TextStyle(
                             color: _getSeverityColor(severity, colors),
                             fontSize: 14,
@@ -364,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icon(Icons.access_time, color: colors.text200, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        time,
+                        _getLocalizedTime(time, localize),
                         style: TextStyle(
                           color: colors.text200,
                           fontSize: 12,
@@ -443,6 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               time: disaster.formattedTime,
                               disasterType: disaster.disasterType,
                               colors: colors,
+                              localize: localize,
                             ),
                           );
                         },
@@ -519,5 +523,38 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Helper method to get icon based on disaster type
   IconData _getDisasterIcon(String type) {
     return DisasterService.getDisasterIcon(type);
+  }
+
+  /// Helper method to get localized time string
+  String _getLocalizedTime(String time, AppLocalizations localize) {
+    if (time.contains('just now')) {
+      return localize.translate('time_just_now');
+    } else if (time.contains('minute ago')) {
+      return localize.translate('time_minute_ago');
+    } else if (time.contains('minutes ago')) {
+      final minutes = time.split(' ')[0];
+      return localize.translate('time_minutes_ago', {'count': minutes});
+    } else if (time.contains('hour ago')) {
+      return localize.translate('time_hour_ago');
+    } else if (time.contains('hours ago')) {
+      final hours = time.split(' ')[0];
+      return localize.translate('time_hours_ago', {'count': hours});
+    } else if (time.contains('day ago')) {
+      return localize.translate('time_day_ago');
+    } else if (time.contains('days ago')) {
+      final days = time.split(' ')[0];
+      return localize.translate('time_days_ago', {'count': days});
+    } else if (time.contains('month ago')) {
+      return localize.translate('time_month_ago');
+    } else if (time.contains('months ago')) {
+      final months = time.split(' ')[0];
+      return localize.translate('time_months_ago', {'count': months});
+    } else if (time.contains('year ago')) {
+      return localize.translate('time_year_ago');
+    } else if (time.contains('years ago')) {
+      final years = time.split(' ')[0];
+      return localize.translate('time_years_ago', {'count': years});
+    }
+    return time;
   }
 }

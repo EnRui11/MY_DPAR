@@ -1051,5 +1051,22 @@
   "disaster_type_heavy_rain": "Hujan Lebat",
   "disaster_type_haze": "Jerebu",
   "disaster_type_other": "Lain-lain",
-  "time_ago": "{time} lalu"
+  "time_ago": "{time} lalu",
+
+
+
+
+  
+  "search_location": "Cari lokasi",
+  "sos": "SOS",
+  "disasters": "Bencana",
+  "shelters": "Tempat Perlindungan",
+  "medical": "Perubatan",
+  "supplies": "Bekalan",
+  "report_disaster": "Laporkan Bencana",
+  "location_services_disabled": "Perkhidmatan lokasi dilumpuhkan",
+  "location_permission_denied": "Kebenaran lokasi ditolak",
+  "location_permission_denied_forever": "Kebenaran lokasi ditolak secara kekal",
+  "unable_to_get_location": "Tidak dapat mendapatkan lokasi semasa: {error}",
+  "location_not_found": "Lokasi tidak ditemui"
 }

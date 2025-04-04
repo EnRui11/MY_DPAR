@@ -1047,5 +1047,22 @@
   "disaster_type_heavy_rain": "Heavy Rain",
   "disaster_type_haze": "Haze",
   "disaster_type_other": "Other",
-  "time_ago": "{time}"
+  "time_ago": "{time}",
+
+
+
+
+
+  "search_location": "Search location",
+  "sos": "SOS",
+  "disasters": "Disasters",
+  "shelters": "Shelters",
+  "medical": "Medical",
+  "supplies": "Supplies",
+  "report_disaster": "Report Disaster",
+  "location_services_disabled": "Location services are disabled",
+  "location_permission_denied": "Location permission denied",
+  "location_permission_denied_forever": "Location permission permanently denied",
+  "unable_to_get_location": "Unable to get current location: {error}",
+  "location_not_found": "Location not found"
 }

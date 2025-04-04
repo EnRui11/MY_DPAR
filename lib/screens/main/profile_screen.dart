@@ -42,7 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NavigationService>(context, listen: false).changeIndex(3);
-      // Ensure user data is initialized
       Provider.of<UserInformationService>(context, listen: false)
           .initializeUser();
     });
@@ -66,8 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildContent(userInformation, colors),
               ],
             ),
-            if (userInformation.isLoading)
-              _buildLoadingOverlay(colors), // Use service's loading state
+            if (userInformation.isLoading) _buildLoadingOverlay(colors),
           ],
         ),
       ),
@@ -75,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildHeader(ThemeProvider themeProvider, AppColorTheme colors,
-          LanguageService languageService) =>
+      LanguageService languageService) =>
       Padding(
         padding: const EdgeInsets.symmetric(
             horizontal: _padding, vertical: _spacingSmall),
@@ -94,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     inactiveThumbColor: Colors.amber,
                     inactiveTrackColor: Colors.amber.withOpacity(0.3),
                     thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
-                      (Set<MaterialState> states) {
+                          (Set<MaterialState> states) {
                         return Icon(
                           themeProvider.isDarkMode
                               ? Icons.dark_mode
@@ -107,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     trackOutlineColor: MaterialStateProperty.resolveWith(
-                      (states) => themeProvider.isDarkMode
+                          (states) => themeProvider.isDarkMode
                           ? colors.bg300.withOpacity(0.2)
                           : Colors.transparent,
                     ),
@@ -170,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: colors.accent200.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
                       border:
-                          Border.all(color: colors.accent200.withOpacity(0.3)),
+                      Border.all(color: colors.accent200.withOpacity(0.3)),
                     ),
                     child: Center(
                       child: Text(
@@ -195,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildContent(
-          UserInformationService userInformation, AppColorTheme colors) =>
+      UserInformationService userInformation, AppColorTheme colors) =>
       Expanded(
         child: RefreshIndicator(
           onRefresh: userInformation.refreshUserData,
@@ -210,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: _spacingLarge * 2),
                 _buildEmergencyContactsSection(userInformation, colors),
                 const SizedBox(height: _spacingLarge * 2),
-                _buildSettingsSection(colors),
+                _buildSettingsSection(userInformation, colors),
               ],
             ),
           ),
@@ -218,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildProfileHeader(
-          UserInformationService userInformation, AppColorTheme colors) =>
+      UserInformationService userInformation, AppColorTheme colors) =>
       Column(
         children: [
           Stack(
@@ -232,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : null,
                 child: userInformation.photoUrl == null
                     ? Icon(Icons.person_outline,
-                        size: 48, color: colors.accent200)
+                    size: 48, color: colors.accent200)
                     : null,
               ),
               CircleAvatar(
@@ -271,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildEmergencyContactsSection(
-          UserInformationService userInformation, AppColorTheme colors) =>
+      UserInformationService userInformation, AppColorTheme colors) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -296,58 +294,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
           userInformation.contacts.isEmpty
               ? _buildEmptyContactsCard(colors)
               : ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: userInformation.contacts.length,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.only(bottom: _spacingMedium),
-                    child: _buildEmergencyContact(
-                        userInformation.contacts[index],
-                        index,
-                        userInformation,
-                        colors),
-                  ),
-                ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: userInformation.contacts.length,
+            itemBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.only(bottom: _spacingMedium),
+              child: _buildEmergencyContact(
+                  userInformation.contacts[index],
+                  index,
+                  userInformation,
+                  colors),
+            ),
+          ),
         ],
       );
 
   Widget _buildEmptyContactsCard(AppColorTheme colors) => Container(
-        padding: const EdgeInsets.all(_padding),
-        decoration: _cardDecoration(colors),
-        child: Column(
-          children: [
-            Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
-            const SizedBox(height: _spacingMedium),
-            Text(
-              AppLocalizations.of(context).translate('no_emergency_contacts'),
-              style: TextStyle(
-                  color: colors.primary300,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              AppLocalizations.of(context).translate('add_contacts_help'),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.text200),
-            ),
-            const SizedBox(height: _spacingMedium),
-            ElevatedButton(
-              onPressed: () => _showAddContactDialog(
-                  Provider.of<UserInformationService>(context, listen: false),
-                  colors),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.accent200,
-                  foregroundColor: colors.bg100),
-              child:
-                  Text(AppLocalizations.of(context).translate('add_contact')),
-            ),
-          ],
+    padding: const EdgeInsets.all(_padding),
+    decoration: _cardDecoration(colors),
+    child: Column(
+      children: [
+        Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
+        const SizedBox(height: _spacingMedium),
+        Text(
+          AppLocalizations.of(context).translate('no_emergency_contacts'),
+          style: TextStyle(
+              color: colors.primary300,
+              fontSize: 16,
+              fontWeight: FontWeight.w500),
         ),
-      );
+        const SizedBox(height: _spacingSmall),
+        Text(
+          AppLocalizations.of(context).translate('add_contacts_help'),
+          textAlign: TextAlign.center,
+          style: TextStyle(color: colors.text200),
+        ),
+        const SizedBox(height: _spacingMedium),
+        ElevatedButton(
+          onPressed: () => _showAddContactDialog(
+              Provider.of<UserInformationService>(context, listen: false),
+              colors),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: colors.accent200,
+              foregroundColor: colors.bg100),
+          child:
+          Text(AppLocalizations.of(context).translate('add_contact')),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildEmergencyContact(EmergencyContact contact, int index,
-          UserInformationService userInformation, AppColorTheme colors) =>
+      UserInformationService userInformation, AppColorTheme colors) =>
       Container(
         decoration: _cardDecoration(colors),
         padding: const EdgeInsets.all(_padding),
@@ -393,34 +391,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
 
-  Widget _buildSettingsSection(AppColorTheme colors) {
-    final settings = [
-      SettingItem(
-        icon: Icons.shield_outlined,
-        title: AppLocalizations.of(context).translate('privacy'),
-        onTap: () => _navigateTo(const Placeholder()),
-      ),
-      SettingItem(
-        icon: Icons.help_outline,
-        title: AppLocalizations.of(context).translate('help_support'),
-        onTap: () => _navigateTo(const Placeholder()),
-      ),
-      SettingItem(
-        icon: Icons.logout,
-        title: AppLocalizations.of(context).translate('logout'),
-        onTap: () => _showLogoutDialog(colors),
-      ),
-    ];
-
-    return Column(
-      children: settings
-          .map((setting) => Padding(
-                padding: const EdgeInsets.only(bottom: _spacingMedium),
-                child: _buildSettingItem(setting, colors),
-              ))
-          .toList(),
-    );
-  }
+  Widget _buildSettingsSection(
+      UserInformationService userInformation, AppColorTheme colors) =>
+      Column(
+        children: [
+          _buildSettingItem(
+            SettingItem(
+              icon: Icons.shield_outlined,
+              title: AppLocalizations.of(context).translate('privacy'),
+              onTap: () => _navigateTo(const Placeholder()),
+            ),
+            colors,
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildSettingItem(
+            SettingItem(
+              icon: Icons.help_outline,
+              title: AppLocalizations.of(context).translate('help_support'),
+              onTap: () => _navigateTo(const Placeholder()),
+            ),
+            colors,
+          ),
+          const SizedBox(height: _spacingMedium),
+          _buildSettingItem(
+            SettingItem(
+              icon: Icons.logout,
+              title: AppLocalizations.of(context).translate('logout'),
+              onTap: () => _showLogoutDialog(userInformation, colors),
+            ),
+            colors,
+          ),
+        ],
+      );
 
   Widget _buildSettingItem(SettingItem setting, AppColorTheme colors) =>
       GestureDetector(
@@ -470,43 +472,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final status = await Permission.photos.request();
 
     if (status.isGranted) {
-      try {
-        final picker = ImagePicker();
-        final pickedFile = await picker.pickImage(
-          source: source,
-          maxWidth: 800,
-          maxHeight: 800,
-          imageQuality: 85,
-        );
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
 
-        if (pickedFile == null) return;
-
-        if (mounted) {
-          _showLoadingDialog(colors, 'uploading_photo');
-        }
-
+      if (pickedFile != null) {
         await userInformation.updateProfilePhoto(pickedFile.path);
-        if (mounted) {
-          Navigator.pop(context); // Close loading dialog
-          _showSnackBar(
-              AppLocalizations.of(context).translate('profile_photo_updated'),
-              colors.accent200);
-        }
-      } catch (e) {
-        if (mounted) {
-          Navigator.pop(context);
-          _showSnackBar(
-              AppLocalizations.of(context)
-                  .translate('photo_update_failed', {'error': e.toString()}),
-              colors.warning);
-        }
       }
     } else if (status.isDenied || status.isPermanentlyDenied) {
-      if (mounted) {
-        _showSnackBar(
-            AppLocalizations.of(context).translate('permission_denied'),
-            colors.warning);
-      }
+      _showSnackBar(
+          AppLocalizations.of(context).translate('permission_denied'),
+          colors.warning);
     }
   }
 
@@ -527,19 +507,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: Text(
                   AppLocalizations.of(context).translate('choose_gallery'),
                   style: TextStyle(color: colors.text100)),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery, userInformation, colors);
-              },
+              onTap: () => _pickImage(ImageSource.gallery, userInformation, colors),
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: colors.accent200),
               title: Text(AppLocalizations.of(context).translate('take_photo'),
                   style: TextStyle(color: colors.text100)),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera, userInformation, colors);
-              },
+              onTap: () => _pickImage(ImageSource.camera, userInformation, colors),
             ),
           ],
         ),
@@ -569,8 +543,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
-            onPressed: () => _addContact(userInformation, nameController,
-                relationController, phoneController, colors),
+            onPressed: () async {
+              if (_validateInputs(
+                  nameController, relationController, phoneController, colors)) {
+                final newContact = EmergencyContact(
+                  name: nameController.text.trim(),
+                  relation: relationController.text.trim(),
+                  phone: phoneController.text.trim(),
+                );
+                await userInformation.addEmergencyContact(newContact);
+                Navigator.pop(context);
+              }
+            },
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent200,
                 foregroundColor: colors.bg100),
@@ -579,39 +563,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _addContact(
-    UserInformationService userInformation,
-    TextEditingController nameController,
-    TextEditingController relationController,
-    TextEditingController phoneController,
-    AppColorTheme colors,
-  ) async {
-    if (!_validateInputs(
-        nameController, relationController, phoneController, colors)) return;
-
-    final contact = EmergencyContact(
-      name: nameController.text.trim(),
-      relation: relationController.text.trim(),
-      phone: phoneController.text.trim(),
-    );
-
-    try {
-      await userInformation.addEmergencyContact(contact);
-      if (mounted) {
-        Navigator.pop(context);
-        _showSnackBar(AppLocalizations.of(context).translate('contact_added'),
-            colors.accent200);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar(
-            AppLocalizations.of(context)
-                .translate('contact_add_failed', {'error': e.toString()}),
-            colors.warning);
-      }
-    }
   }
 
   void _showEditContactDialog(EmergencyContact contact, int index,
@@ -642,8 +593,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
-            onPressed: () => _updateContact(userInformation, nameController,
-                relationController, phoneController, index, colors),
+            onPressed: () async {
+              if (_validateInputs(
+                  nameController, relationController, phoneController, colors)) {
+                final updatedContact = EmergencyContact(
+                  name: nameController.text.trim(),
+                  relation: relationController.text.trim(),
+                  phone: phoneController.text.trim(),
+                );
+                Navigator.pop(context);
+                await userInformation.updateEmergencyContact(index, updatedContact);
+              }
+            },
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent200,
                 foregroundColor: colors.bg100),
@@ -652,40 +613,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _updateContact(
-    UserInformationService userInformation,
-    TextEditingController nameController,
-    TextEditingController relationController,
-    TextEditingController phoneController,
-    int index,
-    AppColorTheme colors,
-  ) async {
-    if (!_validateInputs(
-        nameController, relationController, phoneController, colors)) return;
-
-    final updatedContact = EmergencyContact(
-      name: nameController.text.trim(),
-      relation: relationController.text.trim(),
-      phone: phoneController.text.trim(),
-    );
-
-    try {
-      await userInformation.updateEmergencyContact(index, updatedContact);
-      if (mounted) {
-        Navigator.pop(context);
-        _showSnackBar(AppLocalizations.of(context).translate('contact_updated'),
-            colors.accent200);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar(
-            AppLocalizations.of(context)
-                .translate('contact_update_failed', {'error': e.toString()}),
-            colors.warning);
-      }
-    }
   }
 
   void _showDeleteConfirmationDialog(EmergencyContact contact, int index,
@@ -708,7 +635,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: colors.text200)),
           ),
           ElevatedButton(
-            onPressed: () => _deleteContact(index, userInformation, colors),
+            onPressed: () async {
+              await userInformation.deleteEmergencyContact(index);
+              Navigator.pop(context); // Close confirmation dialog
+              Navigator.pop(context); // Close edit dialog
+            },
             style: ElevatedButton.styleFrom(
                 backgroundColor: colors.warning, foregroundColor: colors.bg100),
             child: Text(AppLocalizations.of(context).translate('delete')),
@@ -718,30 +649,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _deleteContact(int index, UserInformationService userInformation,
-      AppColorTheme colors) async {
-    try {
-      await userInformation.deleteEmergencyContact(index);
-      if (mounted) {
-        Navigator.pop(context); // Close confirmation dialog
-        Navigator.pop(context); // Close edit dialog
-        _showSnackBar(AppLocalizations.of(context).translate('contact_deleted'),
-            colors.accent200);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar(
-            AppLocalizations.of(context)
-                .translate('contact_delete_failed', {'error': e.toString()}),
-            colors.warning);
-      }
-    }
-  }
-
-  void _showLogoutDialog(AppColorTheme colors) {
-    final userInformation =
-        Provider.of<UserInformationService>(context, listen: false);
-
+  void _showLogoutDialog(
+      UserInformationService userInformation, AppColorTheme colors) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -759,25 +668,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await userInformation.logout();
-                if (mounted) {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  Navigator.pop(context);
-                  _showSnackBar(
-                    AppLocalizations.of(context)
-                        .translate('logout_failed', {'error': e.toString()}),
-                    colors.warning,
-                  );
-                }
+              await userInformation.logout();
+              if (mounted) {
+                Navigator.pop(dialogContext);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                );
               }
             },
             style: ElevatedButton.styleFrom(
@@ -790,11 +688,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildContactForm(
-    AppColorTheme colors,
-    TextEditingController nameController,
-    TextEditingController relationController,
-    TextEditingController phoneController,
-  ) =>
+      AppColorTheme colors,
+      TextEditingController nameController,
+      TextEditingController relationController,
+      TextEditingController phoneController,
+      ) =>
       Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -835,11 +733,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   bool _validateInputs(
-    TextEditingController nameController,
-    TextEditingController relationController,
-    TextEditingController phoneController,
-    AppColorTheme colors,
-  ) {
+      TextEditingController nameController,
+      TextEditingController relationController,
+      TextEditingController phoneController,
+      AppColorTheme colors,
+      ) {
     if (nameController.text.trim().isEmpty ||
         relationController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty) {
@@ -851,28 +749,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return true;
   }
 
-  void _showLoadingDialog(AppColorTheme colors, String messageKey) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: colors.bg100,
-        content: Row(
-          children: [
-            CircularProgressIndicator(color: colors.accent200),
-            const SizedBox(width: 20),
-            Text(AppLocalizations.of(context).translate(messageKey),
-                style: TextStyle(color: colors.text100)),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildLoadingOverlay(AppColorTheme colors) => Container(
-        color: Colors.black.withOpacity(0.5),
-        child: const Center(child: CircularProgressIndicator()),
-      );
+    color: Colors.black.withOpacity(0.5),
+    child: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(color: colors.accent200),
+          const SizedBox(height: 16),
+          Text(
+            AppLocalizations.of(context).translate('loading'),
+            style: TextStyle(color: colors.bg100),
+          ),
+        ],
+      ),
+    ),
+  );
 
   void _showSnackBar(String message, Color backgroundColor) {
     if (mounted) {

@@ -445,6 +445,11 @@ class UserInformationService with ChangeNotifier {
     _isLoading = false;
   }
 
+  /// Explicitly set loading state
+  void setLoading(bool loading) {
+    _setLoading(loading);
+  }
+
   /// Helper method to set loading state
   void _setLoading(bool loading) {
     _isLoading = loading;

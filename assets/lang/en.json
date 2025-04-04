@@ -23,6 +23,8 @@
   "reset_email_sent": "If an account exists, a reset email has been sent.",
   "too_many_requests": "Too many requests. Please try again later.",
   "error_with_code": "Error: {message} (Code: {code})",
+  "signing_in": "Signing in...",
+  "sending_reset_email": "Sending reset email...",
 
 
 
@@ -155,6 +157,10 @@
   "photo_update_failed": "Failed to update photo: {error}",
   "delete_contact_confirmation": "Are you sure you want to delete {name}?",
   "logout_confirmation": "Are you sure you want to logout?",
+  "uploading_photo": "Uploading photo...",
+  "logging_out": "Logging out...",
+  "refresh_successful": "Profile refreshed successfully",
+  "refresh_failed": "Failed to refresh profile",
 
 
 
@@ -394,6 +400,7 @@
 
 
 
+  "cpr_guide_screen": "cpr_guide_screen.dart",
   "cpr_guide": "CPR Guide",
   "call_emergency_services": "Call Emergency Services First!",
   "call_before_cpr": "Before starting CPR, ensure help is on the way",
@@ -432,6 +439,7 @@
 
 
 
+  "first_aid_guide_screen": "first_aid_guide_screen.dart",
   "first_aid_guide": "First Aid Guide",
   "emergency_actions": "Emergency Actions",
   "quick_response": "Quick Response",
@@ -452,6 +460,7 @@
 
 
 
+  "first_aid_kit_screen": "first_aid_kit_screen.dart",
   "first_aid_kit_checklist": "First Aid Kit Checklist",
   "essential_kit_maintenance": "Essential Kit Maintenance",
   "check_items_quantity": "Check items you have and enter quantities",
@@ -498,6 +507,7 @@
 
 
 
+  "fractures_guide_screen": "fractures_guide_screen.dart",
   "fractures_sprains": "Fractures & Sprains",
   "initial_assessment": "Initial Assessment",
   "look_for_signs": "Look for Signs",
@@ -541,7 +551,8 @@
 
 
 
-
+  
+  "emergency_kit_screen": "emergency_kit_screen.dart",
   "emergency_kit_checklist": "Emergency Kit Checklist",
   "reset_to_defaults": "Reset to defaults",
   "your_progress": "Your Progress",
@@ -591,6 +602,7 @@
 
 
 
+  "fire_guide_screen": "fire_guide_screen.dart",
   "fire_safety_guide": "Fire Safety Guide",
   "back": "Back",
   "fire_warning": "Fire Warning",
@@ -642,6 +654,7 @@
 
 
 
+  "flood_guide_screen": "flood_guide_screen.dart",
   "flood_safety_guide": "Flood Safety Guide",
   "back": "Back",
   "flood_warning": "Flood Warning",
@@ -695,6 +708,7 @@
 
 
 
+  "earthquake_guide_screen": "earthquake_guide_screen.dart",
   "earthquake_safety": "Earthquake Safety",
   "back": "Back",
   "earthquake_warning": "Earthquake Warning",
@@ -749,6 +763,7 @@
 
 
 
+  "haze_guide_screen": "haze_guide_screen.dart",
   "haze_safety_guide": "Haze Safety Guide",
   "back": "Back",
   "haze_warning": "Haze Warning",
@@ -800,6 +815,7 @@
 
 
 
+  "heavy_rain_guide_screen": "heavy_rain_guide_screen.dart",
   "heavy_rain_safety_guide": "Heavy Rain Safety Guide",
   "back": "Back",
   "safety_alert": "Safety Alert",
@@ -856,6 +872,7 @@
 
 
 
+  "landslide_guide_screen": "landslide_guide_screen.dart",
   "landslide_safety_guide": "Landslide Safety Guide",
   "back": "Back",
   "landslide_warning": "Landslide Warning",
@@ -909,6 +926,7 @@
 
 
 
+  "emergency_contacts_screen": "emergency_contacts_screen.dart",
   "emergency_contacts": "Emergency Contacts",
   "back": "Back",
   "emergency_numbers": "Emergency Numbers",
@@ -929,6 +947,7 @@
 
 
 
+  "preparation_guide_screen": "preparation_guide_screen.dart",
   "preparation_guides": "Preparation Guides",
   "back": "Back",
   "featured_guide": "Featured Guide",
@@ -948,6 +967,7 @@
 
 
 
+  "home_safety_checklist_screen": "home_safety_checklist_screen.dart",
   "home_safety_checklist": "Home Safety Checklist",
   "back": "Back",
   "reset_to_defaults": "Reset to defaults",
@@ -1001,6 +1021,7 @@
 
 
 
+  "knowledge_base_screen": "knowledge_base_screen.dart",
   "knowledge_base": "Knowledge Base",
   "back": "Back",
   "featured_guide": "Featured Guide",
@@ -1053,6 +1074,7 @@
 
 
 
+  "map_screen": "map_screen.dart",
   "search_location": "Search location",
   "sos": "SOS",
   "disasters": "Disasters",

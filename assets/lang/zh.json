@@ -23,6 +23,8 @@
   "reset_email_sent": "如果账户存在，重置电子邮件已发送。",
   "too_many_requests": "请求过多。请稍后再试。",
   "error_with_code": "错误：{message}（代码：{code}）",
+  "signing_in": "正在登录...",
+  "sending_reset_email": "正在发送重置邮件...",
 
 
 
@@ -153,6 +155,10 @@
   "photo_update_failed": "更新照片失败: {error}",
   "delete_contact_confirmation": "您确定要删除 {name} 吗？",
   "logout_confirmation": "您确定要登出吗？",
+  "uploading_photo": "正在上传照片...",
+  "logging_out": "正在登出...",
+  "refresh_successful": "个人资料刷新成功",
+  "refresh_failed": "刷新个人资料失败",
 
 
 
@@ -393,6 +399,7 @@
 
 
 
+  "cpr_guide_screen": "cpr_guide_screen.dart",
   "cpr_guide": "心肺复苏指南",
   "call_emergency_services": "先拨打紧急服务电话！",
   "call_before_cpr": "在开始心肺复苏前，确保救援正在路上",
@@ -431,6 +438,7 @@
 
 
 
+  "first_aid_guide_screen": "first_aid_guide_screen.dart",
   "first_aid_guide": "急救指南",
   "emergency_actions": "紧急行动",
   "quick_response": "快速反应",
@@ -451,6 +459,7 @@
 
 
 
+  "first_aid_kit_screen": "first_aid_kit_screen.dart",
   "first_aid_kit_checklist": "急救包清单",
   "essential_kit_maintenance": "基本套件维护",
   "check_items_quantity": "检查您拥有的物品并输入数量",
@@ -496,7 +505,7 @@
 
 
 
-
+  "fractures_guide_screen": "fractures_guide_screen.dart",
   "fractures_sprains": "骨折与扭伤",
   "initial_assessment": "初步评估",
   "look_for_signs": "观察迹象",
@@ -547,6 +556,7 @@
 
 
 
+  "emergency_kit_screen": "emergency_kit_screen.dart",
   "emergency_kit_checklist": "紧急装备清单",
   "reset_to_defaults": "重置为默认",
   "your_progress": "您的进度",
@@ -596,6 +606,7 @@
 
 
 
+  "fire_guide_screen": "fire_guide_screen.dart",
   "fire_safety_guide": "消防安全指南",
   "back": "返回",
   "fire_warning": "火灾警告",
@@ -647,6 +658,7 @@
 
 
 
+  "flood_guide_screen": "flood_guide_screen.dart",
   "flood_safety_guide": "洪水安全指南",
   "back": "返回",
   "flood_warning": "洪水警告",
@@ -700,6 +712,7 @@
 
 
 
+  "earthquake_guide_screen": "earthquake_guide_screen.dart",
   "earthquake_safety": "地震安全",
   "back": "返回",
   "earthquake_warning": "地震警告",
@@ -754,6 +767,7 @@
 
 
 
+  "haze_guide_screen": "haze_guide_screen.dart",
   "haze_safety_guide": "雾霾安全指南",
   "back": "返回",
   "haze_warning": "雾霾警告",
@@ -805,6 +819,7 @@
 
 
 
+  "heavy_rain_guide_screen": "heavy_rain_guide_screen.dart",
   "heavy_rain_safety_guide": "暴雨安全指南",
   "back": "返回",
   "safety_alert": "安全警报",
@@ -861,6 +876,7 @@
 
 
 
+  "landslide_guide_screen": "landslide_guide_screen.dart",
   "landslide_safety_guide": "山体滑坡安全指南",
   "back": "返回",
   "landslide_warning": "山体滑坡警告",
@@ -914,6 +930,7 @@
 
 
 
+  "emergency_contacts_screen": "emergency_contacts_screen.dart",
   "emergency_contacts": "紧急联系方式",
   "back": "返回",
   "emergency_numbers": "紧急号码",
@@ -933,6 +950,7 @@
 
 
 
+  "preparation_guide_screen": "preparation_guide_screen.dart",
   "preparation_guides": "准备指南",
   "back": "返回",
   "featured_guide": "特色指南",
@@ -952,6 +970,7 @@
 
 
 
+  "home_safety_checklist_screen": "home_safety_checklist_screen.dart",
   "home_safety_checklist": "家庭安全检查清单",
   "back": "返回",
   "reset_to_defaults": "重置为默认",
@@ -1005,6 +1024,7 @@
 
 
 
+  "knowledge_base_screen": "knowledge_base_screen.dart",
   "knowledge_base": "知识库",
   "back": "返回",
   "featured_guide": "特色指南",
@@ -1057,6 +1077,7 @@
 
 
 
+  "map_screen": "map_screen.dart",
   "search_location": "搜索位置",
   "sos": "SOS",
   "disasters": "灾难",

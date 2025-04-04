@@ -153,6 +153,12 @@
   "photo_update_failed": "Gagal mengemas kini gambar: {error}",
   "delete_contact_confirmation": "Adakah anda pasti mahu memadam {name}?",
   "logout_confirmation": "Adakah anda pasti mahu log keluar?",
+  "uploading_photo": "Memuat naik gambar...",
+  "logging_out": "Sedang log keluar...",
+  "signing_in": "Sedang log masuk...",
+  "sending_reset_email": "Menghantar e-mel tetapan semula...",
+  "refresh_successful": "Profil berjaya dikemas kini",
+  "refresh_failed": "Gagal mengemas kini profil",
 
 
 
@@ -393,6 +399,7 @@
 
 
 
+  "cpr_guide_screen": "cpr_guide_screen.dart",
   "cpr_guide": "Panduan CPR",
   "call_emergency_services": "Panggil Perkhidmatan Kecemasan Dahulu!",
   "call_before_cpr": "Sebelum memulakan CPR, pastikan bantuan sedang dalam perjalanan",
@@ -431,6 +438,7 @@
 
 
 
+  "first_aid_guide_screen": "first_aid_guide_screen.dart",
   "first_aid_guide": "Panduan Pertolongan Cemas",
   "emergency_actions": "Tindakan Kecemasan",
   "quick_response": "Tindak Balas Pantas",
@@ -451,6 +459,7 @@
 
 
 
+  "first_aid_kit_screen": "first_aid_kit_screen.dart",
   "first_aid_kit_checklist": "Senarai Semak Kit Pertolongan Cemas",
   "essential_kit_maintenance": "Penyelenggaraan Kit Penting",
   "check_items_quantity": "Semak item yang anda ada dan masukkan kuantiti",
@@ -497,6 +506,7 @@
 
 
 
+  "fractures_guide_screen": "fractures_guide_screen.dart",
   "fractures_sprains": "Patah & Terkilir",
   "initial_assessment": "Penilaian Awal",
   "look_for_signs": "Cari Tanda-tanda",
@@ -547,6 +557,7 @@
 
 
 
+  "emergency_kit_screen": "emergency_kit_screen.dart",
   "emergency_kit_checklist": "Senarai Semak Kit Kecemasan",
   "reset_to_defaults": "Tetapkan semula kepada lalai",
   "your_progress": "Kemajuan Anda",
@@ -596,6 +607,7 @@
 
 
 
+  "fire_guide_screen": "fire_guide_screen.dart",
   "fire_safety_guide": "Panduan Keselamatan Kebakaran",
   "back": "Kembali",
   "fire_warning": "Amaran Kebakaran",
@@ -647,6 +659,7 @@
 
 
 
+  "flood_guide_screen": "flood_guide_screen.dart",
   "flood_safety_guide": "Panduan Keselamatan Banjir",
   "back": "Kembali",
   "flood_warning": "Amaran Banjir",
@@ -700,6 +713,7 @@
 
 
 
+  "earthquake_guide_screen": "earthquake_guide_screen.dart",
   "earthquake_safety": "Keselamatan Gempa Bumi",
   "back": "Kembali",
   "earthquake_warning": "Amaran Gempa Bumi",
@@ -754,6 +768,7 @@
 
 
 
+  "haze_guide_screen": "haze_guide_screen.dart",
   "haze_safety_guide": "Panduan Keselamatan Jerebu",
   "back": "Kembali",
   "haze_warning": "Amaran Jerebu",
@@ -805,6 +820,7 @@
 
 
 
+  "heavy_rain_guide_screen": "heavy_rain_guide_screen.dart",
   "heavy_rain_safety_guide": "Panduan Keselamatan Hujan Lebat",
   "back": "Kembali",
   "safety_alert": "Amaran Keselamatan",
@@ -861,6 +877,7 @@
 
 
 
+  "landslide_guide_screen": "landslide_guide_screen.dart",
   "landslide_safety_guide": "Panduan Keselamatan Tanah Runtuh",
   "back": "Kembali",
   "landslide_warning": "Amaran Tanah Runtuh",
@@ -914,6 +931,7 @@
 
 
 
+  "emergency_contacts_screen": "emergency_contacts_screen.dart",
   "emergency_contacts": "Kenalan Kecemasan",
   "back": "Kembali",
   "emergency_numbers": "Nombor Kecemasan",
@@ -933,6 +951,7 @@
 
 
 
+  "preparation_guide_screen": "preparation_guide_screen.dart",
   "preparation_guides": "Panduan Persediaan",
   "back": "Kembali",
   "featured_guide": "Panduan Utama",
@@ -952,6 +971,7 @@
 
 
 
+  "home_safety_checklist_screen": "home_safety_checklist_screen.dart",
   "home_safety_checklist": "Senarai Semak Keselamatan Rumah",
   "back": "Kembali",
   "reset_to_defaults": "Tetapkan semula ke lalai",
@@ -1005,6 +1025,7 @@
 
 
 
+  "knowledge_base_screen": "knowledge_base_screen.dart",
   "knowledge_base": "Pangkalan Pengetahuan",
   "back": "Kembali",
   "featured_guide": "Panduan Utama",
@@ -1057,6 +1078,7 @@
 
 
   
+  "map_screen": "map_screen.dart",
   "search_location": "Cari lokasi",
   "sos": "SOS",
   "disasters": "Bencana",

@@ -15,24 +15,7 @@ class BottomNavContainer extends StatefulWidget {
 }
 
 class _MainContainerScreenState extends State<BottomNavContainer> {
-  // Create a page controller
-  late PageController _pageController;
-  
-  @override
-  void initState() {
-    super.initState();
-    // Initialize the page controller
-    _pageController = PageController();
-  }
-  
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  // List of screens to display
-  final List<Widget> _screens = [
+  static final List<Widget> _screens = [
     const HomeScreen(),
     const MapScreen(),
     const CommunityScreen(),
@@ -42,27 +25,16 @@ class _MainContainerScreenState extends State<BottomNavContainer> {
   @override
   Widget build(BuildContext context) {
     final navigationService = Provider.of<NavigationService>(context);
-    
-    // Listen to navigation service changes and update page controller
-    if (_pageController.hasClients && 
-        navigationService.currentIndex != _pageController.page?.round()) {
-      _pageController.jumpToPage(navigationService.currentIndex);
-    }
+    final currentIndex = navigationService.currentIndex;
     
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(), // Disable swiping
+      body: IndexedStack(
+        index: currentIndex,
         children: _screens,
-        onPageChanged: (index) {
-          // Update the navigation service when page changes
-          navigationService.changeIndex(index);
-        },
       ),
       bottomNavigationBar: BottomNavBar(
         onTap: (index) {
-          // When nav bar is tapped, change page
-          _pageController.jumpToPage(index);
+          navigationService.changeIndex(index);
         },
       ),
     );

@@ -21,41 +21,9 @@ class NavigationService extends ChangeNotifier {
 
   // Method to change the current index
   void changeIndex(int index) {
-    if (index != _currentIndex) {
+    if (index >= 0 && index < routes.length) {
       _currentIndex = index;
       notifyListeners();
-    }
-  }
-
-  // Get screen name based on index
-  String getScreenName(int index) {
-    switch (index) {
-      case 0:
-        return 'Home';
-      case 1:
-        return 'Map';
-      case 2:
-        return 'Community';
-      case 3:
-        return 'Profile';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  // Get icon data based on index
-  IconData getScreenIcon(int index) {
-    switch (index) {
-      case 0:
-        return Icons.home;
-      case 1:
-        return Icons.map_outlined;
-      case 2:
-        return Icons.people_outline;
-      case 3:
-        return Icons.person_outline;
-      default:
-        return Icons.error;
     }
   }
 
@@ -74,33 +42,67 @@ class NavigationService extends ChangeNotifier {
       {bool replace = false}) {
     if (index >= 0 && index < routes.length) {
       changeIndex(index);
-
-      // Create the appropriate screen based on index
-      Widget screen;
-      switch (index) {
-        case 0:
-          screen = const HomeScreen();
-          break;
-        case 1:
-          screen = const MapScreen();
-          break;
-        case 2:
-          screen = const CommunityScreen();
-          break;
-        case 3:
-          screen = const ProfileScreen();
-          break;
-        default:
-          return;
-      }
-
-      // Navigate using MaterialPageRoute instead of named routes
       if (replace) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => screen));
+        Navigator.pushReplacementNamed(context, routes[index]);
       } else {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+        Navigator.pushNamed(context, routes[index]);
       }
+    }
+  }
+
+  // Get the route name for a specific index
+  String getRouteForIndex(int index) {
+    if (index >= 0 && index < routes.length) {
+      return routes[index];
+    }
+    return routes[0]; // Default to home
+  }
+
+  // Get the widget for a specific index
+  Widget getScreenForIndex(int index) {
+    switch (index) {
+      case 0:
+        return const HomeScreen();
+      case 1:
+        return const MapScreen();
+      case 2:
+        return const CommunityScreen();
+      case 3:
+        return const ProfileScreen();
+      default:
+        return const HomeScreen();
+    }
+  }
+  
+  // Get the name for a specific screen index
+  String getScreenName(int index) {
+    switch (index) {
+      case 0:
+        return 'Home';
+      case 1:
+        return 'Map';
+      case 2:
+        return 'Community';
+      case 3:
+        return 'Profile';
+      default:
+        return 'Home';
+    }
+  }
+  
+  // Get the icon for a specific screen index
+  IconData getScreenIcon(int index) {
+    switch (index) {
+      case 0:
+        return Icons.home;
+      case 1:
+        return Icons.map;
+      case 2:
+        return Icons.people;
+      case 3:
+        return Icons.person;
+      default:
+        return Icons.home;
     }
   }
 }

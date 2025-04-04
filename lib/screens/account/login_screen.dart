@@ -64,19 +64,74 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Column(
-              children: [
-                _buildHeader(themeProvider, colors, languageService),
-                _buildContent(colors, localizations),
-              ],
-            ),
-            if (_isLoading) _buildLoadingOverlay(colors),
+            _buildHeader(themeProvider, colors, languageService),
+            _buildContent(colors, localizations),
           ],
         ),
       ),
     );
+  }
+
+  /// Handles the sign-in process with Firebase Authentication.
+  Future<void> _signIn(BuildContext context) async {
+    final localizations = AppLocalizations.of(context);
+    final userService =
+        Provider.of<UserInformationService>(context, listen: false);
+    final colors =
+        Provider.of<ThemeProvider>(context, listen: false).currentTheme;
+
+    setState(() => _isLoading = true);
+    _showSnackBar(
+        context, localizations.translate('signing_in'), colors.accent200);
+
+    try {
+      final credential = await userService.loginUser(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      debugPrint('User signed in with UID: ${credential.user?.uid}');
+      if (mounted) {
+        _navigateTo(context, const BottomNavContainer(), replace: true);
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, _mapErrorToMessage(e, localizations));
+      debugPrint('Sign-in error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Handles the password reset process.
+  Future<void> _resetPassword(BuildContext context) async {
+    final localizations = AppLocalizations.of(context);
+    final userService =
+        Provider.of<UserInformationService>(context, listen: false);
+    final colors =
+        Provider.of<ThemeProvider>(context, listen: false).currentTheme;
+    final email = _emailController.text.trim();
+
+    if (!_isValidEmail(email)) {
+      _showErrorSnackBar(context, localizations.translate('enter_valid_email'));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    _showSnackBar(context, localizations.translate('sending_reset_email'),
+        colors.accent200);
+
+    try {
+      await userService.resetPassword(email);
+      if (mounted) {
+        _showSnackBar(context, localizations.translate('reset_email_sent'),
+            colors.accent200);
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, _mapErrorToMessage(e, localizations));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   /// Builds the header with theme toggle and language selector.
@@ -383,59 +438,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isFormValid() =>
       _emailController.text.trim().isNotEmpty &&
       _passwordController.text.isNotEmpty;
-
-  /// Handles the sign-in process with Firebase Authentication.
-  Future<void> _signIn(BuildContext context) async {
-    final localizations = AppLocalizations.of(context);
-    final userService =
-        Provider.of<UserInformationService>(context, listen: false);
-
-    setState(() => _isLoading = true);
-    try {
-      final credential = await userService.loginUser(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      debugPrint('User signed in with UID: ${credential.user?.uid}');
-      if (mounted)
-        _navigateTo(context, const BottomNavContainer(), replace: true);
-    } catch (e) {
-      _showErrorSnackBar(context, _mapErrorToMessage(e, localizations));
-      debugPrint('Sign-in error: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  /// Handles the password reset process.
-  Future<void> _resetPassword(BuildContext context) async {
-    final localizations = AppLocalizations.of(context);
-    final userService =
-        Provider.of<UserInformationService>(context, listen: false);
-    final email = _emailController.text.trim();
-    final colors =
-        Provider.of<ThemeProvider>(context, listen: false).currentTheme;
-
-    if (!_isValidEmail(email)) {
-      _showErrorSnackBar(context, localizations.translate('enter_valid_email'));
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      await userService.resetPassword(email);
-      debugPrint('Reset email sent to: $email');
-      if (mounted) {
-        _showSnackBar(context, localizations.translate('reset_email_sent'),
-            colors.accent200);
-      }
-    } catch (e) {
-      _showErrorSnackBar(context, _mapErrorToMessage(e, localizations));
-      debugPrint('Reset password error: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   /// Maps FirebaseAuthException codes to localized messages for sign-in.
   String _mapErrorToMessage(dynamic e, AppLocalizations localizations) {

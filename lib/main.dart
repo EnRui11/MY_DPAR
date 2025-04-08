@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
+import 'package:mydpar/screens/officer/services/officer_nav_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
 import 'package:mydpar/services/cpr_audio_service.dart';
@@ -25,7 +26,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseInitializer.initialize();
   await PermissionRequester.requestInitial();
-  
+
   // Request notification permissions
   await _requestNotificationPermissions();
 
@@ -45,14 +46,14 @@ Future<void> _requestNotificationPermissions() async {
       sound: true,
       provisional: false,
     );
-    
+
     // Set up foreground notification presentation options
     await messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
-    
+
     debugPrint('Notification permissions requested');
   } catch (e) {
     debugPrint('Error requesting notification permissions: $e');
@@ -104,6 +105,7 @@ class MyDPARApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DisasterService()),
         ChangeNotifierProvider(create: (_) => NavigationService()),
         ChangeNotifierProvider(create: (_) => LanguageService()),
+        ChangeNotifierProvider(create: (_) => OfficerNavigationService()),
       ],
       child: const AppThemeWrapper(),
     );
@@ -254,16 +256,16 @@ class AuthWrapper extends StatelessWidget {
           debugPrint('Failed to update FCM token: $e');
         });
       }
-      
+
       if (!sosService.isInitialized) {
         sosService.checkActiveAlert(context);
       }
-      
+
       // Set up FCM token refresh listener
       _setupFcmTokenRefreshListener(userService);
     });
   }
-  
+
   void _setupFcmTokenRefreshListener(UserInformationService userService) {
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       debugPrint('FCM token refreshed, updating in Firestore');

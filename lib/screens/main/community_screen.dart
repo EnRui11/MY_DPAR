@@ -99,7 +99,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
           children: [
             Column(
               children: [
-                _buildHeader(context, colors),
                 _buildContent(context, colors),
               ],
             ),
@@ -138,19 +137,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
       MaterialPageRoute(builder: (context) => screen),
     );
   }
-
-  Widget _buildHeader(BuildContext context, AppColorTheme colors) => Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: _paddingValue, vertical: _paddingValue),
-        child: Text(
-          'Community',
-          style: TextStyle(
-            color: colors.primary300,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
 
   Widget _buildContent(BuildContext context, AppColorTheme colors) => Expanded(
         child: SingleChildScrollView(

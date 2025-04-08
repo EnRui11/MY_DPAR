@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mydpar/screens/officer/screens/officer_dashboard_screen.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
@@ -415,8 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SettingItem(
                 icon: Icons.supervised_user_circle,
                 title: AppLocalizations.of(context).translate('officer_panel'),
-                onTap: () =>
-                    _navigateTo(const Placeholder()), // Create this screen
+                onTap: () => _navigateTo(const OfficerDashboardScreen()),
               ),
               colors,
             ),

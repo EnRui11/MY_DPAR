@@ -395,42 +395,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       );
 
-  /// Builds the loading overlay for async operations.
-  Widget _buildLoadingOverlay(AppColorTheme colors) => Container(
-        color: Colors.black.withOpacity(0.5),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: colors.bg100,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  'Signing in...',
-                  style: TextStyle(
-                    color: colors.text100,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
   /// Builds a field label with consistent styling.
   Widget _buildFieldLabel(String text, AppColorTheme colors) => Text(
         text,

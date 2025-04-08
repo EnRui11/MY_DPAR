@@ -16,6 +16,7 @@ class UserRegistrationData {
   final String password;
   final String phoneNumber;
   final List<EmergencyContact> emergencyContacts;
+  final String role;
 
   const UserRegistrationData({
     required this.firstName,
@@ -24,6 +25,7 @@ class UserRegistrationData {
     required this.password,
     required this.phoneNumber,
     this.emergencyContacts = const [],
+    this.role = 'normal',
   });
 
   /// Converts the user data to a JSON map for Firestore.
@@ -33,6 +35,7 @@ class UserRegistrationData {
         'email': email,
         'phoneNumber': phoneNumber,
         'emergencyContacts': emergencyContacts.map((e) => e.toJson()).toList(),
+        'role': role,
       };
 }
 
@@ -853,6 +856,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordController.text,
         phoneNumber: _phoneNumberController.text.trim(),
         emergencyContacts: _emergencyContacts,
+        role: 'normal',
       );
 
       debugPrint('Registering user with email: ${userData.email}');
@@ -863,6 +867,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: userData.password,
         phoneNumber: userData.phoneNumber,
         emergencyContacts: userData.emergencyContacts,
+        role: userData.role,
       );
       debugPrint('User created with UID: ${credential.user?.uid}');
 

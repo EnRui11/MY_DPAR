@@ -32,7 +32,7 @@ class EmergencyContact {
       };
 }
 
-class UserInformationService with ChangeNotifier {
+class UserInformationService extends ChangeNotifier {
   String? _userId;
   String? _firstName;
   String? _lastName;
@@ -42,6 +42,7 @@ class UserInformationService with ChangeNotifier {
   List<EmergencyContact> _contacts = [];
   bool _isInitialized = false;
   bool _isLoading = false;
+  String? _role;
 
   // Private Firebase instances for better encapsulation
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -90,6 +91,8 @@ class UserInformationService with ChangeNotifier {
     }
   }
 
+  String? get role => _role;
+
   /// Loads user data from Firestore.
   Future<void> _loadUserData() async {
     if (_userId == null) return;
@@ -101,6 +104,7 @@ class UserInformationService with ChangeNotifier {
         _firstName = data['firstName'] as String?;
         _lastName = data['lastName'] as String? ?? 'User';
         _phoneNumber = data['phoneNumber'] as String?;
+        _role = data['role'] as String? ?? 'normal';
         _contacts = (data['emergencyContacts'] as List<dynamic>? ?? [])
             .map((item) =>
                 EmergencyContact.fromJson(item as Map<String, dynamic>))
@@ -113,8 +117,10 @@ class UserInformationService with ChangeNotifier {
           'email': _email,
           'phoneNumber': _phoneNumber,
           'emergencyContacts': [],
+          'role': 'normal',
         }, SetOptions(merge: true));
         _lastName ??= 'User';
+        _role = 'normal';
         _contacts = [];
       }
     } catch (e) {
@@ -142,6 +148,7 @@ class UserInformationService with ChangeNotifier {
     required String password,
     required String phoneNumber,
     List<EmergencyContact> emergencyContacts = const [],
+    String role = 'normal',
   }) async {
     _setLoading(true);
     try {
@@ -158,6 +165,7 @@ class UserInformationService with ChangeNotifier {
         'email': email,
         'phoneNumber': phoneNumber,
         'emergencyContacts': emergencyContacts.map((e) => e.toJson()).toList(),
+        'role': role,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -442,6 +450,7 @@ class UserInformationService with ChangeNotifier {
     _photoUrl = null;
     _email = null;
     _phoneNumber = null;
+    _role = null;
     _contacts = [];
     _isInitialized = false;
     _isLoading = false;

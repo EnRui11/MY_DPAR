@@ -76,7 +76,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       bottomNavigationBar: BottomNavBar(
         onTap: (index) {
-          if (index != 3) { // Only navigate if not already on profile screen
+          if (index != 3) {
+            // Only navigate if not already on profile screen
             navigationService.changeIndex(index);
             _navigateToScreen(index);
           }
@@ -408,6 +409,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           UserInformationService userInformation, AppColorTheme colors) =>
       Column(
         children: [
+          // Add officer button if user is an officer
+          if (userInformation.role == 'officer') ...[
+            _buildSettingItem(
+              SettingItem(
+                icon: Icons.supervised_user_circle,
+                title: AppLocalizations.of(context).translate('officer_panel'),
+                onTap: () =>
+                    _navigateTo(const Placeholder()), // Create this screen
+              ),
+              colors,
+            ),
+            const SizedBox(height: _spacingMedium),
+          ],
           _buildSettingItem(
             SettingItem(
               icon: Icons.shield_outlined,
@@ -824,7 +838,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       default:
         return;
     }
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => screen),

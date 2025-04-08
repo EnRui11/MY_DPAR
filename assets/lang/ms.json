@@ -1090,5 +1090,46 @@
   "location_permission_denied": "Kebenaran lokasi ditolak",
   "location_permission_denied_forever": "Kebenaran lokasi ditolak secara kekal",
   "unable_to_get_location": "Tidak dapat mendapatkan lokasi semasa: {error}",
-  "location_not_found": "Lokasi tidak ditemui"
+  "location_not_found": "Lokasi tidak ditemui",
+
+
+
+
+
+  "report_disaster_screen": "report_disaster_screen.dart",
+  "report_disaster": "Laporkan Bencana",
+  "back": "Kembali",
+  "disaster_type": "Jenis Bencana",
+  "select_disaster_type": "Pilih jenis bencana",
+  "heavy_rain": "Hujan Lebat",
+  "flood": "Banjir",
+  "earthquake": "Gempa Bumi",
+  "fire": "Kebakaran",
+  "landslide": "Tanah Runtuh",
+  "haze": "Jerebu",
+  "other": "Lain-lain",
+  "specify_disaster_type": "Nyatakan Jenis Bencana",
+  "specify_disaster_type_hint": "Sila nyatakan jenis bencana",
+  "severity_level": "Tahap Keparahan",
+  "low": "Rendah",
+  "medium": "Sederhana",
+  "high": "Tinggi",
+  "location": "Lokasi",
+  "description": "Penerangan",
+  "describe_disaster": "Terangkan bencana...",
+  "add_photos": "Tambah Foto",
+  "tap_to_upload_photo": "Ketuk untuk memuat naik foto",
+  "tap_to_add_more_photos": "Ketuk untuk tambah lagi foto ({count} dipilih)",
+  "submit_report": "Hantar Laporan",
+  "gallery": "Galeri",
+  "camera": "Kamera",
+  "location_services_disabled": "Perkhidmatan lokasi dilumpuhkan",
+  "location_permission_denied": "Kebenaran lokasi ditolak",
+  "location_permission_denied_forever": "Kebenaran lokasi ditolak secara kekal",
+  "disaster_updated_success": "Bencana berjaya dikemas kini!",
+  "disaster_reported_success": "Bencana baru berjaya dilaporkan!",
+  "failed_to_submit_report": "Gagal menghantar laporan: {error}",
+  "failed_to_upload_photos": "Gagal memuat naik foto: {error}",
+  "failed_to_pick_photo": "Gagal memilih foto: {error}",
+  "please_fill_in": "Sila isi: {fields}"
 }

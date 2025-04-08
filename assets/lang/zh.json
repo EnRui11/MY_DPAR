@@ -1089,5 +1089,46 @@
   "location_permission_denied": "定位权限被拒绝",
   "location_permission_denied_forever": "定位权限被永久拒绝",
   "unable_to_get_location": "无法获取当前位置：{error}",
-  "location_not_found": "未找到位置"
+  "location_not_found": "未找到位置",
+
+
+
+
+
+  "report_disaster_screen": "report_disaster_screen.dart",
+  "report_disaster": "报告灾难",
+  "back": "返回",
+  "disaster_type": "灾难类型",
+  "select_disaster_type": "选择灾难类型",
+  "heavy_rain": "暴雨",
+  "flood": "洪水",
+  "earthquake": "地震",
+  "fire": "火灾",
+  "landslide": "山体滑坡",
+  "haze": "雾霾",
+  "other": "其他",
+  "specify_disaster_type": "指定灾难类型",
+  "specify_disaster_type_hint": "请指定灾难类型",
+  "severity_level": "严重程度",
+  "low": "低",
+  "medium": "中",
+  "high": "高",
+  "location": "位置",
+  "description": "描述",
+  "describe_disaster": "描述灾难...",
+  "add_photos": "添加照片",
+  "tap_to_upload_photo": "点击上传照片",
+  "tap_to_add_more_photos": "点击添加更多照片（已选 {count} 张）",
+  "submit_report": "提交报告",
+  "gallery": "图库",
+  "camera": "相机",
+  "location_services_disabled": "定位服务已禁用",
+  "location_permission_denied": "定位权限被拒绝",
+  "location_permission_denied_forever": "定位权限被永久拒绝",
+  "disaster_updated_success": "灾难更新成功！",
+  "disaster_reported_success": "新灾难报告成功！",
+  "failed_to_submit_report": "提交报告失败：{error}",
+  "failed_to_upload_photos": "上传照片失败：{error}",
+  "failed_to_pick_photo": "选择照片失败：{error}",
+  "please_fill_in": "请填写：{fields}"
 }

@@ -14,8 +14,14 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/services/alert_notification_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
-/// Model representing a disaster report.
+const _padding = 24.0;
+const _spacingSmall = 8.0;
+const _spacingMedium = 16.0;
+const _spacingLarge = 24.0;
+const _defaultLocation = LatLng(3.1390, 101.6869);
+
 class DisasterReport {
   final String id;
   final String userId;
@@ -51,7 +57,6 @@ class DisasterReport {
     this.verifyNum,
   }) : id = id ?? _generateId(disasterType);
 
-  /// Generates a unique ID for the disaster.
   static String _generateId(String disasterType) {
     final now = DateTime.now();
     final dateStr =
@@ -63,10 +68,9 @@ class DisasterReport {
     return 'DIS_${typeStr}_${dateStr}_${timeStr}_$randomStr';
   }
 
-  /// Converts disaster type to a short form.
   static String _getDisasterTypeShortForm(String type) {
     const map = {
-      'heavy rain': 'RAIN',
+      'heavy_rain': 'RAIN',
       'flood': 'FLD',
       'earthquake': 'EQT',
       'fire': 'FIRE',
@@ -77,7 +81,6 @@ class DisasterReport {
     return map[type.toLowerCase()] ?? type.substring(0, 4).toUpperCase();
   }
 
-  /// Converts the report to a JSON map for Firestore.
   Map<String, dynamic> toJson() => {
         'id': id,
         'userId': userId,
@@ -97,9 +100,6 @@ class DisasterReport {
       };
 }
 
-// Remove DisasterReport class as we'll use DisasterModel from disaster_information_service.dart
-
-/// Screen for reporting a new disaster or updating an existing one.
 class ReportDisasterScreen extends StatefulWidget {
   const ReportDisasterScreen({super.key});
 
@@ -108,7 +108,6 @@ class ReportDisasterScreen extends StatefulWidget {
 }
 
 class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
-  // Form and state management
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _descriptionController;
   late final MapController _mapController;
@@ -124,7 +123,6 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
   bool _isLoading = false;
   bool _isLoadingLocation = false;
 
-  // Constants
   static const _disasterTypes = [
     'Heavy Rain',
     'Flood',
@@ -135,11 +133,6 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
     'Other'
   ];
   static const _severities = ['Low', 'Medium', 'High'];
-  static const _defaultLocation = LatLng(3.1390, 101.6869); // Kuala Lumpur
-  static const _padding = 24.0;
-  static const _spacingSmall = 8.0;
-  static const _spacingMedium = 16.0;
-  static const _spacingLarge = 24.0;
 
   @override
   void initState() {
@@ -157,13 +150,11 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
     super.dispose();
   }
 
-  /// Initializes timezone and caches disasters.
   Future<void> _initializeServices() async {
     await DisasterVerificationService.initializeTimeZone();
     await _verificationService.cacheDisasters();
   }
 
-  /// Updates the current location of the user.
   Future<void> _updateCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
     try {
@@ -176,16 +167,16 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
         _mapController.move(_currentLocation!, 15);
       });
     } catch (e) {
-      //_showSnackBar('Failed to get current location: $e', Colors.red);
+      // _showSnackBar('Failed to get current location: $e', Colors.red);
     } finally {
       setState(() => _isLoadingLocation = false);
     }
   }
 
-  /// Checks and requests location permissions.
   Future<bool> _checkLocationPermission() async {
+    final l = AppLocalizations.of(context);
     if (!await Geolocator.isLocationServiceEnabled()) {
-      _showSnackBar('Location services are disabled', Colors.red);
+      _showSnackBar(l.translate('location_services_disabled'), Colors.red);
       return false;
     }
 
@@ -193,20 +184,21 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        _showSnackBar('Location permission denied', Colors.red);
+        _showSnackBar(l.translate('location_permission_denied'), Colors.red);
         return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      _showSnackBar('Location permission permanently denied', Colors.red);
+      _showSnackBar(
+          l.translate('location_permission_denied_forever'), Colors.red);
       return false;
     }
     return true;
   }
 
-  /// Handles form submission by creating or updating a disaster.
   Future<void> _submitReport(AppColorTheme colors) async {
+    final l = AppLocalizations.of(context);
     if (!_isFormValid()) {
       _showValidationErrors(colors);
       return;
@@ -223,22 +215,23 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
       final disasterService =
           Provider.of<DisasterService>(context, listen: false);
 
+      // Convert display disaster type to internal type (with underscore)
+      final internalDisasterType =
+          _selectedDisasterType!.replaceAll(' ', '_').toLowerCase();
+
       if (_selectedMapLocation != null) {
         final existingDisaster =
             await _verificationService.checkExistingDisaster(
-          disasterType: _selectedDisasterType!,
+          disasterType: internalDisasterType,
           latitude: _selectedMapLocation!.latitude,
           longitude: _selectedMapLocation!.longitude,
           timestamp: timestamp,
         );
 
         if (existingDisaster != null) {
-          // Get the existing disaster from DisasterService
           final disaster =
               await disasterService.getDisasterById(existingDisaster['id']);
-
           if (disaster != null) {
-            // Update the existing disaster using DisasterService
             final updatedDisaster = disaster.copyWith(
               severity: _selectedSeverity!,
               description: _descriptionController.text,
@@ -248,11 +241,9 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
             );
 
             await disasterService.updateDisaster(updatedDisaster);
-
-            // Alert nearby users about the updated disaster
             await alertService.alertNearbyUsers(
               disasterId: existingDisaster['id'],
-              disasterType: _selectedDisasterType!,
+              disasterType: internalDisasterType,
               latitude: _selectedMapLocation!.latitude,
               longitude: _selectedMapLocation!.longitude,
               severity: _selectedSeverity!,
@@ -260,17 +251,17 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
               description: _descriptionController.text,
             );
 
-            _showSnackBar('Disaster updated successfully!', colors.accent200);
+            _showSnackBar(
+                l.translate('disaster_updated_success'), colors.accent200);
             _resetForm();
             return;
           }
         }
       }
 
-      // Create a new disaster using DisasterService
       final newDisasterId = await disasterService.createDisaster(
         userId: user.uid,
-        disasterType: _selectedDisasterType!,
+        disasterType: internalDisasterType,
         otherDisasterType: _otherDisasterType,
         severity: _selectedSeverity!,
         location: _selectedLocation!,
@@ -285,10 +276,9 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
       );
 
       if (newDisasterId != null && _selectedMapLocation != null) {
-        // Alert nearby users about the new disaster
         await alertService.alertNearbyUsers(
           disasterId: newDisasterId,
-          disasterType: _selectedDisasterType!,
+          disasterType: internalDisasterType,
           latitude: _selectedMapLocation!.latitude,
           longitude: _selectedMapLocation!.longitude,
           severity: _selectedSeverity!,
@@ -297,17 +287,19 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
         );
       }
 
-      _showSnackBar('New disaster reported successfully!', colors.accent200);
+      _showSnackBar(l.translate('disaster_reported_success'), colors.accent200);
       _resetForm();
     } catch (e) {
-      _showSnackBar('Failed to submit report: $e', colors.warning);
+      _showSnackBar(
+          l.translate('failed_to_submit_report', {'error': e.toString()}),
+          colors.warning);
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  /// Uploads selected photos to Firebase Storage.
   Future<List<String>> _uploadPhotos(AppColorTheme colors) async {
+    final l = AppLocalizations.of(context);
     try {
       return await Future.wait(_selectedPhotos.map((photo) async {
         final ref = FirebaseStorage.instance.ref().child('disaster_photos').child(
@@ -316,435 +308,603 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
         return await ref.getDownloadURL();
       }));
     } catch (e) {
-      _showSnackBar('Failed to upload photos: $e', Colors.red);
+      _showSnackBar(
+          l.translate('failed_to_upload_photos', {'error': e.toString()}),
+          Colors.red);
       return [];
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final colors = themeProvider.currentTheme;
-
+    final colors = Provider.of<ThemeProvider>(context).currentTheme;
     return Scaffold(
       backgroundColor: colors.bg200,
       body: SafeArea(
         child: Column(
           children: [
-            _buildStatusBar(colors),
-            _buildMainContent(colors),
+            _StatusBar(colors: colors),
+            _MainContent(formKey: _formKey, colors: colors),
           ],
         ),
       ),
     );
   }
+}
 
-  /// Builds the status bar with back button and title.
-  Widget _buildStatusBar(AppColorTheme colors) => Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: _spacingMedium, vertical: _spacingMedium - 4),
-        decoration: _cardDecoration(colors),
-        child: Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back, color: colors.primary300),
-              onPressed: () => Navigator.pop(context),
-            ),
-            Text(
-              'Report Disaster',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colors.primary300),
-            ),
-          ],
+class _StatusBar extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _StatusBar({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: _spacingMedium, vertical: _spacingMedium - 4),
+      decoration: _cardDecoration(colors),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.primary300),
+            onPressed: () => Navigator.pop(context),
+            tooltip: l.translate('back'),
+          ),
+          Text(
+            l.translate('report_disaster'),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MainContent extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final AppColorTheme colors;
+
+  const _MainContent({required this.formKey, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(_padding),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DisasterTypeSection(colors: colors),
+              const SizedBox(height: _spacingLarge),
+              _SeveritySection(colors: colors),
+              const SizedBox(height: _spacingLarge),
+              _LocationSection(colors: colors),
+              const SizedBox(height: _spacingLarge),
+              _DescriptionSection(colors: colors),
+              const SizedBox(height: _spacingLarge),
+              _PhotoSection(colors: colors),
+              const SizedBox(height: _spacingLarge),
+              _SubmitButton(colors: colors),
+            ],
+          ),
         ),
-      );
+      ),
+    );
+  }
+}
 
-  /// Builds the scrollable main content area.
-  Widget _buildMainContent(AppColorTheme colors) => Expanded(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(_padding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+class _DisasterTypeSection extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _DisasterTypeSection({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Label(textKey: 'disaster_type', colors: colors, isRequired: true),
+        const SizedBox(height: _spacingSmall),
+        _DisasterTypeDropdown(colors: colors),
+        if (state._selectedDisasterType == 'Other') ...[
+          const SizedBox(height: _spacingMedium),
+          _Label(
+              textKey: 'specify_disaster_type',
+              colors: colors,
+              isRequired: true),
+          const SizedBox(height: _spacingSmall),
+          _OtherDisasterField(colors: colors),
+        ],
+      ],
+    );
+  }
+}
+
+class _DisasterTypeDropdown extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _DisasterTypeDropdown({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _fieldDecoration(colors),
+      child: DropdownButtonFormField<String>(
+        value: state._selectedDisasterType,
+        decoration: const InputDecoration(
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
+          border: InputBorder.none,
+        ),
+        dropdownColor: colors.bg100,
+        style: TextStyle(color: colors.text200, fontSize: 16),
+        hint: Text(l.translate('select_disaster_type'),
+            style: TextStyle(color: colors.text200)),
+        items: _ReportDisasterScreenState._disasterTypes
+            .map((value) => DropdownMenuItem<String>(
+                  value: value,
+                  child: Row(
+                    children: [
+                      Icon(
+                          DisasterService.getDisasterIcon(
+                              _getInternalDisasterType(value)),
+                          color: colors.accent200,
+                          size: 20),
+                      const SizedBox(width: 8),
+                      Text(l
+                          .translate(value.toLowerCase().replaceAll(' ', '_'))),
+                    ],
+                  ),
+                ))
+            .toList(),
+        onChanged: (value) =>
+            state.setState(() => state._selectedDisasterType = value),
+      ),
+    );
+  }
+
+  // Helper method to convert display name to internal type
+  String _getInternalDisasterType(String displayType) {
+    return displayType.replaceAll(' ', '_');
+  }
+}
+
+class _OtherDisasterField extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _OtherDisasterField({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _fieldDecoration(colors),
+      child: TextField(
+        onChanged: (value) => state._otherDisasterType = value,
+        style: TextStyle(color: colors.text200),
+        decoration: InputDecoration(
+          hintText: l.translate('specify_disaster_type_hint'),
+          hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: _spacingMedium, vertical: 12),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+}
+
+class _SeveritySection extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _SeveritySection({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Label(textKey: 'severity_level', colors: colors, isRequired: true),
+        const SizedBox(height: _spacingSmall),
+        _SeverityButtons(colors: colors),
+      ],
+    );
+  }
+}
+
+class _SeverityButtons extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _SeverityButtons({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: _ReportDisasterScreenState._severities.map((severity) {
+        final isSelected = state._selectedSeverity == severity;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ElevatedButton(
+              onPressed: () =>
+                  state.setState(() => state._selectedSeverity = severity),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isSelected
+                    ? colors.accent200
+                    : colors.bg100.withOpacity(0.7),
+                foregroundColor: isSelected ? colors.bg100 : colors.text200,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: colors.bg300.withOpacity(0.2)),
+                ),
+              ),
+              child: Text(l.translate(severity.toLowerCase())),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _LocationSection extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _LocationSection({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Label(textKey: 'location', colors: colors, isRequired: true),
+        const SizedBox(height: _spacingSmall),
+        _LocationSelector(colors: colors),
+      ],
+    );
+  }
+}
+
+class _LocationSelector extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _LocationSelector({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    return Column(
+      children: [
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: colors.bg100.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: state._selectedLocation == null
+                  ? colors.warning
+                  : colors.bg300.withOpacity(0.2),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
               children: [
-                _buildDisasterTypeSection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildSeveritySection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildLocationSection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildDescriptionSection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildPhotoSection(colors),
-                const SizedBox(height: _spacingLarge),
-                _buildSubmitButton(colors),
+                if (state._isLoadingLocation)
+                  Center(
+                      child: CircularProgressIndicator(color: colors.accent200))
+                else
+                  FlutterMap(
+                    mapController: state._mapController,
+                    options: MapOptions(
+                      center: state._selectedMapLocation ??
+                          state._currentLocation ??
+                          _defaultLocation,
+                      zoom: 15,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        subdomains: const ['a', 'b', 'c'],
+                        userAgentPackageName: 'com.mydpar.app',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          if (state._currentLocation != null &&
+                              state._selectedMapLocation == null)
+                            Marker(
+                              point: state._currentLocation!,
+                              builder: (_) => const Icon(Icons.my_location,
+                                  color: Colors.blue, size: 30),
+                            ),
+                          if (state._selectedMapLocation != null)
+                            Marker(
+                              point: state._selectedMapLocation!,
+                              builder: (_) => Icon(Icons.location_pin,
+                                  color: colors.warning, size: 40),
+                            ),
+                          if (state._currentLocation == null &&
+                              state._selectedMapLocation == null)
+                            Marker(
+                              point: _defaultLocation,
+                              builder: (_) => const Icon(Icons.location_pin,
+                                  color: Colors.grey, size: 30),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(onTap: () => state._selectLocation(context)),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-      );
-
-  /// Builds the disaster type selection section.
-  Widget _buildDisasterTypeSection(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel('Disaster Type', colors, isRequired: true),
+        if (state._selectedLocation != null) ...[
           const SizedBox(height: _spacingSmall),
-          _buildDisasterTypeDropdown(colors),
-          if (_selectedDisasterType == 'Other') ...[
-            const SizedBox(height: _spacingMedium),
-            _buildLabel('Specify Disaster Type', colors, isRequired: true),
-            const SizedBox(height: _spacingSmall),
-            _buildOtherDisasterField(colors),
-          ],
-        ],
-      );
-
-  /// Builds the severity selection section.
-  Widget _buildSeveritySection(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel('Severity Level', colors, isRequired: true),
-          const SizedBox(height: _spacingSmall),
-          _buildSeverityButtons(colors),
-        ],
-      );
-
-  /// Builds the location selection section with map preview.
-  Widget _buildLocationSection(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel('Location', colors, isRequired: true),
-          const SizedBox(height: _spacingSmall),
-          _buildLocationSelector(colors),
-        ],
-      );
-
-  /// Builds the description input section.
-  Widget _buildDescriptionSection(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel('Description', colors),
-          const SizedBox(height: _spacingSmall),
-          _buildDescriptionField(colors),
-        ],
-      );
-
-  /// Builds the photo upload section.
-  Widget _buildPhotoSection(AppColorTheme colors) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel('Add Photos', colors),
-          const SizedBox(height: _spacingSmall),
-          _buildPhotoUploader(colors),
-        ],
-      );
-
-  /// Builds a label with an optional required indicator.
-  Widget _buildLabel(String text, AppColorTheme colors,
-          {bool isRequired = false}) =>
-      Row(
-        children: [
-          Text(text,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: colors.primary300)),
-          if (isRequired)
-            Text(' *',
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: colors.warning)),
-        ],
-      );
-
-  /// Builds the disaster type dropdown.
-  Widget _buildDisasterTypeDropdown(AppColorTheme colors) => Container(
-        decoration: _fieldDecoration(colors),
-        child: DropdownButtonFormField<String>(
-          value: _selectedDisasterType,
-          decoration: const InputDecoration(
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: _spacingMedium, vertical: 12),
-            border: InputBorder.none,
-          ),
-          dropdownColor: colors.bg100,
-          style: TextStyle(color: colors.text200, fontSize: 16),
-          hint: Text('Select disaster type',
-              style: TextStyle(color: colors.text200)),
-          items: _disasterTypes
-              .map((value) => DropdownMenuItem<String>(
-                    value: value,
-                    child: Row(
-                      children: [
-                        Icon(_getDisasterIcon(value),
-                            color: colors.accent200, size: 20),
-                        const SizedBox(width: 8),
-                        Text(value),
-                      ],
-                    ),
-                  ))
-              .toList(),
-          onChanged: (value) => setState(() => _selectedDisasterType = value),
-        ),
-      );
-
-  /// Builds the field for specifying other disaster type.
-  Widget _buildOtherDisasterField(AppColorTheme colors) => Container(
-        decoration: _fieldDecoration(colors),
-        child: TextField(
-          onChanged: (value) => _otherDisasterType = value,
-          style: TextStyle(color: colors.text200),
-          decoration: InputDecoration(
-            hintText: 'Please specify the disaster type',
-            hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: _spacingMedium, vertical: 12),
-            border: InputBorder.none,
-          ),
-        ),
-      );
-
-  /// Builds the severity selection buttons.
-  Widget _buildSeverityButtons(AppColorTheme colors) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: _severities.map((severity) {
-          final isSelected = _selectedSeverity == severity;
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: ElevatedButton(
-                onPressed: () => setState(() => _selectedSeverity = severity),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isSelected
-                      ? colors.accent200
-                      : colors.bg100.withOpacity(0.7),
-                  foregroundColor: isSelected ? colors.bg100 : colors.text200,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: colors.bg300.withOpacity(0.2)),
-                  ),
-                ),
-                child: Text(severity),
-              ),
-            ),
-          );
-        }).toList(),
-      );
-
-  /// Builds the location selector with map preview.
-  Widget _buildLocationSelector(AppColorTheme colors) => Column(
-        children: [
           Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: colors.bg100.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _selectedLocation == null
-                    ? colors.warning
-                    : colors.bg300.withOpacity(0.2),
+            decoration: _fieldDecoration(colors),
+            child: TextField(
+              enabled: false,
+              controller: TextEditingController(text: state._selectedLocation),
+              style: TextStyle(color: colors.text200),
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: _spacingMedium, vertical: 12),
+                border: InputBorder.none,
               ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Stack(
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _DescriptionSection extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _DescriptionSection({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Label(textKey: 'description', colors: colors),
+        const SizedBox(height: _spacingSmall),
+        _DescriptionField(colors: colors),
+      ],
+    );
+  }
+}
+
+class _DescriptionField extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _DescriptionField({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: _fieldDecoration(colors),
+      child: TextField(
+        controller: state._descriptionController,
+        style: TextStyle(color: colors.text200),
+        maxLines: 4,
+        decoration: InputDecoration(
+          hintText: l.translate('describe_disaster'),
+          hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
+          contentPadding: const EdgeInsets.all(_spacingMedium),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoSection extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _PhotoSection({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Label(textKey: 'add_photos', colors: colors),
+        const SizedBox(height: _spacingSmall),
+        _PhotoUploader(colors: colors),
+      ],
+    );
+  }
+}
+
+class _PhotoUploader extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _PhotoUploader({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return Column(
+      children: [
+        Container(
+          decoration: _fieldDecoration(colors),
+          child: MaterialButton(
+            onPressed: state._pickPhotos,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
+              child: Column(
                 children: [
-                  if (_isLoadingLocation)
-                    Center(
-                        child:
-                            CircularProgressIndicator(color: colors.accent200))
-                  else
-                    FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        center: _selectedMapLocation ??
-                            _currentLocation ??
-                            _defaultLocation,
-                        zoom: 15,
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          subdomains: const ['a', 'b', 'c'],
-                          userAgentPackageName: 'com.mydpar.app',
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            if (_currentLocation != null &&
-                                _selectedMapLocation == null)
-                              Marker(
-                                point: _currentLocation!,
-                                builder: (_) => Icon(Icons.my_location,
-                                    color: Colors.blue, size: 30),
-                              ),
-                            if (_selectedMapLocation != null)
-                              Marker(
-                                point: _selectedMapLocation!,
-                                builder: (_) => Icon(Icons.location_pin,
-                                    color: colors.warning, size: 40),
-                              ),
-                            if (_currentLocation == null &&
-                                _selectedMapLocation == null)
-                              Marker(
-                                point: _defaultLocation,
-                                builder: (_) => Icon(Icons.location_pin,
-                                    color: Colors.grey, size: 30),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(onTap: () => _selectLocation(context)),
-                    ),
+                  Icon(Icons.upload_outlined,
+                      color: colors.accent200, size: 32),
+                  const SizedBox(height: _spacingSmall),
+                  Text(
+                    state._selectedPhotos.isEmpty
+                        ? l.translate('tap_to_upload_photo')
+                        : l.translate('tap_to_add_more_photos',
+                            {'count': state._selectedPhotos.length.toString()}),
+                    style: TextStyle(color: colors.text200),
                   ),
                 ],
               ),
             ),
           ),
-          if (_selectedLocation != null) ...[
-            const SizedBox(height: _spacingSmall),
-            Container(
-              decoration: _fieldDecoration(colors),
-              child: TextField(
-                enabled: false,
-                controller: TextEditingController(text: _selectedLocation),
-                style: TextStyle(color: colors.text200),
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: _spacingMedium, vertical: 12),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ],
-        ],
-      );
-
-  /// Builds the description text field.
-  Widget _buildDescriptionField(AppColorTheme colors) => Container(
-        decoration: _fieldDecoration(colors),
-        child: TextField(
-          controller: _descriptionController,
-          style: TextStyle(color: colors.text200),
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: 'Describe the disaster...',
-            hintStyle: TextStyle(color: colors.text200.withOpacity(0.7)),
-            contentPadding: const EdgeInsets.all(_spacingMedium),
-            border: InputBorder.none,
-          ),
         ),
-      );
-
-  /// Builds the photo uploader section.
-  Widget _buildPhotoUploader(AppColorTheme colors) => Column(
-        children: [
-          Container(
-            decoration: _fieldDecoration(colors),
-            child: MaterialButton(
-              onPressed: _pickPhotos,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
-                child: Column(
+        if (state._selectedPhotos.isNotEmpty) ...[
+          const SizedBox(height: _spacingMedium),
+          SizedBox(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: state._selectedPhotos.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.only(right: _spacingSmall),
+                child: Stack(
                   children: [
-                    Icon(Icons.upload_outlined,
-                        color: colors.accent200, size: 32),
-                    const SizedBox(height: _spacingSmall),
-                    Text(
-                      _selectedPhotos.isEmpty
-                          ? 'Tap to upload photo'
-                          : 'Tap to add more photos (${_selectedPhotos.length} selected)',
-                      style: TextStyle(color: colors.text200),
+                    Container(
+                      width: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                            image: FileImage(state._selectedPhotos[index]),
+                            fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => state.setState(
+                            () => state._selectedPhotos.removeAt(index)),
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                              color: colors.bg100, shape: BoxShape.circle),
+                          child: Icon(Icons.close,
+                              size: 16, color: colors.warning),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          if (_selectedPhotos.isNotEmpty) ...[
-            const SizedBox(height: _spacingMedium),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _selectedPhotos.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(right: _spacingSmall),
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(
-                              image: FileImage(_selectedPhotos[index]),
-                              fit: BoxFit.cover),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedPhotos.removeAt(index)),
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                                color: colors.bg100, shape: BoxShape.circle),
-                            child: Icon(Icons.close,
-                                size: 16, color: colors.warning),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
         ],
-      );
+      ],
+    );
+  }
+}
 
-  /// Builds the submit button.
-  Widget _buildSubmitButton(AppColorTheme colors) => SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : () => _submitReport(colors),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colors.accent200,
-            foregroundColor: colors.bg100,
-            padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          child: _isLoading
-              ? SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(colors.bg100),
-                  ),
-                )
-              : const Text('Submit Report',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+class _SubmitButton extends StatelessWidget {
+  final AppColorTheme colors;
+
+  const _SubmitButton({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    final l = AppLocalizations.of(context);
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: state._isLoading ? null : () => state._submitReport(colors),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colors.accent200,
+          foregroundColor: colors.bg100,
+          padding: const EdgeInsets.symmetric(vertical: _spacingMedium),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-      );
+        child: state._isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(colors.bg100),
+                ),
+              )
+            : Text(l.translate('submit_report'),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+}
 
-  /// Selects a location via the SelectLocationScreen.
+class _Label extends StatelessWidget {
+  final String textKey;
+  final AppColorTheme colors;
+  final bool isRequired;
+
+  const _Label(
+      {required this.textKey, required this.colors, this.isRequired = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Text(l.translate(textKey),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: colors.primary300)),
+        if (isRequired)
+          Text(' *',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: colors.warning)),
+      ],
+    );
+  }
+}
+
+extension ReportDisasterScreenStateExtensions on _ReportDisasterScreenState {
   Future<void> _selectLocation(BuildContext context) async {
     final result = await Navigator.push(
       context,
@@ -764,8 +924,8 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
     }
   }
 
-  /// Picks photos from gallery or camera.
   Future<void> _pickPhotos() async {
+    final l = AppLocalizations.of(context);
     try {
       final source = await showModalBottomSheet<ImageSource>(
         context: context,
@@ -774,12 +934,12 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
+              title: Text(l.translate('gallery')),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Camera'),
+              title: Text(l.translate('camera')),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
           ],
@@ -799,11 +959,12 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
         setState(() => _selectedPhotos.add(File(pickedFile.path)));
       }
     } catch (e) {
-      _showSnackBar('Failed to pick photo: $e', Colors.red);
+      _showSnackBar(
+          l.translate('failed_to_pick_photo', {'error': e.toString()}),
+          Colors.red);
     }
   }
 
-  /// Validates the form data.
   bool _isFormValid() {
     return _selectedDisasterType != null &&
         (_selectedDisasterType != 'Other' ||
@@ -812,7 +973,6 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
         _selectedLocation != null;
   }
 
-  /// Resets the form to its initial state.
   void _resetForm() {
     setState(() {
       _selectedDisasterType = null;
@@ -825,24 +985,26 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
     });
   }
 
-  /// Shows validation errors if the form is incomplete.
   void _showValidationErrors(AppColorTheme colors) {
+    final l = AppLocalizations.of(context);
     final missingFields = <String>[];
-    if (_selectedDisasterType == null) missingFields.add('Disaster Type');
+    if (_selectedDisasterType == null)
+      missingFields.add(l.translate('disaster_type'));
     if (_selectedDisasterType == 'Other' &&
         (_otherDisasterType?.isEmpty ?? true)) {
-      missingFields.add('Other Disaster Type specification');
+      missingFields.add(l.translate('specify_disaster_type'));
     }
-    if (_selectedSeverity == null) missingFields.add('Severity Level');
-    if (_selectedLocation == null) missingFields.add('Location');
+    if (_selectedSeverity == null)
+      missingFields.add(l.translate('severity_level'));
+    if (_selectedLocation == null) missingFields.add(l.translate('location'));
 
     if (missingFields.isNotEmpty) {
       _showSnackBar(
-          'Please fill in: ${missingFields.join(", ")}', colors.warning);
+          l.translate('please_fill_in', {'fields': missingFields.join(', ')}),
+          colors.warning);
     }
   }
 
-  /// Displays a snackbar with a message.
   void _showSnackBar(String message, Color backgroundColor) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -852,22 +1014,15 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
           duration: const Duration(seconds: 3)),
     );
   }
-
-  /// Reusable field decoration.
-  BoxDecoration _fieldDecoration(AppColorTheme colors) => BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.bg300.withOpacity(0.2)),
-      );
-
-  /// Reusable card decoration.
-  BoxDecoration _cardDecoration(AppColorTheme colors) => BoxDecoration(
-        color: colors.bg100.withOpacity(0.7),
-        border: Border.all(color: colors.bg300.withOpacity(0.2)),
-      );
-
-  /// Returns an icon based on the disaster type.
-  IconData _getDisasterIcon(String type) {
-    return DisasterService.getDisasterIcon(type);
-  }
 }
+
+BoxDecoration _fieldDecoration(AppColorTheme colors) => BoxDecoration(
+      color: colors.bg100.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: colors.bg300.withOpacity(0.2)),
+    );
+
+BoxDecoration _cardDecoration(AppColorTheme colors) => BoxDecoration(
+      color: colors.bg100.withOpacity(0.7),
+      border: Border.all(color: colors.bg300.withOpacity(0.2)),
+    );

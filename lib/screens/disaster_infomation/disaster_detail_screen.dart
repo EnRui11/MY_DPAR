@@ -525,7 +525,7 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
       case 'landslide':
         screen = LandslideGuideScreen();
         break;
-      case 'heavy rain':
+      case 'heavy_rain':
         screen = HeavyRainGuideScreen();
         break;
       case 'haze':

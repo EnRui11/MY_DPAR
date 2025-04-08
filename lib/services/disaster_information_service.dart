@@ -163,7 +163,6 @@ class DisasterService with ChangeNotifier {
     const tsunami = IconData(0xf07cf, fontFamily: 'MaterialIcons');
 
     return switch (type.toLowerCase()) {
-      'heavy rain' => Icons.thunderstorm_outlined,
       'heavy_rain' => Icons.thunderstorm_outlined,
       'flood' => flood,
       'fire' => Icons.local_fire_department,

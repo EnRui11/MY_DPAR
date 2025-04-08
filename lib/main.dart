@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mydpar/screens/main/bottom_nav_container.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/screens/main/home_screen.dart';
-import 'package:mydpar/screens/main/map_screen.dart';
-import 'package:mydpar/screens/main/community_screen.dart';
-import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
 import 'package:mydpar/services/cpr_audio_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
@@ -28,11 +25,38 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseInitializer.initialize();
   await PermissionRequester.requestInitial();
+  
+  // Request notification permissions
+  await _requestNotificationPermissions();
 
   // Start background location service
   BackgroundLocationService().startLocationUpdates();
 
   runApp(const MyDPARApp());
+}
+
+/// Request notification permissions for FCM
+Future<void> _requestNotificationPermissions() async {
+  try {
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      provisional: false,
+    );
+    
+    // Set up foreground notification presentation options
+    await messaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    
+    debugPrint('Notification permissions requested');
+  } catch (e) {
+    debugPrint('Error requesting notification permissions: $e');
+  }
 }
 
 /// Handles Firebase initialization with robust error management.
@@ -185,8 +209,6 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 
-  // In the _authStateBuilder method, replace the return statement:
-
   Widget Function(BuildContext, AsyncSnapshot<User?>) _authStateBuilder(
     UserInformationService userService,
     SOSAlertService sosService,
@@ -218,13 +240,36 @@ class AuthWrapper extends StatelessWidget {
   ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!userService.isInitialized) {
-        userService.initializeUser().catchError((e) {
+        userService.initializeUser().then((_) {
+          // Update FCM token after user is initialized
+          userService.updateFcmToken().catchError((e) {
+            debugPrint('Failed to update FCM token: $e');
+          });
+        }).catchError((e) {
           debugPrint('Failed to initialize user: $e');
         });
+      } else {
+        // If already initialized, still update the FCM token
+        userService.updateFcmToken().catchError((e) {
+          debugPrint('Failed to update FCM token: $e');
+        });
       }
+      
       if (!sosService.isInitialized) {
         sosService.checkActiveAlert(context);
       }
+      
+      // Set up FCM token refresh listener
+      _setupFcmTokenRefreshListener(userService);
+    });
+  }
+  
+  void _setupFcmTokenRefreshListener(UserInformationService userService) {
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      debugPrint('FCM token refreshed, updating in Firestore');
+      userService.updateFcmTokenWithValue(newToken).catchError((e) {
+        debugPrint('Failed to update refreshed FCM token: $e');
+      });
     });
   }
 }

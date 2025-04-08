@@ -1086,5 +1086,46 @@
   "location_permission_denied": "Location permission denied",
   "location_permission_denied_forever": "Location permission permanently denied",
   "unable_to_get_location": "Unable to get current location: {error}",
-  "location_not_found": "Location not found"
+  "location_not_found": "Location not found",
+
+
+
+
+
+  "report_disaster_screen": "report_disaster_screen.dart",
+  "report_disaster": "Report Disaster",
+  "back": "Back",
+  "disaster_type": "Disaster Type",
+  "select_disaster_type": "Select disaster type",
+  "heavy_rain": "Heavy Rain",
+  "flood": "Flood",
+  "earthquake": "Earthquake",
+  "fire": "Fire",
+  "landslide": "Landslide",
+  "haze": "Haze",
+  "other": "Other",
+  "specify_disaster_type": "Specify Disaster Type",
+  "specify_disaster_type_hint": "Please specify the disaster type",
+  "severity_level": "Severity Level",
+  "low": "Low",
+  "medium": "Medium",
+  "high": "High",
+  "location": "Location",
+  "description": "Description",
+  "describe_disaster": "Describe the disaster...",
+  "add_photos": "Add Photos",
+  "tap_to_upload_photo": "Tap to upload photo",
+  "tap_to_add_more_photos": "Tap to add more photos ({count} selected)",
+  "submit_report": "Submit Report",
+  "gallery": "Gallery",
+  "camera": "Camera",
+  "location_services_disabled": "Location services are disabled",
+  "location_permission_denied": "Location permission denied",
+  "location_permission_denied_forever": "Location permission permanently denied",
+  "disaster_updated_success": "Disaster updated successfully!",
+  "disaster_reported_success": "New disaster reported successfully!",
+  "failed_to_submit_report": "Failed to submit report: {error}",
+  "failed_to_upload_photos": "Failed to upload photos: {error}",
+  "failed_to_pick_photo": "Failed to pick photo: {error}",
+  "please_fill_in": "Please fill in: {fields}"
 }

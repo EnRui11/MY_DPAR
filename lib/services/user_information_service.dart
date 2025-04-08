@@ -63,6 +63,7 @@ class UserInformationService with ChangeNotifier {
 
   UserInformationService() {
     _initializeUser();
+    setupTokenRefreshListener();
   }
 
   /// Initializes user data from Firebase Auth and Firestore.
@@ -334,6 +335,7 @@ class UserInformationService with ChangeNotifier {
         await _firestore.collection('user_locations').doc(_userId).update({
           'isOnline': false,
           'lastUpdateTime': Timestamp.now(),
+          'fcmToken': FieldValue.delete(),
         });
       }
 
@@ -485,5 +487,44 @@ class UserInformationService with ChangeNotifier {
   /// Get current user ID
   String? getCurrentUserId() {
     return _auth.currentUser?.uid;
+  }
+
+  /// Sets up a listener for FCM token refreshes
+  void setupTokenRefreshListener() {
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      if (_userId != null) {
+        _firestore.collection('users').doc(_userId).update({
+          'fcmToken': newToken,
+        }).then((_) {
+          debugPrint('FCM token refreshed and updated in Firestore');
+        }).catchError((e) {
+          debugPrint('Error updating refreshed FCM token: $e');
+        });
+      }
+    });
+  }
+
+  /// Updates FCM token on app launch
+  Future<void> updateTokenOnLaunch() async {
+    if (_auth.currentUser != null && _userId != null) {
+      await updateFcmToken();
+      debugPrint('FCM token updated on app launch');
+    }
+  }
+
+  /// Updates the user's FCM token with a specific value
+  Future<void> updateFcmTokenWithValue(String token) async {
+    if (_userId == null) return;
+
+    try {
+      await _firestore.collection('users').doc(_userId).update({
+        'fcmToken': token,
+        'lastTokenUpdate': FieldValue.serverTimestamp(),
+      });
+      debugPrint('FCM token updated successfully');
+    } catch (e) {
+      debugPrint('Error updating FCM token: $e');
+      throw Exception('Failed to update FCM token: $e');
+    }
   }
 }

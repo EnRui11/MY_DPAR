@@ -11,11 +11,13 @@ import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
+import 'package:mydpar/screens/main/map_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
+import 'package:mydpar/screens/main/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final bool showNavBar;
-
-  const HomeScreen({Key? key, this.showNavBar = true}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -31,12 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch disasters when the screen loads, only get happening disasters
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Set current index in navigation service
-      Provider.of<NavigationService>(context, listen: false).changeIndex(0);
       Provider.of<DisasterService>(context, listen: false)
           .fetchRecentDisasters(onlyHappening: true);
+      Provider.of<NavigationService>(context, listen: false).changeIndex(0);
     });
   }
 
@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
     final AppColorTheme colors = themeProvider.currentTheme;
     final AppLocalizations localize = AppLocalizations.of(context)!;
+    final navigationService = Provider.of<NavigationService>(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -55,6 +56,14 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildHeader(colors, localize),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        onTap: (index) {
+          if (index != 0) { // Only navigate if not already on home screen
+            navigationService.changeIndex(index);
+            _navigateToScreen(index);
+          }
+        },
       ),
     );
   }
@@ -556,5 +565,27 @@ class _HomeScreenState extends State<HomeScreen> {
       return localize.translate('time_years_ago', {'count': years});
     }
     return time;
+  }
+
+  void _navigateToScreen(int index) {
+    Widget screen;
+    switch (index) {
+      case 1:
+        screen = const MapScreen();
+        break;
+      case 2:
+        screen = const CommunityScreen();
+        break;
+      case 3:
+        screen = const ProfileScreen();
+        break;
+      default:
+        return;
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
   }
 }

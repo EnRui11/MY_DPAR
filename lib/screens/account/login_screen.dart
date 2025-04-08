@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mydpar/screens/account/register_screen.dart';
-import 'package:mydpar/screens/main/bottom_nav_container.dart';
 import 'package:mydpar/services/language_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/services/user_information_service.dart';
+
+import '../../services/bottom_nav_service.dart';
+import '../main/home_screen.dart';
 
 /// Data model for login credentials.
 class LoginData {
@@ -92,8 +94,10 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
       debugPrint('User signed in with UID: ${credential.user?.uid}');
+      Provider.of<NavigationService>(context, listen: false).changeIndex(0);
+      
       if (mounted) {
-        _navigateTo(context, const BottomNavContainer(), replace: true);
+        _navigateTo(context, const HomeScreen(), replace: true);
       }
     } catch (e) {
       _showErrorSnackBar(context, _mapErrorToMessage(e, localizations));

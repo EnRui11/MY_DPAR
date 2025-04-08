@@ -23,10 +23,18 @@ class _MainContainerScreenState extends State<BottomNavContainer> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NavigationService>(context, listen: false).changeIndex(0);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final navigationService = Provider.of<NavigationService>(context);
     final currentIndex = navigationService.currentIndex;
-    
+
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,

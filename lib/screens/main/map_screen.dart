@@ -10,6 +10,10 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
+import 'package:mydpar/screens/main/profile_screen.dart';
 
 const double _paddingValue = 16.0;
 const double _spacingSmall = 8.0;
@@ -17,7 +21,7 @@ const double _spacingMedium = 12.0;
 const double _spacingLarge = 24.0;
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({Key? key}) : super(key: key);
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -138,17 +142,53 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Provider.of<ThemeProvider>(context).currentTheme;
+    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
+    final AppColorTheme colors = themeProvider.currentTheme;
+    final navigationService = Provider.of<NavigationService>(context);
+
     return Scaffold(
-      body: Stack(
-        children: [
-          _Map(colors: colors),
-          _SearchBar(colors: colors),
-          _FilterControls(colors: colors),
-          _LocationControl(colors: colors),
-          _ReportButton(colors: colors),
-        ],
+      backgroundColor: colors.bg200,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            _Map(colors: colors),
+            _SearchBar(colors: colors),
+            _FilterControls(colors: colors),
+            _LocationControl(colors: colors),
+            _ReportButton(colors: colors),
+          ],
+        ),
       ),
+      bottomNavigationBar: BottomNavBar(
+        onTap: (index) {
+          if (index != 1) { // Only navigate if not already on map screen
+            navigationService.changeIndex(index);
+            _navigateToScreen(index);
+          }
+        },
+      ),
+    );
+  }
+
+  void _navigateToScreen(int index) {
+    Widget screen;
+    switch (index) {
+      case 0:
+        screen = const HomeScreen();
+        break;
+      case 2:
+        screen = const CommunityScreen();
+        break;
+      case 3:
+        screen = const ProfileScreen();
+        break;
+      default:
+        return;
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
     );
   }
 }

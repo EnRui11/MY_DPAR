@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:mydpar/screens/main/bottom_nav_container.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
@@ -227,7 +227,7 @@ class AuthWrapper extends StatelessWidget {
       final user = snapshot.data;
       if (user != null) {
         _initializeServices(context, userService, sosService);
-        return const BottomNavContainer();
+        return const HomeScreen();
       }
       return const LoginScreen();
     };

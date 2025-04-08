@@ -10,6 +10,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:mydpar/services/language_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:mydpar/widgets/bottom_nav_bar.dart';
+import 'package:mydpar/screens/main/home_screen.dart';
+import 'package:mydpar/screens/main/map_screen.dart';
+import 'package:mydpar/screens/main/community_screen.dart';
 
 // Model for settings items
 class SettingItem {
@@ -25,7 +29,7 @@ class SettingItem {
 }
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -41,9 +45,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NavigationService>(context, listen: false).changeIndex(3);
       Provider.of<UserInformationService>(context, listen: false)
           .initializeUser();
+      Provider.of<NavigationService>(context, listen: false).changeIndex(3);
     });
   }
 
@@ -53,6 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final colors = themeProvider.currentTheme;
     final userInformation = Provider.of<UserInformationService>(context);
     final languageService = Provider.of<LanguageService>(context);
+    final navigationService = Provider.of<NavigationService>(context);
 
     return Scaffold(
       backgroundColor: colors.bg200,
@@ -69,11 +74,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavBar(
+        onTap: (index) {
+          if (index != 3) { // Only navigate if not already on profile screen
+            navigationService.changeIndex(index);
+            _navigateToScreen(index);
+          }
+        },
+      ),
     );
   }
 
   Widget _buildHeader(ThemeProvider themeProvider, AppColorTheme colors,
-      LanguageService languageService) =>
+          LanguageService languageService) =>
       Padding(
         padding: const EdgeInsets.symmetric(
             horizontal: _padding, vertical: _spacingSmall),
@@ -92,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     inactiveThumbColor: Colors.amber,
                     inactiveTrackColor: Colors.amber.withOpacity(0.3),
                     thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
-                          (Set<MaterialState> states) {
+                      (Set<MaterialState> states) {
                         return Icon(
                           themeProvider.isDarkMode
                               ? Icons.dark_mode
@@ -105,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     trackOutlineColor: MaterialStateProperty.resolveWith(
-                          (states) => themeProvider.isDarkMode
+                      (states) => themeProvider.isDarkMode
                           ? colors.bg300.withOpacity(0.2)
                           : Colors.transparent,
                     ),
@@ -168,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: colors.accent200.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
                       border:
-                      Border.all(color: colors.accent200.withOpacity(0.3)),
+                          Border.all(color: colors.accent200.withOpacity(0.3)),
                     ),
                     child: Center(
                       child: Text(
@@ -193,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildContent(
-      UserInformationService userInformation, AppColorTheme colors) =>
+          UserInformationService userInformation, AppColorTheme colors) =>
       Expanded(
         child: RefreshIndicator(
           onRefresh: userInformation.refreshUserData,
@@ -216,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildProfileHeader(
-      UserInformationService userInformation, AppColorTheme colors) =>
+          UserInformationService userInformation, AppColorTheme colors) =>
       Column(
         children: [
           Stack(
@@ -230,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : null,
                 child: userInformation.photoUrl == null
                     ? Icon(Icons.person_outline,
-                    size: 48, color: colors.accent200)
+                        size: 48, color: colors.accent200)
                     : null,
               ),
               CircleAvatar(
@@ -269,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildEmergencyContactsSection(
-      UserInformationService userInformation, AppColorTheme colors) =>
+          UserInformationService userInformation, AppColorTheme colors) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -294,58 +307,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
           userInformation.contacts.isEmpty
               ? _buildEmptyContactsCard(colors)
               : ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: userInformation.contacts.length,
-            itemBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.only(bottom: _spacingMedium),
-              child: _buildEmergencyContact(
-                  userInformation.contacts[index],
-                  index,
-                  userInformation,
-                  colors),
-            ),
-          ),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: userInformation.contacts.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: _spacingMedium),
+                    child: _buildEmergencyContact(
+                        userInformation.contacts[index],
+                        index,
+                        userInformation,
+                        colors),
+                  ),
+                ),
         ],
       );
 
   Widget _buildEmptyContactsCard(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.all(_padding),
-    decoration: _cardDecoration(colors),
-    child: Column(
-      children: [
-        Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
-        const SizedBox(height: _spacingMedium),
-        Text(
-          AppLocalizations.of(context).translate('no_emergency_contacts'),
-          style: TextStyle(
-              color: colors.primary300,
-              fontSize: 16,
-              fontWeight: FontWeight.w500),
+        padding: const EdgeInsets.all(_padding),
+        decoration: _cardDecoration(colors),
+        child: Column(
+          children: [
+            Icon(Icons.contact_phone_outlined, color: colors.text200, size: 48),
+            const SizedBox(height: _spacingMedium),
+            Text(
+              AppLocalizations.of(context).translate('no_emergency_contacts'),
+              style: TextStyle(
+                  color: colors.primary300,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: _spacingSmall),
+            Text(
+              AppLocalizations.of(context).translate('add_contacts_help'),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.text200),
+            ),
+            const SizedBox(height: _spacingMedium),
+            ElevatedButton(
+              onPressed: () => _showAddContactDialog(
+                  Provider.of<UserInformationService>(context, listen: false),
+                  colors),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.accent200,
+                  foregroundColor: colors.bg100),
+              child:
+                  Text(AppLocalizations.of(context).translate('add_contact')),
+            ),
+          ],
         ),
-        const SizedBox(height: _spacingSmall),
-        Text(
-          AppLocalizations.of(context).translate('add_contacts_help'),
-          textAlign: TextAlign.center,
-          style: TextStyle(color: colors.text200),
-        ),
-        const SizedBox(height: _spacingMedium),
-        ElevatedButton(
-          onPressed: () => _showAddContactDialog(
-              Provider.of<UserInformationService>(context, listen: false),
-              colors),
-          style: ElevatedButton.styleFrom(
-              backgroundColor: colors.accent200,
-              foregroundColor: colors.bg100),
-          child:
-          Text(AppLocalizations.of(context).translate('add_contact')),
-        ),
-      ],
-    ),
-  );
+      );
 
   Widget _buildEmergencyContact(EmergencyContact contact, int index,
-      UserInformationService userInformation, AppColorTheme colors) =>
+          UserInformationService userInformation, AppColorTheme colors) =>
       Container(
         decoration: _cardDecoration(colors),
         padding: const EdgeInsets.all(_padding),
@@ -392,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   Widget _buildSettingsSection(
-      UserInformationService userInformation, AppColorTheme colors) =>
+          UserInformationService userInformation, AppColorTheme colors) =>
       Column(
         children: [
           _buildSettingItem(
@@ -484,8 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await userInformation.updateProfilePhoto(pickedFile.path);
       }
     } else if (status.isDenied || status.isPermanentlyDenied) {
-      _showSnackBar(
-          AppLocalizations.of(context).translate('permission_denied'),
+      _showSnackBar(AppLocalizations.of(context).translate('permission_denied'),
           colors.warning);
     }
   }
@@ -507,13 +519,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: Text(
                   AppLocalizations.of(context).translate('choose_gallery'),
                   style: TextStyle(color: colors.text100)),
-              onTap: () => _pickImage(ImageSource.gallery, userInformation, colors),
+              onTap: () =>
+                  _pickImage(ImageSource.gallery, userInformation, colors),
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: colors.accent200),
               title: Text(AppLocalizations.of(context).translate('take_photo'),
                   style: TextStyle(color: colors.text100)),
-              onTap: () => _pickImage(ImageSource.camera, userInformation, colors),
+              onTap: () =>
+                  _pickImage(ImageSource.camera, userInformation, colors),
             ),
           ],
         ),
@@ -544,8 +558,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_validateInputs(
-                  nameController, relationController, phoneController, colors)) {
+              if (_validateInputs(nameController, relationController,
+                  phoneController, colors)) {
                 final newContact = EmergencyContact(
                   name: nameController.text.trim(),
                   relation: relationController.text.trim(),
@@ -594,15 +608,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_validateInputs(
-                  nameController, relationController, phoneController, colors)) {
+              if (_validateInputs(nameController, relationController,
+                  phoneController, colors)) {
                 final updatedContact = EmergencyContact(
                   name: nameController.text.trim(),
                   relation: relationController.text.trim(),
                   phone: phoneController.text.trim(),
                 );
                 Navigator.pop(context);
-                await userInformation.updateEmergencyContact(index, updatedContact);
+                await userInformation.updateEmergencyContact(
+                    index, updatedContact);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -674,7 +689,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
+                  (route) => false,
                 );
               }
             },
@@ -688,11 +703,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildContactForm(
-      AppColorTheme colors,
-      TextEditingController nameController,
-      TextEditingController relationController,
-      TextEditingController phoneController,
-      ) =>
+    AppColorTheme colors,
+    TextEditingController nameController,
+    TextEditingController relationController,
+    TextEditingController phoneController,
+  ) =>
       Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -733,11 +748,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
   bool _validateInputs(
-      TextEditingController nameController,
-      TextEditingController relationController,
-      TextEditingController phoneController,
-      AppColorTheme colors,
-      ) {
+    TextEditingController nameController,
+    TextEditingController relationController,
+    TextEditingController phoneController,
+    AppColorTheme colors,
+  ) {
     if (nameController.text.trim().isEmpty ||
         relationController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty) {
@@ -750,21 +765,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildLoadingOverlay(AppColorTheme colors) => Container(
-    color: Colors.black.withOpacity(0.5),
-    child: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(color: colors.accent200),
-          const SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context).translate('loading'),
-            style: TextStyle(color: colors.bg100),
+        color: Colors.black.withOpacity(0.5),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: colors.accent200),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context).translate('loading'),
+                style: TextStyle(color: colors.bg100),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 
   void _showSnackBar(String message, Color backgroundColor) {
     if (mounted) {
@@ -792,6 +807,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         MaterialPageRoute(builder: (_) => screen),
       );
     }
+  }
+
+  void _navigateToScreen(int index) {
+    Widget screen;
+    switch (index) {
+      case 0:
+        screen = const HomeScreen();
+        break;
+      case 1:
+        screen = const MapScreen();
+        break;
+      case 2:
+        screen = const CommunityScreen();
+        break;
+      default:
+        return;
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
   }
 
   BoxDecoration _cardDecoration(AppColorTheme colors, {double opacity = 0.7}) =>

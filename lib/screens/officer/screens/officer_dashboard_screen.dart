@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
@@ -5,6 +6,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/screens/officer/widgets/officer_nav_bar.dart';
+import 'package:mydpar/services/sos_alert_service.dart';
 
 class OfficerDashboardScreen extends StatefulWidget {
   const OfficerDashboardScreen({Key? key}) : super(key: key);
@@ -65,88 +67,220 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
         ],
       );
 
-  Widget _buildSOSSection(AppColorTheme colors) => Container(
-        padding: const EdgeInsets.all(_padding),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFFF3D3D),
-              const Color(0xFFFF8080),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
+  Widget _buildSOSSection(AppColorTheme colors) {
+    final sosService = Provider.of<SOSAlertService>(context);
+    final alerts = sosService.activeAlerts;
+    final bool hasActiveAlerts = alerts.isNotEmpty;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.all(_padding),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: hasActiveAlerts
+              ? [
+                  const Color(0xFFFF3D3D),
+                  const Color(0xFFFF8080),
+                ]
+              : [
+                  const Color(0xFF4CAF50),
+                  const Color(0xFF81C784),
+                ],
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: Colors.white, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Active SOS',
-                      style: TextStyle(
-                        color: colors.bg100,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return ScaleTransition(
+                        scale: animation,
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      hasActiveAlerts
+                          ? Icons.warning_amber_rounded
+                          : Icons.check_circle_outline,
+                      key: ValueKey<bool>(hasActiveAlerts),
+                      color: Colors.white,
+                      size: 24,
                     ),
-                  ],
-                ),
-                Text(
-                  '2',
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Active SOS',
+                    style: TextStyle(
+                      color: colors.bg100,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  '${sosService.activeAlertsCount}',
+                  key: ValueKey<int>(sosService.activeAlertsCount),
                   style: TextStyle(
                     color: colors.bg100,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildSOSCard(
-              'Medical Emergency',
-              'Taman Meru, Block A',
-              '2 min ago',
-              colors,
-            ),
-            const SizedBox(height: 12),
-            _buildSOSCard(
-              'Trapped in Building',
-              'Jalan Kebun, Shah Alam',
-              '5 min ago',
-              colors,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.bg100,
-                  foregroundColor: const Color(0xFFFF3D3D),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('View All SOS'),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SizeTransition(
+                  sizeFactor: animation,
+                  child: child,
+                ),
+              );
+            },
+            child: alerts.isEmpty
+                ? Container(
+                    key: const ValueKey<bool>(false),
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: colors.bg100,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No Active SOS Emergencies',
+                          style: TextStyle(
+                            color: colors.bg100,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'The situation is currently under control',
+                          style: TextStyle(
+                            color: colors.bg100.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    key: const ValueKey<bool>(true),
+                    children: [
+                      ...alerts.take(2).map((alert) => Column(
+                            children: [
+                              _buildSOSCard(
+                                alert['emergencyType'] ?? 'Emergency',
+                                alert['address'] ?? 'Location unavailable',
+                                _formatTimestamp(alert['alertStartTime']),
+                                colors,
+                                alert,
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          )),
+                      if (alerts.length > 2)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '+${alerts.length - 2} more emergencies',
+                                style: TextStyle(
+                                  color: colors.bg100,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+          const SizedBox(height: 16),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 500),
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                // TODO: Implement view all SOS screen
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.bg100,
+                foregroundColor: hasActiveAlerts
+                    ? const Color(0xFFFF3D3D)
+                    : const Color(0xFF4CAF50),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('View All SOS'),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    final now = DateTime.now();
+    final difference = now.difference(timestamp.toDate());
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} min ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else {
+      return '${difference.inDays} days ago';
+    }
+  }
 
   Widget _buildSOSCard(
     String title,
     String location,
     String time,
     AppColorTheme colors,
+    Map<String, dynamic> alert,
   ) =>
       Container(
         padding: const EdgeInsets.all(12),
@@ -160,12 +294,22 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: colors.bg100,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      color: colors.bg100,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      alert['username'] ?? 'Unknown User',
+                      style: TextStyle(
+                        color: colors.bg100,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
                   time,
@@ -184,6 +328,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                 fontSize: 14,
               ),
             ),
+            const SizedBox(height: 4),
           ],
         ),
       );
@@ -314,7 +459,8 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
               children: [
                 Text(
                   time,
-                  style: TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 12),
+                  style: TextStyle(
+                      color: colors.text200.withOpacity(0.7), fontSize: 12),
                 ),
                 TextButton(
                   onPressed: () {},

@@ -447,16 +447,19 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
         builder: (context, child) => Scaffold(
           backgroundColor: _isAlertSent ? (_flickerAnimation.value ?? colors.warning) : colors.bg200,
           body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(_padding),
-              child: Column(
-                children: [
-                  _buildCountdownTimer(colors),
-                  const SizedBox(height: _spacingLarge),
-                  _buildLocationSection(colors),
-                  const SizedBox(height: _spacingLarge),
-                  _buildEmergencyActions(colors),
-                ],
+            child: SingleChildScrollView( // Add ScrollView here
+              child: Padding(
+                padding: const EdgeInsets.all(_padding),
+                child: Column(
+                  children: [
+                    _buildCountdownTimer(colors),
+                    const SizedBox(height: _spacingLarge),
+                    _buildLocationSection(colors),
+                    const SizedBox(height: _spacingLarge),
+                    _buildEmergencyActions(colors),
+                    const SizedBox(height: _spacingLarge), // Add bottom padding
+                  ],
+                ),
               ),
             ),
           ),

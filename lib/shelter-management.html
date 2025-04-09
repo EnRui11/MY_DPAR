@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelter Management - MY_DPAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-100: #d4eaf7;
+            --primary-200: #b6ccd8;
+            --primary-300: #3b3c3d;
+            --accent-100: #71c4ef;
+            --accent-200: #00668c;
+            --text-100: #1d1c1c;
+            --text-200: #313d44;
+            --bg-100: #fffefb;
+            --bg-200: #f5f4f1;
+            --bg-300: #cccbc8;
+            --warning: #FF3D3D;
+        }
+        .glass-effect {
+            background: rgba(255, 254, 251, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 254, 251, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-[#1d1c1c] p-4">
+    <div class="w-[375px] h-[812px] bg-[#fffefb] rounded-[40px] p-1 shadow-xl mx-auto">
+        <div class="w-full h-full bg-[#f5f4f1] rounded-[38px] overflow-hidden relative">
+            <!-- Status Bar -->
+            <div class="glass-effect h-12 flex items-center justify-between px-6 fixed w-[373px] z-10">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-[#3b3c3d]">Shelter Management</span>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="pt-16 px-6 pb-20 h-full overflow-y-auto">
+                <!-- Add New Shelter Button -->
+                <a href="add-shelter.html" class="glass-effect rounded-2xl p-4 mb-6 flex items-center justify-center gap-2 hover:bg-[#d4eaf7] transition-all">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/plus-circle.svg" class="w-6 h-6 text-[#00668c]">
+                    <span class="font-semibold text-[#00668c]">Add New Shelter</span>
+                </a>
+
+                <!-- Shelter List -->
+                <div class="space-y-4">
+                    <div class="glass-effect rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-[#3b3c3d]">Shelter A</h3>
+                            <span class="text-xs text-[#00668c] font-medium px-2 py-1 bg-[#00668c]/10 rounded-lg">Available</span>
+                        </div>
+                        <p class="text-sm text-[#313d44] mb-2">Taman Meru, Block A</p>
+                        <div class="w-full h-24 rounded-xl mb-3 overflow-hidden">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.1089697729666!2d101.4461663!3d3.0576034!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc53c75f9e1c31%3A0x60e8e4e67c696e7!2sTaman%20Meru!5e0!3m2!1sen!2smy!4v1635825645789!5m2!1sen!2smy" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <div class="bg-[#f5f4f1] rounded-xl p-3 mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs text-[#313d44]">Capacity</span>
+                                <span class="text-xs font-medium text-[#00668c]">120/200</span>
+                            </div>
+                            <div class="w-full h-2 bg-[#d4eaf7] rounded-full">
+                                <div class="w-3/5 h-full bg-[#00668c] rounded-full"></div>
+                            </div>
+                        </div>
+                        <a href="shelter-detail.html" class="bg-[#00668c] text-white py-2 px-4 rounded-xl text-sm font-medium hover:bg-opacity-90 transition-all w-full block text-center">
+                            View Details
+                        </a>
+                    </div>
+
+                    <!-- Shelter B -->
+                    <div class="glass-effect rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-[#3b3c3d]">Shelter B</h3>
+                            <span class="text-xs text-[#FF3D3D] font-medium px-2 py-1 bg-[#FF3D3D]/10 rounded-lg">Full</span>
+                        </div>
+                        <p class="text-sm text-[#313d44] mb-2">Jalan Kebun, Shah Alam</p>
+                        <div class="w-full h-24 rounded-xl mb-3 overflow-hidden">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.0876967729666!2d101.5161663!3d3.0476034!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc52c75f9e1c31%3A0x60e8e4e67c696e7!2sJalan%20Kebun%2C%20Shah%20Alam!5e0!3m2!1sen!2smy!4v1635825645789!5m2!1sen!2smy" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <div class="bg-[#f5f4f1] rounded-xl p-3 mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs text-[#313d44]">Capacity</span>
+                                <span class="text-xs font-medium text-[#FF3D3D]">150/150</span>
+                            </div>
+                            <div class="w-full h-2 bg-[#d4eaf7] rounded-full">
+                                <div class="w-full h-full bg-[#FF3D3D] rounded-full"></div>
+                            </div>
+                        </div>
+                        <a href="shelter-detail.html" class="bg-[#00668c] text-white py-2 px-4 rounded-xl text-sm font-medium hover:bg-opacity-90 transition-all w-full block text-center">
+                            View Details
+                        </a>
+                    </div>
+
+                    <!-- Shelter C -->
+                    <div class="glass-effect rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-[#3b3c3d]">Shelter C</h3>
+                            <span class="text-xs text-[#FF8C00] font-medium px-2 py-1 bg-[#FF8C00]/10 rounded-lg">Near Full</span>
+                        </div>
+                        <p class="text-sm text-[#313d44] mb-2">Bukit Jelutong</p>
+                        <div class="w-full h-24 rounded-xl mb-3 overflow-hidden">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.1089697729666!2d101.5361663!3d3.0876034!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc53c75f9e1c31%3A0x60e8e4e67c696e7!2sBukit%20Jelutong!5e0!3m2!1sen!2smy!4v1635825645789!5m2!1sen!2smy" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        <div class="bg-[#f5f4f1] rounded-xl p-3 mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs text-[#313d44]">Capacity</span>
+                                <span class="text-xs font-medium text-[#FF8C00]">140/150</span>
+                            </div>
+                            <div class="w-full h-2 bg-[#d4eaf7] rounded-full">
+                                <div class="w-[93%] h-full bg-[#FF8C00] rounded-full"></div>
+                            </div>
+                        </div>
+                        <a href="shelter-detail.html" class="bg-[#00668c] text-white py-2 px-4 rounded-xl text-sm font-medium hover:bg-opacity-90 transition-all w-full block text-center">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="glass-effect fixed bottom-0 w-[373px] h-16 flex justify-around items-center rounded-b-[38px]">
+                <a href="index.html" class="flex flex-col items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/arrow-left.svg" class="w-6 h-6 text-[#313d44]">
+                    <span class="text-[10px] text-[#313d44] font-medium mt-1">Back</span>
+                </a>
+                <a href="officer-dashboard.html" class="flex flex-col items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/layout-dashboard.svg" class="w-6 h-6 text-[#313d44]">
+                    <span class="text-[10px] text-[#313d44] font-medium mt-1">Dashboard</span>
+                </a>
+                <a href="shelter-resource.html" class="flex flex-col items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/home.svg" class="w-6 h-6 text-[#00668c]">
+                    <span class="text-[10px] text-[#00668c] font-medium mt-1">Shelter & Resource</span>
+                </a>
+                <a href="volunteer-teams.html" class="flex flex-col items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/helping-hand.svg" class="w-6 h-6 text-[#313d44]">
+                    <span class="text-[10px] text-[#313d44] font-medium mt-1">Emergency Teams</span>
+                </a>
+                <a href="community-groups.html" class="flex flex-col items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/users.svg" class="w-6 h-6 text-[#313d44]">
+                    <span class="text-[10px] text-[#313d44] font-medium mt-1">Community</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

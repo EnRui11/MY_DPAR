@@ -5,7 +5,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/services/user_information_service.dart';
-import 'package:mydpar/screens/officer/widgets/officer_nav_bar.dart';
+import 'package:mydpar/officer/widgets/officer_nav_bar.dart';
 import 'package:mydpar/services/sos_alert_service.dart';
 
 class OfficerDashboardScreen extends StatefulWidget {
@@ -28,21 +28,21 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
       backgroundColor: colors.bg200,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(_padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: _spacing),
-              _buildHeader(colors),
-              const SizedBox(height: _spacing),
-              _buildSOSSection(colors),
-              const SizedBox(height: _spacing),
-              _buildDisasterReportsSection(colors),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(_padding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(colors),
+                const SizedBox(height: _spacing),
+                _buildSOSSection(colors),
+                const SizedBox(height: _spacing),
+                _buildDisasterReportsSection(colors),
+              ],
+            ),
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(colors),
     );
   }
 

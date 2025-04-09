@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mydpar/screens/officer/screens/officer_dashboard_screen.dart';
 import 'package:mydpar/services/bottom_nav_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
@@ -15,6 +14,7 @@ import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/main/community_screen.dart';
+import 'package:mydpar/officer/screens/officer_nav_container.dart';
 
 // Model for settings items
 class SettingItem {
@@ -416,7 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SettingItem(
                 icon: Icons.supervised_user_circle,
                 title: AppLocalizations.of(context).translate('officer_panel'),
-                onTap: () => _navigateTo(const OfficerDashboardScreen()),
+                onTap: () => _navigateTo(const OfficerNavContainer()),
               ),
               colors,
             ),

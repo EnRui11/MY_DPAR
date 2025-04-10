@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/officer/screens/officer_dashboard_screen.dart';
-import 'package:mydpar/officer/screens/shelter_resource_screen.dart';
+import 'package:mydpar/officer/screens/shelter_management_screen.dart';
 
 class OfficerNavigationService extends ChangeNotifier {
   int _currentIndex = 0;
@@ -32,7 +32,7 @@ class OfficerNavigationService extends ChangeNotifier {
       case 0:
         return const OfficerDashboardScreen();
       case 1:
-        return const ShelterResourceScreen(); // TODO: Implement ShelterScreen
+        return const ShelterManagementScreen(); // TODO: Implement ShelterScreen
       case 2:
         return const Placeholder(); // TODO: Implement TeamsScreen
       case 3:

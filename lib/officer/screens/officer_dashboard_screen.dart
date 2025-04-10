@@ -478,7 +478,4 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
           ],
         ),
       );
-
-  // Replace the _buildBottomNavigation method with:
-  Widget _buildBottomNavigation(AppColorTheme colors) => const OfficerNavBar();
 }

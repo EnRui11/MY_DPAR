@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
-import 'package:mydpar/officer/services/officer_nav_service.dart';
+import 'package:mydpar/services/officer_nav_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/screens/account/login_screen.dart';
 import 'package:mydpar/services/cpr_audio_service.dart';

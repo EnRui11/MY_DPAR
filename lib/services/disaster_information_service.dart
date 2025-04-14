@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/theme/color_theme.dart';
-import 'package:mydpar/localization/app_localizations.dart';
 
 /// Model for disaster data with consistent structure across the app
 class DisasterModel {
@@ -21,12 +20,6 @@ class DisasterModel {
   final List<String>? userList;
   final List<Map<String, dynamic>>? locationList;
   final int verificationCount;
-  
-  // Translated fields
-  String? _translatedDisasterType;
-  String? _translatedSeverity;
-  String? _translatedStatus;
-  String? _translatedTimeAgo;
 
   DisasterModel({
     required this.id,
@@ -44,43 +37,6 @@ class DisasterModel {
     this.locationList,
     required this.verificationCount,
   });
-
-  // Getters for translated fields
-  String get translatedDisasterType => _translatedDisasterType ?? disasterType;
-  String get translatedSeverity => _translatedSeverity ?? severity;
-  String get translatedStatus => _translatedStatus ?? status;
-  String get translatedTimeAgo => _translatedTimeAgo ?? _getDefaultTimeAgo();
-
-  // Set translated values
-  void setTranslations({
-    String? disasterType,
-    String? severity,
-    String? status,
-    String? timeAgo,
-  }) {
-    _translatedDisasterType = disasterType;
-    _translatedSeverity = severity;
-    _translatedStatus = status;
-    _translatedTimeAgo = timeAgo;
-  }
-
-  // Helper method for default time ago string
-  String _getDefaultTimeAgo() {
-    try {
-      final DateTime disasterTime = DateTime.parse(timestamp);
-      final Duration difference = DateTime.now().difference(disasterTime);
-
-      if (difference.inMinutes < 60) {
-        return '${difference.inMinutes} minutes ago';
-      } else if (difference.inHours < 24) {
-        return '${difference.inHours} hours ago';
-      } else {
-        return '${difference.inDays} days ago';
-      }
-    } catch (e) {
-      return timestamp;
-    }
-  }
 
   factory DisasterModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -194,74 +150,12 @@ class DisasterService with ChangeNotifier {
   List<DisasterModel> _happeningDisasters = [];
   bool _isLoading = false;
   String? _error;
-  AppLocalizations? _localizations;
 
   // Getters
   List<DisasterModel> get disasters => _disasters;
   List<DisasterModel> get happeningDisasters => _happeningDisasters;
   bool get isLoading => _isLoading;
   String? get error => _error;
-
-  // Initialize localizations
-  void initializeLocalizations(AppLocalizations localizations) {
-    _localizations = localizations;
-    _updateTranslations();
-  }
-
-  // Update translations for all disasters
-  void _updateTranslations() {
-    if (_localizations == null) return;
-
-    for (var disaster in _disasters) {
-      disaster.setTranslations(
-        disasterType: _localizations!.translate(
-          'disaster_type_${disaster.disasterType.toLowerCase().replaceAll(' ', '_')}'
-        ),
-        severity: _localizations!.translate(
-          'severity_${disaster.severity.toLowerCase()}'
-        ),
-        status: _localizations!.translate(
-          'status_${disaster.status.toLowerCase().replaceAll(' ', '_')}'
-        ),
-        timeAgo: _getLocalizedTimeAgo(DateTime.parse(disaster.timestamp)),
-      );
-    }
-    notifyListeners();
-  }
-
-  // Helper method for localized time ago
-  String _getLocalizedTimeAgo(DateTime timestamp) {
-    if (_localizations == null) return '';
-    
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-    
-    if (difference.inDays > 365) {
-      final years = (difference.inDays / 365).floor();
-      return years == 1 
-          ? _localizations!.translate('time_year_ago')
-          : _localizations!.translate('time_years_ago').replaceAll('{count}', years.toString());
-    } else if (difference.inDays > 30) {
-      final months = (difference.inDays / 30).floor();
-      return months == 1 
-          ? _localizations!.translate('time_month_ago')
-          : _localizations!.translate('time_months_ago').replaceAll('{count}', months.toString());
-    } else if (difference.inDays > 0) {
-      return difference.inDays == 1 
-          ? _localizations!.translate('time_day_ago')
-          : _localizations!.translate('time_days_ago').replaceAll('{count}', difference.inDays.toString());
-    } else if (difference.inHours > 0) {
-      return difference.inHours == 1 
-          ? _localizations!.translate('time_hour_ago')
-          : _localizations!.translate('time_hours_ago').replaceAll('{count}', difference.inHours.toString());
-    } else if (difference.inMinutes > 0) {
-      return difference.inMinutes == 1 
-          ? _localizations!.translate('time_minute_ago')
-          : _localizations!.translate('time_minutes_ago').replaceAll('{count}', difference.inMinutes.toString());
-    } else {
-      return _localizations!.translate('time_just_now');
-    }
-  }
 
   /// Returns an icon based on the disaster type.
   static IconData getDisasterIcon(String type) {
@@ -410,6 +304,7 @@ class DisasterService with ChangeNotifier {
 
   /// Create a new disaster report
   Future<String?> createDisaster({
+    required String id,
     required String userId,
     required String disasterType,
     String? otherDisasterType,
@@ -427,6 +322,7 @@ class DisasterService with ChangeNotifier {
     _setLoading(true);
     try {
       final data = {
+        'id': id,
         'userId': userId,
         'disasterType': disasterType,
         'otherDisasterType': otherDisasterType,
@@ -443,16 +339,14 @@ class DisasterService with ChangeNotifier {
         'verifyNum': verificationCount,
       };
 
-      final docRef = await _firestore.collection('disaster_reports').add(data);
-
-      // Update the document with its ID
-      await docRef.update({'id': docRef.id});
+      // Use the custom ID instead of auto-generated ID
+      await _firestore.collection('disaster_reports').doc(id).set(data);
 
       // Refresh the disaster lists
       await fetchDisasters();
 
       _error = null;
-      return docRef.id;
+      return id;
     } catch (e) {
       debugPrint('Error creating disaster: $e');
       _error = 'Failed to create disaster: $e';

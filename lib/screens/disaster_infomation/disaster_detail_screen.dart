@@ -170,6 +170,8 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
       );
 
   Widget _buildAlertHeader(AppColorTheme colors) {
+    final localizations = AppLocalizations.of(context);
+
     return Row(
       children: [
         Container(
@@ -191,7 +193,9 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _disaster!.translatedDisasterType,
+                // Translate disaster type
+                localizations.translate(
+                    'disaster_type_${_disaster!.disasterType.toLowerCase().replaceAll(' ', '_')}'),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -211,13 +215,15 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      _disaster!.translatedSeverity,
+                      // Translate severity
+                      localizations.translate(
+                          'severity_${_disaster!.severity.toLowerCase()}'),
                       style: TextStyle(color: colors.bg100, fontSize: 12),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '• ${_disaster!.translatedTimeAgo}',
+                    '• ${_getLocalizedTimeAgo(context, DateTime.parse(_disaster!.timestamp))}',
                     style: TextStyle(color: colors.text200, fontSize: 12),
                   ),
                 ],
@@ -558,16 +564,6 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
           ],
         ),
         child: child,
-      );
-
-  Widget _buildStatusRow(String status, AppColorTheme colors) => Row(
-        children: [
-          Icon(Icons.verified, color: colors.text200, size: 16),
-          const SizedBox(width: 4),
-          Text(
-              '${AppLocalizations.of(context).translate('status')}: ${_disaster!.translatedStatus}',
-              style: TextStyle(color: colors.text200, fontSize: 12)),
-        ],
       );
 }
 

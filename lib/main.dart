@@ -120,13 +120,7 @@ class AppThemeWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final languageService = Provider.of<LanguageService>(context);
-    final disasterService = Provider.of<DisasterService>(context);
     final colors = themeProvider.currentTheme;
-
-    // Initialize translations in DisasterService
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      disasterService.initializeLocalizations(AppLocalizations.of(context));
-    });
 
     return MaterialApp(
       title: 'MY-DPAR',

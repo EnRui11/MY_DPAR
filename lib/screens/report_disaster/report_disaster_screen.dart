@@ -289,7 +289,11 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
         }
       }
 
+      // Generate disaster ID before creating
+      final disasterId = DisasterReport._generateId(internalDisasterType);
+
       final newDisasterId = await disasterService.createDisaster(
+        id: disasterId,
         userId: user.uid,
         disasterType: internalDisasterType,
         otherDisasterType: _otherDisasterType,
@@ -493,8 +497,8 @@ class _DisasterTypeDropdown extends StatelessWidget {
                           color: colors.accent200,
                           size: 20),
                       const SizedBox(width: 8),
-                      Text(l.translate(
-                          'disaster_type_${value.toLowerCase().replaceAll(' ', '_')}')),
+                      Text(l
+                          .translate(value.toLowerCase().replaceAll(' ', '_'))),
                     ],
                   ),
                 ))
@@ -589,7 +593,7 @@ class _SeverityButtons extends StatelessWidget {
                   side: BorderSide(color: colors.bg300.withOpacity(0.2)),
                 ),
               ),
-              child: Text(l.translate('severity_${severity.toLowerCase()}')),
+              child: Text(l.translate(severity.toLowerCase())),
             ),
           ),
         );
@@ -605,6 +609,7 @@ class _LocationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -624,7 +629,7 @@ class _LocationSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state =
-        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+    context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
     return Column(
       children: [
         Container(
@@ -657,7 +662,7 @@ class _LocationSelector extends StatelessWidget {
                     children: [
                       TileLayer(
                         urlTemplate:
-                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
                         userAgentPackageName: 'com.mydpar.app',
                       ),

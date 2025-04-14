@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:mydpar/screens/report_disaster/select_location_screen.dart';
+import 'package:mydpar/screens/report_disaster/select_disaster_location_screen.dart';
 import 'package:mydpar/services/disaster_verification_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -122,6 +123,7 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
   LatLng? _selectedMapLocation;
   bool _isLoading = false;
   bool _isLoadingLocation = false;
+  Timer? _locationRetryTimer; // Timer for retrying location fetch
 
   static const _disasterTypes = [
     'Heavy Rain',
@@ -140,13 +142,14 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
     _descriptionController = TextEditingController();
     _mapController = MapController();
     _initializeServices();
-    _updateCurrentLocation();
+    _updateCurrentLocation(); // Start attempting to get location
   }
 
   @override
   void dispose() {
     _descriptionController.dispose();
     _mapController.dispose();
+    _locationRetryTimer?.cancel(); // Cancel timer to prevent memory leaks
     super.dispose();
   }
 
@@ -156,21 +159,48 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
   }
 
   Future<void> _updateCurrentLocation() async {
+    if (_selectedMapLocation != null) {
+      // Stop retrying if user has selected a location
+      _locationRetryTimer?.cancel();
+      return;
+    }
+
     setState(() => _isLoadingLocation = true);
     try {
-      if (!await _checkLocationPermission()) return;
+      if (!await _checkLocationPermission()) {
+        _scheduleLocationRetry();
+        return;
+      }
 
       final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10), // Avoid hanging too long
+      );
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
         _mapController.move(_currentLocation!, 15);
+        _isLoadingLocation = false;
+        _locationRetryTimer?.cancel(); // Stop retrying on success
       });
     } catch (e) {
-      // _showSnackBar('Failed to get current location: $e', Colors.red);
-    } finally {
-      setState(() => _isLoadingLocation = false);
+      // Failed to get location, schedule a retry
+      _scheduleLocationRetry();
     }
+  }
+
+  void _scheduleLocationRetry() {
+    if (_selectedMapLocation != null || !mounted) {
+      setState(() => _isLoadingLocation = false);
+      return; // Don't retry if location is selected or widget is disposed
+    }
+
+    setState(() => _isLoadingLocation = false);
+    _locationRetryTimer?.cancel(); // Cancel any existing timer
+    _locationRetryTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted && _currentLocation == null && _selectedMapLocation == null) {
+        _updateCurrentLocation(); // Retry fetching location
+      }
+    });
   }
 
   Future<bool> _checkLocationPermission() async {
@@ -463,8 +493,8 @@ class _DisasterTypeDropdown extends StatelessWidget {
                           color: colors.accent200,
                           size: 20),
                       const SizedBox(width: 8),
-                      Text(l
-                          .translate(value.toLowerCase().replaceAll(' ', '_'))),
+                      Text(l.translate(
+                          'disaster_type_${value.toLowerCase().replaceAll(' ', '_')}')),
                     ],
                   ),
                 ))
@@ -559,7 +589,7 @@ class _SeverityButtons extends StatelessWidget {
                   side: BorderSide(color: colors.bg300.withOpacity(0.2)),
                 ),
               ),
-              child: Text(l.translate(severity.toLowerCase())),
+              child: Text(l.translate('severity_${severity.toLowerCase()}')),
             ),
           ),
         );
@@ -575,7 +605,6 @@ class _LocationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -634,11 +663,10 @@ class _LocationSelector extends StatelessWidget {
                       ),
                       MarkerLayer(
                         markers: [
-                          if (state._currentLocation != null &&
-                              state._selectedMapLocation == null)
+                          if (state._currentLocation != null)
                             Marker(
                               point: state._currentLocation!,
-                              builder: (_) => const Icon(Icons.my_location,
+                              builder: (_) => Icon(Icons.my_location,
                                   color: Colors.blue, size: 30),
                             ),
                           if (state._selectedMapLocation != null)
@@ -646,13 +674,6 @@ class _LocationSelector extends StatelessWidget {
                               point: state._selectedMapLocation!,
                               builder: (_) => Icon(Icons.location_pin,
                                   color: colors.warning, size: 40),
-                            ),
-                          if (state._currentLocation == null &&
-                              state._selectedMapLocation == null)
-                            Marker(
-                              point: _defaultLocation,
-                              builder: (_) => const Icon(Icons.location_pin,
-                                  color: Colors.grey, size: 30),
                             ),
                         ],
                       ),
@@ -909,8 +930,8 @@ extension ReportDisasterScreenStateExtensions on _ReportDisasterScreenState {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) =>
-              SelectLocationScreen(initialLocation: _selectedMapLocation)),
+          builder: (_) => SelectDisasterLocationScreen(
+              initialLocation: _selectedMapLocation)),
     );
 
     if (result != null && result is Map<String, dynamic>) {

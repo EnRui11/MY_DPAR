@@ -361,7 +361,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
                   Text(disaster.description,
                       style: TextStyle(color: colors.text200, fontSize: 14)),
                   const SizedBox(height: _spacingMedium),
-                  _buildStatusRow(disaster.status, colors),
+                  _buildStatusRow(disaster, colors),
                   if (disaster.coordinates != null) ...[
                     const SizedBox(height: _spacingMedium),
                     _buildMiniMap(disaster.coordinates!, colors),
@@ -400,10 +400,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
               ),
               const SizedBox(width: _spacingSmall),
               Expanded(
-                child: Text(
-                    // Translate the disaster type
-                    AppLocalizations.of(context).translate(
-                        'disaster_type_${disaster.disasterType.toLowerCase().replaceAll(' ', '_')}'),
+                child: Text(disaster.translatedDisasterType,
                     style: TextStyle(color: colors.text200, fontSize: 18)),
               ),
             ],
@@ -414,9 +411,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
               horizontal: _spacingSmall, vertical: 4),
           decoration: BoxDecoration(
               color: severityColor, borderRadius: BorderRadius.circular(12)),
-          child: Text(
-              AppLocalizations.of(context)
-                  .translate('severity_${disaster.severity.toLowerCase()}'),
+          child: Text(disaster.translatedSeverity,
               style: const TextStyle(color: Colors.white, fontSize: 12)),
         ),
       ],
@@ -424,15 +419,22 @@ class _DisastersScreenState extends State<DisastersScreen> {
   }
 
   /// Builds the status row.
-  Widget _buildStatusRow(String status, AppColorTheme colors) => Row(
-        children: [
-          Icon(Icons.verified, color: colors.text200, size: 16),
-          const SizedBox(width: 4),
-          Text(
-              '${AppLocalizations.of(context).translate('status')}: ${AppLocalizations.of(context).translate('status_${status.toLowerCase().replaceAll(' ', '_')}')}',
-              style: TextStyle(color: colors.text200, fontSize: 12)),
-        ],
-      );
+  Widget _buildStatusRow(DisasterModel disaster, AppColorTheme colors) {
+    if (disaster == null) {
+      return Container(); // or handle the null case appropriately
+    }
+
+    return Row(
+      children: [
+        Icon(Icons.verified, color: colors.text200, size: 16),
+        const SizedBox(width: 4),
+        Text(
+          '${AppLocalizations.of(context).translate('status')}: ${disaster.translatedStatus}',
+          style: TextStyle(color: colors.text200, fontSize: 12),
+        ),
+      ],
+    );
+  }
 
   /// Builds a mini map for the disaster location.
   Widget _buildMiniMap(LatLng coordinates, AppColorTheme colors) => SizedBox(
@@ -495,54 +497,12 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   /// Builds the time row with localized relative time.
   Widget _buildTimeRow(DisasterModel disaster, AppColorTheme colors) {
-    // Assuming disaster has a method to get the raw timestamp
-    final timestamp = DateTime.parse(disaster.timestamp);
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    String timeText;
-
-    if (difference.inDays > 365) {
-      final years = (difference.inDays / 365).floor();
-      timeText = years == 1
-          ? AppLocalizations.of(context).translate('time_year_ago')
-          : AppLocalizations.of(context)
-              .translate('time_years_ago')
-              .replaceAll('{count}', years.toString());
-    } else if (difference.inDays > 30) {
-      final months = (difference.inDays / 30).floor();
-      timeText = months == 1
-          ? AppLocalizations.of(context).translate('time_month_ago')
-          : AppLocalizations.of(context)
-              .translate('time_months_ago')
-              .replaceAll('{count}', months.toString());
-    } else if (difference.inDays > 0) {
-      timeText = difference.inDays == 1
-          ? AppLocalizations.of(context).translate('time_day_ago')
-          : AppLocalizations.of(context)
-              .translate('time_days_ago')
-              .replaceAll('{count}', difference.inDays.toString());
-    } else if (difference.inHours > 0) {
-      timeText = difference.inHours == 1
-          ? AppLocalizations.of(context).translate('time_hour_ago')
-          : AppLocalizations.of(context)
-              .translate('time_hours_ago')
-              .replaceAll('{count}', difference.inHours.toString());
-    } else if (difference.inMinutes > 0) {
-      timeText = difference.inMinutes == 1
-          ? AppLocalizations.of(context).translate('time_minute_ago')
-          : AppLocalizations.of(context)
-              .translate('time_minutes_ago')
-              .replaceAll('{count}', difference.inMinutes.toString());
-    } else {
-      timeText = AppLocalizations.of(context).translate('time_just_now');
-    }
-
     return Row(
       children: [
         Icon(Icons.access_time, color: colors.text200, size: 16),
         const SizedBox(width: 4),
-        Text(timeText, style: TextStyle(color: colors.text200, fontSize: 12)),
+        Text(disaster.translatedTimeAgo,
+            style: TextStyle(color: colors.text200, fontSize: 12)),
       ],
     );
   }

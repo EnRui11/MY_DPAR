@@ -7,16 +7,16 @@ import 'package:geocoding/geocoding.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
-class SelectLocationScreen extends StatefulWidget {
+class SelectDisasterLocationScreen extends StatefulWidget {
   final LatLng? initialLocation; // Optional initial location from ReportIncidentScreen
 
-  const SelectLocationScreen({super.key, this.initialLocation});
+  const SelectDisasterLocationScreen({super.key, this.initialLocation});
 
   @override
-  State<SelectLocationScreen> createState() => _SelectLocationScreenState();
+  State<SelectDisasterLocationScreen> createState() => _SelectDisasterLocationScreenState();
 }
 
-class _SelectLocationScreenState extends State<SelectLocationScreen> {
+class _SelectDisasterLocationScreenState extends State<SelectDisasterLocationScreen> {
   late final MapController _mapController;
   late final TextEditingController _searchController;
 

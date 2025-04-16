@@ -7,6 +7,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class ShelterDetailScreen extends StatelessWidget {
+  final String id;
   final String name;
   final String location;
   final ShelterStatus status;
@@ -16,6 +17,7 @@ class ShelterDetailScreen extends StatelessWidget {
 
   const ShelterDetailScreen({
     Key? key,
+    required this.id,
     required this.name,
     required this.location,
     required this.status,

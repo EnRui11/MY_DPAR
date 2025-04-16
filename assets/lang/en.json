@@ -1204,5 +1204,20 @@
   "min_threshold": "Minimum Threshold",
   "create_shelter": "Create Shelter",
   "shelter_created_successfully": "Shelter created successfully",
-  "failed_to_create_shelter": "Failed to create shelter"
+  "failed_to_create_shelter": "Failed to create shelter",
+
+
+
+
+
+  
+  "ShelterManagementScreen": "shelter_management_screen.dart",
+  "shelter_management": "Shelter Management",
+  "error_loading_shelters": "Error loading shelters",
+  "add_new_shelter": "Add New Shelter",
+  "capacity": "Capacity",
+  "available": "Available",
+  "near_full": "Near Full",
+  "full": "Full",
+  "view_details": "View Details"
 }

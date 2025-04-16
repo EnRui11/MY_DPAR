@@ -5,13 +5,22 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/shelter_detail_screen.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/add_shelter_screen.dart';
+import 'package:mydpar/officer/service/shelter_and_resource_service.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_map/flutter_map.dart';
 
-class ShelterManagementScreen extends StatelessWidget {
+class ShelterManagementScreen extends StatefulWidget {
   const ShelterManagementScreen({super.key});
 
+  @override
+  State<ShelterManagementScreen> createState() =>
+      _ShelterManagementScreenState();
+}
+
+class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
   static const double _padding = 16.0;
   static const double _spacing = 24.0;
+  final ShelterService _shelterService = ShelterService();
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +34,7 @@ class ShelterManagementScreen extends StatelessWidget {
           children: [
             _buildHeader(colors),
             Expanded(
-              child: _buildShelterList(context, colors), // Pass context here
+              child: _buildShelterList(context, colors),
             ),
           ],
         ),
@@ -48,7 +57,7 @@ class ShelterManagementScreen extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              'Shelter Management',
+              AppLocalizations.of(context).translate('shelter_management'),
               style: TextStyle(
                 color: colors.primary300,
                 fontSize: 20,
@@ -59,43 +68,62 @@ class ShelterManagementScreen extends StatelessWidget {
         ),
       );
 
-  // Update to accept BuildContext parameter
   Widget _buildShelterList(BuildContext context, AppColorTheme colors) =>
-      ListView(
-        padding: const EdgeInsets.all(_padding),
-        children: [
-          _buildAddShelterButton(context, colors),
-          const SizedBox(height: _spacing),
-          _buildShelterCard(
-            context, // Pass context here
-            colors,
-            name: 'Shelter A',
-            location: 'Taman Meru, Block A',
-            status: ShelterManagementStatus.available, // Use local enum
-            currentCapacity: 120,
-            totalCapacity: 200,
-          ),
-          const SizedBox(height: _spacing),
-          _buildShelterCard(
-            context, // Pass context here
-            colors,
-            name: 'Shelter B',
-            location: 'Jalan Kebun, Shah Alam',
-            status: ShelterManagementStatus.full, // Use local enum
-            currentCapacity: 150,
-            totalCapacity: 150,
-          ),
-          const SizedBox(height: _spacing),
-          _buildShelterCard(
-            context, // Pass context here
-            colors,
-            name: 'Shelter C',
-            location: 'Bukit Jelutong',
-            status: ShelterManagementStatus.nearFull, // Use local enum
-            currentCapacity: 140,
-            totalCapacity: 150,
-          ),
-        ],
+      StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _shelterService.getAllShelters(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                AppLocalizations.of(context)
+                    .translate('error_loading_shelters'),
+                style: TextStyle(color: colors.warning),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final shelters = snapshot.data!;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(_padding),
+            itemCount: shelters.length + 1, // +1 for the add button
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  children: [
+                    _buildAddShelterButton(context, colors),
+                    const SizedBox(height: _spacing),
+                  ],
+                );
+              }
+
+              final shelter = shelters[index - 1];
+              return Column(
+                children: [
+                  _buildShelterCard(
+                    context,
+                    colors,
+                    id: shelter['id'],
+                    name: shelter['name'],
+                    location: shelter['locationName'],
+                    status: _getShelterStatus(
+                      shelter['currentOccupancy'],
+                      shelter['capacity'],
+                    ),
+                    currentCapacity: shelter['currentOccupancy'],
+                    totalCapacity: shelter['capacity'],
+                    coordinates: shelter['location'] as LatLng,
+                  ),
+                  const SizedBox(height: _spacing),
+                ],
+              );
+            },
+          );
+        },
       );
 
   Widget _buildAddShelterButton(BuildContext context, AppColorTheme colors) =>
@@ -110,13 +138,14 @@ class ShelterManagementScreen extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AddShelterScreen(),
                 ),
               );
+              if (result == true) {}
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(
@@ -131,7 +160,7 @@ class ShelterManagementScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Add New Shelter',
+                    AppLocalizations.of(context).translate('add_new_shelter'),
                     style: TextStyle(
                       color: colors.accent200,
                       fontSize: 16,
@@ -145,18 +174,18 @@ class ShelterManagementScreen extends StatelessWidget {
         ),
       );
 
-  // Update to accept BuildContext parameter
   Widget _buildShelterCard(
-    BuildContext context, // Add context parameter
+    BuildContext context,
     AppColorTheme colors, {
+    required String id,
     required String name,
     required String location,
-    required ShelterManagementStatus status, // Use local enum
+    required ShelterManagementStatus status,
     required int currentCapacity,
     required int totalCapacity,
+    required LatLng coordinates,
   }) {
     final statusData = _getShelterStatusData(status, colors);
-    final capacityPercentage = (currentCapacity / totalCapacity) * 100;
 
     return Container(
       decoration: BoxDecoration(
@@ -170,7 +199,34 @@ class ShelterManagementScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to shelter details
+            // Convert local enum to ShelterDetailScreen enum
+            ShelterStatus detailStatus;
+            switch (status) {
+              case ShelterManagementStatus.available:
+                detailStatus = ShelterStatus.available;
+                break;
+              case ShelterManagementStatus.nearFull:
+                detailStatus = ShelterStatus.nearFull;
+                break;
+              case ShelterManagementStatus.full:
+                detailStatus = ShelterStatus.full;
+                break;
+            }
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ShelterDetailScreen(
+                  id: id,
+                  name: name,
+                  location: location,
+                  status: detailStatus,
+                  currentCapacity: currentCapacity,
+                  totalCapacity: totalCapacity,
+                  coordinates: coordinates,
+                ),
+              ),
+            );
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
@@ -224,9 +280,34 @@ class ShelterManagementScreen extends StatelessWidget {
                     color: colors.bg200,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  // TODO: Implement map view
-                  child: const Center(
-                    child: Text('Map View'),
+                  clipBehavior: Clip.antiAlias,
+                  child: FlutterMap(
+                    options: MapOptions(
+                      center: coordinates,
+                      zoom: 15,
+                      interactiveFlags: InteractiveFlag.none,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.app',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            width: 40,
+                            height: 40,
+                            point: coordinates,
+                            builder: (ctx) => const Icon(
+                              Icons.location_on,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -294,12 +375,13 @@ class ShelterManagementScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ShelterDetailScreen(
+                          id: id,
                           name: name,
                           location: location,
-                          status: detailStatus, // Use converted enum
+                          status: detailStatus,
                           currentCapacity: currentCapacity,
                           totalCapacity: totalCapacity,
-                          coordinates: LatLng(3.1390, 101.6869),
+                          coordinates: coordinates,
                         ),
                       ),
                     );
@@ -312,7 +394,8 @@ class ShelterManagementScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('View Details'),
+                  child: Text(
+                      AppLocalizations.of(context).translate('view_details')),
                 ),
               ],
             ),
@@ -322,30 +405,40 @@ class ShelterManagementScreen extends StatelessWidget {
     );
   }
 
+  ShelterManagementStatus _getShelterStatus(
+      int currentOccupancy, int capacity) {
+    final percentage = (currentOccupancy / capacity) * 100;
+    if (percentage >= 100) {
+      return ShelterManagementStatus.full;
+    } else if (percentage >= 80) {
+      return ShelterManagementStatus.nearFull;
+    } else {
+      return ShelterManagementStatus.available;
+    }
+  }
+
   _StatusData _getShelterStatusData(
       ShelterManagementStatus status, AppColorTheme colors) {
-    // Update parameter type
     switch (status) {
-      case ShelterManagementStatus.available: // Use local enum
+      case ShelterManagementStatus.available:
         return _StatusData(
           color: colors.accent200,
-          label: 'Available',
+          label: AppLocalizations.of(context).translate('available'),
         );
-      case ShelterManagementStatus.nearFull: // Use local enum
+      case ShelterManagementStatus.nearFull:
         return _StatusData(
           color: const Color(0xFFFF8C00),
-          label: 'Near Full',
+          label: AppLocalizations.of(context).translate('near_full'),
         );
-      case ShelterManagementStatus.full: // Use local enum
+      case ShelterManagementStatus.full:
         return _StatusData(
           color: colors.warning,
-          label: 'Full',
+          label: AppLocalizations.of(context).translate('full'),
         );
     }
   }
 }
 
-// Rename the enum to avoid conflict
 enum ShelterManagementStatus {
   available,
   nearFull,

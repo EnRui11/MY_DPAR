@@ -1207,5 +1207,20 @@
   "min_threshold": "Ambang Minimum",
   "create_shelter": "Cipta Tempat Perlindungan",
   "shelter_created_successfully": "Tempat perlindungan berjaya dibuat",
- "failed_to_create_shelter": "Gagal mencipta tempat perlindungan"
+ "failed_to_create_shelter": "Gagal mencipta tempat perlindungan",
+
+
+
+
+
+  
+ "ShelterManagementScreen": "shelter_management_screen.dart",
+ "shelter_management": "Pengurusan Tempat Perlindungan",
+ "error_loading_shelters": "Ralat memuatkan tempat perlindungan",
+ "add_new_shelter": "Tambah Tempat Perlindungan Baru",
+ "capacity": "Kapasiti",
+ "available": "Tersedia",
+ "near_full": "Hampir Penuh",
+ "full": "Penuh",
+ "view_details": "Lihat Butiran"
 }

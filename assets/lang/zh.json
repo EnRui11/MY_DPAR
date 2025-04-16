@@ -1210,5 +1210,20 @@
   "min_threshold": "最低阈值",
   "create_shelter": "创建庇护所",
   "shelter_created_successfully": "庇护所创建成功",
-"failed_to_create_shelter": "创建庇护所失败"
+"failed_to_create_shelter": "创建庇护所失败",
+
+
+
+
+
+  
+"ShelterManagementScreen": "shelter_management_screen.dart",
+"shelter_management": "庇护所管理",
+"error_loading_shelters": "加载庇护所时出错",
+"add_new_shelter": "添加新庇护所",
+"capacity": "容量",
+"available": "可用",
+"near_full": "接近满员",
+"full": "满员",
+"view_details": "查看详情"
 }

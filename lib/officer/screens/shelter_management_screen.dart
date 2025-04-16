@@ -4,6 +4,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/shelter_detail_screen.dart';
+import 'package:mydpar/officer/screens/shelter_and_resource/add_shelter_screen.dart';
 import 'package:latlong2/latlong.dart';
 
 class ShelterManagementScreen extends StatelessWidget {
@@ -59,10 +60,11 @@ class ShelterManagementScreen extends StatelessWidget {
       );
 
   // Update to accept BuildContext parameter
-  Widget _buildShelterList(BuildContext context, AppColorTheme colors) => ListView(
+  Widget _buildShelterList(BuildContext context, AppColorTheme colors) =>
+      ListView(
         padding: const EdgeInsets.all(_padding),
         children: [
-          _buildAddShelterButton(colors),
+          _buildAddShelterButton(context, colors),
           const SizedBox(height: _spacing),
           _buildShelterCard(
             context, // Pass context here
@@ -96,7 +98,8 @@ class ShelterManagementScreen extends StatelessWidget {
         ],
       );
 
-  Widget _buildAddShelterButton(AppColorTheme colors) => Container(
+  Widget _buildAddShelterButton(BuildContext context, AppColorTheme colors) =>
+      Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
           borderRadius: BorderRadius.circular(16),
@@ -108,7 +111,12 @@ class ShelterManagementScreen extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              // TODO: Implement add shelter functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddShelterScreen(),
+                ),
+              );
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(
@@ -281,7 +289,7 @@ class ShelterManagementScreen extends StatelessWidget {
                         detailStatus = ShelterStatus.full;
                         break;
                     }
-                    
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -315,7 +323,8 @@ class ShelterManagementScreen extends StatelessWidget {
   }
 
   _StatusData _getShelterStatusData(
-      ShelterManagementStatus status, AppColorTheme colors) { // Update parameter type
+      ShelterManagementStatus status, AppColorTheme colors) {
+    // Update parameter type
     switch (status) {
       case ShelterManagementStatus.available: // Use local enum
         return _StatusData(

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
@@ -9,6 +8,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/select_shelter_location_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mydpar/services/shelter_and_resource_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddShelterScreen extends StatefulWidget {
   const AddShelterScreen({super.key});
@@ -27,9 +28,12 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
   String? _locationName;
   final List<ResourceItem> _resources = [];
   bool _isLoadingLocation = false;
+  bool _isSubmitting = false;
   late final MapController _mapController;
   static const LatLng _defaultLocation =
       LatLng(3.1390, 101.6869); // Kuala Lumpur
+
+  final _shelterService = ShelterService();
 
   @override
   void initState() {
@@ -554,7 +558,7 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _submitForm,
+        onPressed: _isSubmitting ? null : _submitForm,
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.accent200,
           foregroundColor: colors.bg100,
@@ -563,13 +567,22 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Text(
-          localizations.translate('create_shelter'),
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: _isSubmitting
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: colors.bg100,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(
+                localizations.translate('create_shelter'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }
@@ -630,8 +643,60 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
       return;
     }
 
-    // TODO: Implement shelter creation logic
-    // This should create a new shelter in your database
+    setState(() => _isSubmitting = true);
+
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Prepare resources data
+      final resourcesData = _resources
+          .map((resource) => {
+                'type': resource.type,
+                'description': resource.descriptionController.text,
+                'currentStock': int.parse(resource.initialStockController.text),
+                'minThreshold': int.parse(resource.minThresholdController.text),
+              })
+          .toList();
+
+      // Create shelter with resources
+      await _shelterService.createShelter(
+        name: _nameController.text,
+        status: _selectedStatus,
+        location: _selectedLocation!,
+        locationName: _locationName!,
+        capacity: int.parse(_capacityController.text),
+        createdBy: currentUser.uid,
+        resources: resourcesData,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)
+                .translate('shelter_created_successfully')),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true); // Return true to indicate success
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)
+                .translate('failed_to_create_shelter')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 }
 

@@ -1208,5 +1208,7 @@
   "resource_description": "资源描述",
   "current_stock": "当前库存",
   "min_threshold": "最低阈值",
-  "create_shelter": "创建庇护所"
+  "create_shelter": "创建庇护所",
+  "shelter_created_successfully": "庇护所创建成功",
+"failed_to_create_shelter": "创建庇护所失败"
 }

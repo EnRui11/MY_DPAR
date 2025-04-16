@@ -1205,5 +1205,7 @@
   "resource_description": "Penerangan Sumber",
   "current_stock": "Stok Semasa",
   "min_threshold": "Ambang Minimum",
-  "create_shelter": "Cipta Tempat Perlindungan"
+  "create_shelter": "Cipta Tempat Perlindungan",
+  "shelter_created_successfully": "Tempat perlindungan berjaya dibuat",
+ "failed_to_create_shelter": "Gagal mencipta tempat perlindungan"
 }

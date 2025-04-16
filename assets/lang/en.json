@@ -1174,5 +1174,33 @@
   "upload_failed": "Photo upload failed",
   "edit_location": "Edit Location",
   "tap_map_to_edit_location": "Tap on the map to edit location",
-  "location_updated": "Location updated. Click 'Save Changes' to apply."
+  "location_updated": "Location updated. Click 'Save Changes' to apply.",
+
+
+
+
+
+  "AddShelterScreen": "add_shelter_screen.dart",
+  "add_new_shelter": "Add New Shelter",
+  "basic_information": "Basic Information",
+  "shelter_name": "Shelter Name",
+  "please_enter_shelter_name": "Please enter the shelter name",
+  "status": "Status",
+  "status_available": "Available",
+  "status_preparation": "Preparation",
+  "location": "Location",
+  "please_select_location": "Please select a location",
+  "total_capacity": "Total Capacity",
+  "enter_total_capacity": "Enter total capacity",
+  "please_enter_capacity": "Please enter the capacity",
+  "capacity_must_be_positive": "Capacity must be a positive number",
+  "resource_setup": "Resource Setup",
+  "resource_type_food": "Food",
+  "resource_type_water": "Water",
+  "resource_type_medical": "Medical",
+  "resource_type_others": "Others",
+  "resource_description": "Resource Description",
+  "current_stock": "Current Stock",
+  "min_threshold": "Minimum Threshold",
+  "create_shelter": "Create Shelter"
 }

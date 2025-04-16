@@ -1177,5 +1177,33 @@
   "photo_uploaded": "Foto berjaya dimuat naik.",
   "upload_failed": "Muat naik foto gagal",
   "edit_location": "Sunting Lokasi",
-  "tap_map_to_edit_location": "Ketik pada peta untuk menyunting lokasi"
+  "tap_map_to_edit_location": "Ketik pada peta untuk menyunting lokasi",
+
+
+
+
+
+  "AddShelterScreen": "add_shelter_screen.dart",
+  "add_new_shelter": "Tambah Tempat Perlindungan Baru",
+  "basic_information": "Maklumat Asas",
+  "shelter_name": "Nama Tempat Perlindungan",
+  "please_enter_shelter_name": "Sila masukkan nama tempat perlindungan",
+  "status": "Status",
+  "status_available": "Tersedia",
+  "status_preparation": "Persediaan",
+  "location": "Lokasi",
+  "please_select_location": "Sila pilih lokasi",
+  "total_capacity": "Kapasiti Keseluruhan",
+  "enter_total_capacity": "Masukkan kapasiti keseluruhan",
+  "please_enter_capacity": "Sila masukkan kapasiti",
+  "capacity_must_be_positive": "Kapasiti mesti nombor positif",
+  "resource_setup": "Penyediaan Sumber",
+  "resource_type_food": "Makanan",
+  "resource_type_water": "Air",
+  "resource_type_medical": "Perubatan",
+  "resource_type_others": "Lain-lain",
+  "resource_description": "Penerangan Sumber",
+  "current_stock": "Stok Semasa",
+  "min_threshold": "Ambang Minimum",
+  "create_shelter": "Cipta Tempat Perlindungan"
 }

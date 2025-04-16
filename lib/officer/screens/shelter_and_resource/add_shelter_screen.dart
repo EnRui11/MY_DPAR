@@ -496,19 +496,6 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: resource.titleController,
-            decoration: InputDecoration(
-              labelText: localizations.translate('resource_title'),
-              labelStyle: TextStyle(color: colors.text100),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: colors.bg200,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
             controller: resource.descriptionController,
             maxLines: 3,
             decoration: InputDecoration(
@@ -529,7 +516,7 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
                   controller: resource.initialStockController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: localizations.translate('initial_stock'),
+                    labelText: localizations.translate('current_stock'),
                     labelStyle: TextStyle(color: colors.text100),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -650,19 +637,16 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
 
 class ResourceItem {
   String type;
-  final TextEditingController titleController;
   final TextEditingController descriptionController;
   final TextEditingController initialStockController;
   final TextEditingController minThresholdController;
 
   ResourceItem({
     this.type = 'food',
-    TextEditingController? titleController,
     TextEditingController? descriptionController,
     TextEditingController? initialStockController,
     TextEditingController? minThresholdController,
-  })  : titleController = titleController ?? TextEditingController(),
-        descriptionController =
+  })  : descriptionController =
             descriptionController ?? TextEditingController(),
         initialStockController =
             initialStockController ?? TextEditingController(),
@@ -671,14 +655,12 @@ class ResourceItem {
 
   ResourceItem copyWith({
     String? type,
-    TextEditingController? titleController,
     TextEditingController? descriptionController,
     TextEditingController? initialStockController,
     TextEditingController? minThresholdController,
   }) {
     return ResourceItem(
       type: type ?? this.type,
-      titleController: titleController ?? this.titleController,
       descriptionController:
           descriptionController ?? this.descriptionController,
       initialStockController:

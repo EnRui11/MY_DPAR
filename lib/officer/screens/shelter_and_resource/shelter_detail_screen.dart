@@ -51,6 +51,8 @@ class ShelterDetailScreen extends StatelessWidget {
                     _buildDemographicsCard(colors),
                     const SizedBox(height: _spacing),
                     _buildResourceInventoryCard(colors),
+                    const SizedBox(height: _spacing),
+                    _buildHelpRequestsCard(colors),
                   ],
                 ),
               ),
@@ -123,7 +125,8 @@ class ShelterDetailScreen extends StatelessWidget {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.app',
                   ),
                   MarkerLayer(
@@ -275,7 +278,9 @@ class ShelterDetailScreen extends StatelessWidget {
         ),
       );
 
-  Widget _buildDemographicItem(String label, String count, AppColorTheme colors) => Column(
+  Widget _buildDemographicItem(
+          String label, String count, AppColorTheme colors) =>
+      Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -306,6 +311,8 @@ class ShelterDetailScreen extends StatelessWidget {
               colors,
               icon: Icons.restaurant,
               title: 'Food Supplies',
+              description:
+                  'Basic food supplies including rice, canned goods, and dry foods',
               currentStock: 75,
               minRequired: 50,
               status: ResourceStatus.medium,
@@ -315,6 +322,7 @@ class ShelterDetailScreen extends StatelessWidget {
               colors,
               icon: Icons.local_drink,
               title: 'Water Supplies',
+              description: 'Clean drinking water in bottles and containers',
               currentStock: 120,
               minRequired: 100,
               status: ResourceStatus.good,
@@ -324,6 +332,8 @@ class ShelterDetailScreen extends StatelessWidget {
               colors,
               icon: Icons.medical_services,
               title: 'Medical Supplies',
+              description:
+                  'First aid kits, medications, and basic medical equipment',
               currentStock: 30,
               minRequired: 50,
               status: ResourceStatus.low,
@@ -338,6 +348,7 @@ class ShelterDetailScreen extends StatelessWidget {
     AppColorTheme colors, {
     required IconData icon,
     required String title,
+    required String description,
     required int currentStock,
     required int minRequired,
     required ResourceStatus status,
@@ -352,6 +363,7 @@ class ShelterDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -388,6 +400,14 @@ class ShelterDetailScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: TextStyle(
+              color: colors.text200,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -442,6 +462,142 @@ class ShelterDetailScreen extends StatelessWidget {
     );
   }
 
+  // Add this new section for help requests
+  Widget _buildHelpRequestsCard(AppColorTheme colors) => _buildCard(
+        colors,
+        title: 'Help Requests',
+        titleTrailing: TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            'View All',
+            style: TextStyle(
+              color: colors.accent200,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        content: Column(
+          children: [
+            _buildHelpRequestItem(
+              colors,
+              icon: Icons.medical_services,
+              title: 'Medical Assistance',
+              description: 'Need additional medical supplies and personnel',
+              requestDate: 'May 15, 2023',
+            ),
+            const SizedBox(height: _spacingSmall),
+            _buildHelpRequestItem(
+              colors,
+              icon: Icons.people,
+              title: 'Volunteer Support',
+              description: 'Requesting volunteers for food distribution',
+              requestDate: 'May 12, 2023',
+            ),
+            const SizedBox(height: _spacing),
+            // Wrap the button in a SizedBox with a defined height
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add_circle_outline, size: 16),
+                label: const Text('Create New Request'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.accent200,
+                  foregroundColor: colors.bg100,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildHelpRequestItem(
+    AppColorTheme colors, {
+    required IconData icon,
+    required String title,
+    required String description,
+    required String requestDate,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(_padding),
+      decoration: BoxDecoration(
+        color: colors.bg200,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: colors.accent200, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  color: colors.primary300,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: TextStyle(
+              color: colors.text200,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, color: colors.text200, size: 12),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Requested on: $requestDate',
+                    style: TextStyle(
+                      color: colors.text200,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () {},
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'View Details',
+                  style: TextStyle(
+                    color: colors.accent200,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildResourceActionButtons(AppColorTheme colors) => Row(
         children: [
           Expanded(
@@ -452,22 +608,6 @@ class ShelterDetailScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent200,
                 foregroundColor: colors.bg100,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: _spacingSmall),
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.help_outline, size: 16),
-              label: const Text('Request Help'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: colors.accent200,
-                side: BorderSide(color: colors.accent200),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -585,7 +725,8 @@ class ShelterDetailScreen extends StatelessWidget {
     }
   }
 
-  _StatusData _getShelterStatusData(ShelterStatus status, AppColorTheme colors) {
+  _StatusData _getShelterStatusData(
+      ShelterStatus status, AppColorTheme colors) {
     switch (status) {
       case ShelterStatus.available:
         return _StatusData(
@@ -605,7 +746,8 @@ class ShelterDetailScreen extends StatelessWidget {
     }
   }
 
-  _StatusData _getResourceStatusData(ResourceStatus status, AppColorTheme colors) {
+  _StatusData _getResourceStatusData(
+      ResourceStatus status, AppColorTheme colors) {
     switch (status) {
       case ResourceStatus.good:
         return _StatusData(

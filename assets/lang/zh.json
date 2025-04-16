@@ -1180,5 +1180,33 @@
   "location_update_failed": "更新位置失败",
   "only_officers_can_edit": "只有官员可以编辑此信息",
   "tap_map_to_edit_location": "点击地图编辑位置",
-  "location_updated": "位置已更新。点击'保存更改'以应用。"
+  "location_updated": "位置已更新。点击'保存更改'以应用。",
+
+
+
+
+
+  "AddShelterScreen": "add_shelter_screen.dart",
+  "add_new_shelter": "添加新庇护所",
+  "basic_information": "基本信息",
+  "shelter_name": "庇护所名称",
+  "please_enter_shelter_name": "请输入庇护所名称",
+  "status": "状态",
+  "status_available": "可用",
+  "status_preparation": "准备中",
+  "location": "位置",
+  "please_select_location": "请选择位置",
+  "total_capacity": "总容量",
+  "enter_total_capacity": "输入总容量",
+  "please_enter_capacity": "请输入容量",
+  "capacity_must_be_positive": "容量必须为正数",
+  "resource_setup": "资源设置",
+  "resource_type_food": "食物",
+  "resource_type_water": "水",
+  "resource_type_medical": "医疗",
+  "resource_type_others": "其他",
+  "resource_description": "资源描述",
+  "current_stock": "当前库存",
+  "min_threshold": "最低阈值",
+  "create_shelter": "创建庇护所"
 }

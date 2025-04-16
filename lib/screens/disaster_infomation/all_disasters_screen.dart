@@ -21,7 +21,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
   // State variables
   String _selectedSort = 'time';
   bool _isAscending = true;
-  String _selectedType = 'all_types'; 
+  String _selectedType = 'all_types';
   Position? _currentPosition;
   bool _showBackToTop = false;
 
@@ -472,7 +472,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
         coordinates.longitude,
       );
 
-      // Use the same approach as in disaster_detail_screen.dart
+      // Use the same approach as in officer_disaster_detail_screen.dart
       distanceText =
           ' (${AppLocalizations.of(context).translate('distance_away').replaceAll('{distance}', (distanceInMeters / 1000).toStringAsFixed(1))})';
     }

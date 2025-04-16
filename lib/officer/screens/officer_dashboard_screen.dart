@@ -5,11 +5,10 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/services/user_information_service.dart';
-import 'package:mydpar/officer/widgets/officer_nav_bar.dart';
 import 'package:mydpar/services/sos_alert_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
-
-import 'disaster_information/all_disasters_screen.dart';
+import 'package:mydpar/officer/screens/disaster_information/officer_all_disasters_screen.dart';
+import 'package:mydpar/officer/screens/disaster_information/officer_disaster_detail_screen.dart';
 
 class OfficerDashboardScreen extends StatefulWidget {
   const OfficerDashboardScreen({Key? key}) : super(key: key);
@@ -75,7 +74,8 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
             ),
           ),
           Text(
-            AppLocalizations.of(context)!.translate('disaster_response_control_center'), // L78
+            AppLocalizations.of(context)!
+                .translate('disaster_response_control_center'), // L78
             style: TextStyle(
               color: colors.text200,
               fontSize: 16,
@@ -139,7 +139,8 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    AppLocalizations.of(context)!.translate('active_sos'), // L142
+                    AppLocalizations.of(context)!
+                        .translate('active_sos'), // L142
                     style: TextStyle(
                       color: colors.bg100,
                       fontSize: 18,
@@ -192,7 +193,8 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          AppLocalizations.of(context)!.translate('no_active_sos_emergencies'), // L195
+                          AppLocalizations.of(context)!
+                              .translate('no_active_sos_emergencies'), // L195
                           style: TextStyle(
                             color: colors.bg100,
                             fontSize: 16,
@@ -201,7 +203,8 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          AppLocalizations.of(context)!.translate('situation_under_control'), // L204
+                          AppLocalizations.of(context)!
+                              .translate('situation_under_control'), // L204
                           style: TextStyle(
                             color: colors.bg100.withOpacity(0.8),
                             fontSize: 14,
@@ -239,7 +242,8 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                AppLocalizations.of(context)!.translate('more_emergencies', {
+                                AppLocalizations.of(context)!.translate(
+                                    'more_emergencies', {
                                   'count': (alerts.length - 2).toString()
                                 }), // L242
                                 style: TextStyle(
@@ -286,11 +290,14 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
     final diff = now.difference(timestamp.toDate());
 
     if (diff.inMinutes < 60) {
-      return AppLocalizations.of(context)!.translate('minutes_ago', {'count': diff.inMinutes.toString()}); // L618
+      return AppLocalizations.of(context)!.translate(
+          'minutes_ago', {'count': diff.inMinutes.toString()}); // L618
     } else if (diff.inHours < 24) {
-      return AppLocalizations.of(context)!.translate('hours_ago', {'count': diff.inHours.toString()}); // L620
+      return AppLocalizations.of(context)!
+          .translate('hours_ago', {'count': diff.inHours.toString()}); // L620
     } else {
-      return AppLocalizations.of(context)!.translate('days_ago', {'count': diff.inDays.toString()}); // L622
+      return AppLocalizations.of(context)!
+          .translate('days_ago', {'count': diff.inDays.toString()}); // L622
     }
   }
 
@@ -446,13 +453,21 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                           final disaster = disasterService.disasters[index];
                           return GestureDetector(
                             onTap: () {
-                              // TODO: Navigate to disaster detail screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OfficerDisasterDetailScreen(
+                                    disasterId: disaster.id,
+                                  ),
+                                ),
+                              );
                             },
                             child: _buildOfficerDisasterCard(
                               severity: disaster.severity,
                               location: disaster.location,
                               time: _formatDisasterTime(disaster.timestamp),
                               disasterType: disaster.disasterType,
+                              status: disaster.status,
                               colors: colors,
                               localize: localize,
                             ),
@@ -509,6 +524,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
     required String location,
     required String time,
     required String disasterType,
+    required String? status,
     required AppColorTheme colors,
     required AppLocalizations localize,
   }) =>
@@ -542,41 +558,69 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        localize.translate(
-                            'disaster_type_${disasterType.toLowerCase()}'),
-                        style: TextStyle(
-                          color: colors.primary300,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              localize.translate(
+                                  'disaster_type_${disasterType.toLowerCase()}'),
+                              style: TextStyle(
+                                color: colors.primary300,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: DisasterService.getSeverityColor(
+                                        severity, colors)
+                                    .withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                localize.translate(
+                                    'severity_${severity.toLowerCase()}'),
+                                style: TextStyle(
+                                  color: DisasterService.getSeverityColor(
+                                      severity, colors),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              DisasterService.getSeverityColor(severity, colors)
-                                  .withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          localize
-                              .translate('severity_${severity.toLowerCase()}'),
-                          style: TextStyle(
-                            color: DisasterService.getSeverityColor(
-                                severity, colors),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                      if (status != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(status, colors)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            localize.translate(
+                                'status_${status.toLowerCase().replaceAll(' ', '_')}'),
+                            style: TextStyle(
+                              color: _getStatusColor(status, colors),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Icon(Icons.location_on_outlined,
@@ -610,6 +654,21 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
           ],
         ),
       );
+
+  Color _getStatusColor(String status, AppColorTheme colors) {
+    switch (status.toLowerCase()) {
+      case 'happening':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      case 'resolved':
+        return Colors.green;
+      case 'false_alarm':
+        return Colors.grey;
+      default:
+        return colors.accent200;
+    }
+  }
 
   String _formatDisasterTime(String timestamp) {
     try {

@@ -625,7 +625,7 @@
   "teach_children_call": "教孩子们在紧急情况下拨打999或994",
   "during_fire": "火灾期间",
   "immediate_actions": "立即行动",
-  "shout_api": "喊“Api!”以警告所有人并迅速撤离",
+  "shout_api": "喊\"Api!\"以警告所有人并迅速撤离",
   "stay_low": "保持低姿以避免浓烟——必要时爬行",
   "check_doors": "用手检查门；如果热，使用其他出口",
   "close_doors": "关上身后的门以减缓火势蔓延",
@@ -688,7 +688,7 @@
   "report_outages": "立即向TNB (15454) 报告停电",
   "after_flood": "洪水后",
   "return_safely": "安全返回",
-  "wait_all_clear": "等待NADMA的“安全”通知后再回家",
+  "wait_all_clear": "等待NADMA的\"安全\"通知后再回家",
   "check_structural_damage": "检查结构性损坏或滑坡",
   "photograph_damage": "拍摄损坏照片以供保险或救济申请",
   "avoid_power_lines": "避免倒下的电线并向TNB报告",
@@ -906,7 +906,7 @@
   "stay_clear_zones": "远离活跃的滑坡区域",
   "after_landslide": "山体滑坡后",
   "safety_check": "安全检查",
-  "wait_all_clear": "等待Bomba或NADMA的“安全”信号",
+  "wait_all_clear": "等待Bomba或NADMA的\"安全\"信号",
   "report_trapped": "向999或994报告被困人员",
   "check_utilities": "检查公用设施—向TNB或SYABAS报告损坏",
   "monitor_secondary": "监控二次滑坡或洪水",
@@ -1013,7 +1013,7 @@
   "install_deadbolts": "在所有门上安装ANSI一级锁",
   "secure_windows": "用锁和格栅加固窗户",
   "use_motion_lights": "在周边使用运动感应灯",
-  "join_neighborhood_watch": "加入当地的“邻里守望”或社区巡逻",
+  "join_neighborhood_watch": "加入当地的\"邻里守望\"或社区巡逻",
   "install_cctv": "安装闭路电视或视频门铃",
   "monsoon_flood_safety": "季风雨和洪水安全",
   "elevate_appliances": "将电器抬高至洪水水位以上",
@@ -1153,12 +1153,32 @@
 
 
 
-  "OfficeAllDisastersScreen": "OfficeAllDisastersScreen.dart",
+  "OfficeAllDisastersScreen": "all_disasters_screen.dart",
   "all_disasters": "所有灾害",
   "filter_by_status": "按状态筛选",
   "status_all_status": "所有状态",
   "status_happening": "进行中",
   "status_pending": "待处理",
   "status_resolved": "已解决",
-  "status_false_alarm": "误报"
+  "status_false_alarm": "误报",
+
+
+
+
+
+  "OfficeDisastersDetailScreen": "disaster_detail_screen.dart",
+  "save_changes": "保存更改",
+  "changes_saved": "更改已成功保存",
+  "failed_to_save": "保存更改失败",
+  "add_photo": "添加照片",
+  "no_photos": "没有照片",
+  "enter_description": "输入描述",
+  "photo_uploaded": "照片上传成功。",
+  "upload_failed": "照片上传失败",
+  "edit_location": "编辑位置",
+  "location_updated": "位置更新成功",
+  "location_update_failed": "更新位置失败",
+  "only_officers_can_edit": "只有官员可以编辑此信息",
+  "tap_map_to_edit_location": "点击地图编辑位置",
+  "location_updated": "位置已更新。点击'保存更改'以应用。"
 }

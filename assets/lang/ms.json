@@ -1154,12 +1154,28 @@
 
 
 
-  "OfficeAllDisastersScreen": "OfficeAllDisastersScreen.dart",
+  "OfficeAllDisastersScreen": "all_disasters_screen.dart",
   "all_disasters": "Semua Bencana",
   "filter_by_status": "Tapis Mengikut Status",
   "status_all_status": "Semua Status",
   "status_happening": "Sedang Berlaku",
   "status_pending": "Tertunda",
   "status_resolved": "Selesai",
-  "status_false_alarm": "Amaran Palsu"
+  "status_false_alarm": "Amaran Palsu",
+
+
+
+
+
+  "OfficeDisastersDetailScreen": "disaster_detail_screen.dart",
+  "save_changes": "Simpan Perubahan",
+  "changes_saved": "Perubahan berjaya disimpan",
+  "failed_to_save": "Gagal menyimpan perubahan",
+  "add_photo": "Tambah Foto",
+  "no_photos": "Tiada foto",
+  "enter_description": "Masukkan keterangan",
+  "photo_uploaded": "Foto berjaya dimuat naik.",
+  "upload_failed": "Muat naik foto gagal",
+  "edit_location": "Sunting Lokasi",
+  "tap_map_to_edit_location": "Ketik pada peta untuk menyunting lokasi"
 }

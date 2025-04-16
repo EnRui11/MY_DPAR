@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
-import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:mydpar/officer/screens/disaster_information/officer_disaster_detail_screen.dart';
 
 /// Displays a list of ongoing disasters with filtering and sorting capabilities.
 class OfficerAllDisastersScreen extends StatefulWidget {
@@ -380,7 +380,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '${AppLocalizations.of(context).translate('all_disasters')} ($count)', // <-- Changed label
+              '${AppLocalizations.of(context).translate('all_disasters')} ($count)',
               style: TextStyle(
                   color: colors.accent200,
                   fontSize: 16,
@@ -390,7 +390,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
               icon: Icon(Icons.refresh_rounded,
                   color: colors.accent200, size: 20),
               onPressed: () async {
-                await service.fetchDisasters(onlyHappening: false); // <-- Always fetch all
+                await service.fetchDisasters(onlyHappening: false);
                 await _fetchCurrentLocation();
               },
             ),
@@ -404,7 +404,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => DisasterDetailScreen(disasterId: disaster.id),
+            builder: (_) => OfficerDisasterDetailScreen(disasterId: disaster.id), 
           ),
         ),
         child: Padding(
@@ -534,7 +534,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
         coordinates.longitude,
       );
 
-      // Use the same approach as in disaster_detail_screen.dart
+      // Use the same approach as in officer_disaster_detail_screen.dart
       distanceText =
           ' (${AppLocalizations.of(context).translate('distance_away').replaceAll('{distance}', (distanceInMeters / 1000).toStringAsFixed(1))})';
     }

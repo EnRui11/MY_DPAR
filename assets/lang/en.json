@@ -607,7 +607,7 @@
   "fire_safety_guide": "Fire Safety Guide",
   "back": "Back",
   "fire_warning": "Fire Warning",
-  "fire_spread_warning": "Fires spread fast—get out within 2 minutes! Don’t wait, call Bomba (994) immediately!",
+  "fire_spread_warning": "Fires spread fast—get out within 2 minutes! Don't wait, call Bomba (994) immediately!",
   "before_fire": "Before a Fire",
   "prevention": "Prevention",
   "install_smoke_detectors": "Install smoke detectors in every room and test monthly",
@@ -617,7 +617,7 @@
   "escape_plan": "Escape Plan",
   "plan_two_routes": "Plan and practice two escape routes per room",
   "ensure_windows_openable": "Ensure windows and grilles can be opened quickly",
-  "set_meeting_point": "Set a meeting point (e.g., outside surau or neighbor’s house)",
+  "set_meeting_point": "Set a meeting point (e.g., outside surau or neighbor's house)",
   "teach_children_call": "Teach children to call 999 or 994 in emergencies",
   "during_fire": "During a Fire",
   "immediate_actions": "Immediate Actions",
@@ -684,7 +684,7 @@
   "report_outages": "Report outages to TNB (15454) promptly",
   "after_flood": "After the Flood",
   "return_safely": "Return Safely",
-  "wait_all_clear": "Wait for NADMA’s \"all clear\" before returning home",
+  "wait_all_clear": "Wait for NADMA's \"all clear\" before returning home",
   "check_structural_damage": "Check for structural damage or landslides",
   "photograph_damage": "Photograph damage for insurance or relief claims",
   "avoid_power_lines": "Avoid downed power lines and report to TNB",
@@ -842,7 +842,7 @@
   "move_higher_floors": "Prepare to move to higher floors if flooding begins",
   "if_outside": "If Outside",
   "avoid_flooded_roads": "Avoid driving through flooded roads—15 cm of water can disable a car",
-  "dont_walk_floodwater": "Don’t walk in floodwater; it may hide potholes or debris",
+  "dont_walk_floodwater": "Don't walk in floodwater; it may hide potholes or debris",
   "stay_clear_trees": "Stay clear of trees, poles, and metal during lightning",
   "move_higher_ground": "Move to higher ground if flash floods approach",
   "after_heavy_rain": "After Heavy Rain",
@@ -902,7 +902,7 @@
   "stay_clear_zones": "Stay clear of active slide zones",
   "after_landslide": "After a Landslide",
   "safety_check": "Safety Check",
-  "wait_all_clear": "Wait for Bomba or NADMA’s 'all clear' signal",
+  "wait_all_clear": "Wait for Bomba or NADMA's 'all clear' signal",
   "report_trapped": "Report trapped people to 999 or 994",
   "check_utilities": "Check utilities—report damage to TNB or SYABAS",
   "monitor_secondary": "Monitor for secondary slides or flooding",
@@ -1150,12 +1150,29 @@
 
 
 
-  "OfficeAllDisastersScreen": "OfficeAllDisastersScreen.dart",
+  "OfficeAllDisastersScreen": "all_disasters_screen.dart",
   "all_disasters": "All Disasters",
   "filter_by_status": "Filter by Status",
   "status_all_status": "All Statuses",
   "status_happening": "Happening",
   "status_pending": "Pending",
   "status_resolved": "Resolved",
-  "status_false_alarm": "False Alarm"
+  "status_false_alarm": "False Alarm",
+
+
+
+
+
+  "OfficeDisastersDetailScreen": "disaster_detail_screen.dart",
+  "save_changes": "Save Changes",
+  "changes_saved": "Changes saved successfully",
+  "failed_to_save": "Failed to save changes",
+  "add_photo": "Add Photo",
+  "no_photos": "No photos",
+  "enter_description": "Enter description",
+  "photo_uploaded": "Photo uploaded successfully.",
+  "upload_failed": "Photo upload failed",
+  "edit_location": "Edit Location",
+  "tap_map_to_edit_location": "Tap on the map to edit location",
+  "location_updated": "Location updated. Click 'Save Changes' to apply."
 }

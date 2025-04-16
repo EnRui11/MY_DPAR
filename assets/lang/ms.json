@@ -1132,5 +1132,34 @@
   "failed_to_submit_report": "Gagal menghantar laporan: {error}",
   "failed_to_upload_photos": "Gagal memuat naik foto: {error}",
   "failed_to_pick_photo": "Gagal memilih foto: {error}",
-  "please_fill_in": "Sila isi: {fields}"
+  "please_fill_in": "Sila isi: {fields}",
+
+
+
+
+
+  "officer_dashboard_screen": "officer_dashboard_screen.dart",
+  "disaster_response_control_center": "Pusat Kawalan Tindak Balas Bencana",
+  "active_sos": "SOS Aktif",
+  "no_active_sos_emergencies": "Tiada Kecemasan SOS Aktif",
+  "situation_under_control": "Situasi kini terkawal",
+  "more_emergencies": "+{count} kecemasan lagi",
+  "view_all_sos": "Lihat Semua SOS",
+  "disaster_reports": "Laporan Bencana",
+  "minutes_ago": "{count} minit lalu",
+  "hours_ago": "{count} jam lalu",
+  "days_ago": "{count} hari lalu",
+
+
+
+
+
+  "OfficeAllDisastersScreen": "OfficeAllDisastersScreen.dart",
+  "all_disasters": "Semua Bencana",
+  "filter_by_status": "Tapis Mengikut Status",
+  "status_all_status": "Semua Status",
+  "status_happening": "Sedang Berlaku",
+  "status_pending": "Tertunda",
+  "status_resolved": "Selesai",
+  "status_false_alarm": "Amaran Palsu"
 }

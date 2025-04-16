@@ -1128,5 +1128,34 @@
   "failed_to_submit_report": "Failed to submit report: {error}",
   "failed_to_upload_photos": "Failed to upload photos: {error}",
   "failed_to_pick_photo": "Failed to pick photo: {error}",
-  "please_fill_in": "Please fill in: {fields}"
+  "please_fill_in": "Please fill in: {fields}",
+
+
+
+
+
+  "officer_dashboard_screen": "officer_dashboard_screen.dart",
+  "disaster_response_control_center": "Disaster Response Control Center",
+  "active_sos": "Active SOS",
+  "no_active_sos_emergencies": "No Active SOS Emergencies",
+  "situation_under_control": "The situation is currently under control",
+  "more_emergencies": "+{count} more emergencies",
+  "view_all_sos": "View All SOS",
+  "disaster_reports": "Disaster Reports",
+  "minutes_ago": "{count} min ago",
+  "hours_ago": "{count} hours ago",
+  "days_ago": "{count} days ago",
+
+
+
+
+
+  "OfficeAllDisastersScreen": "OfficeAllDisastersScreen.dart",
+  "all_disasters": "All Disasters",
+  "filter_by_status": "Filter by Status",
+  "status_all_status": "All Statuses",
+  "status_happening": "Happening",
+  "status_pending": "Pending",
+  "status_resolved": "Resolved",
+  "status_false_alarm": "False Alarm"
 }

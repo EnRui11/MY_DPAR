@@ -177,13 +177,14 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color:
-                DisasterService.getSeverityColor(_disaster!.severity, colors).withOpacity(0.1),
+            color: DisasterService.getSeverityColor(_disaster!.severity, colors)
+                .withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
             DisasterService.getDisasterIcon(_disaster!.disasterType),
-            color: DisasterService.getSeverityColor(_disaster!.severity, colors),
+            color:
+                DisasterService.getSeverityColor(_disaster!.severity, colors),
             size: 24,
           ),
         ),
@@ -568,33 +569,43 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
 }
 
 String _getLocalizedTimeAgo(BuildContext context, DateTime timestamp) {
-    final localizations = AppLocalizations.of(context);
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-    
-    if (difference.inDays > 365) {
-      final years = (difference.inDays / 365).floor();
-      return years == 1 
-          ? localizations.translate('time_year_ago')
-          : localizations.translate('time_years_ago').replaceAll('{count}', years.toString());
-    } else if (difference.inDays > 30) {
-      final months = (difference.inDays / 30).floor();
-      return months == 1 
-          ? localizations.translate('time_month_ago')
-          : localizations.translate('time_months_ago').replaceAll('{count}', months.toString());
-    } else if (difference.inDays > 0) {
-      return difference.inDays == 1 
-          ? localizations.translate('time_day_ago')
-          : localizations.translate('time_days_ago').replaceAll('{count}', difference.inDays.toString());
-    } else if (difference.inHours > 0) {
-      return difference.inHours == 1 
-          ? localizations.translate('time_hour_ago')
-          : localizations.translate('time_hours_ago').replaceAll('{count}', difference.inHours.toString());
-    } else if (difference.inMinutes > 0) {
-      return difference.inMinutes == 1 
-          ? localizations.translate('time_minute_ago')
-          : localizations.translate('time_minutes_ago').replaceAll('{count}', difference.inMinutes.toString());
-    } else {
-      return localizations.translate('time_just_now');
-    }
+  final localizations = AppLocalizations.of(context);
+  final now = DateTime.now();
+  final difference = now.difference(timestamp);
+
+  if (difference.inDays > 365) {
+    final years = (difference.inDays / 365).floor();
+    return years == 1
+        ? localizations.translate('time_year_ago')
+        : localizations
+            .translate('time_years_ago')
+            .replaceAll('{count}', years.toString());
+  } else if (difference.inDays > 30) {
+    final months = (difference.inDays / 30).floor();
+    return months == 1
+        ? localizations.translate('time_month_ago')
+        : localizations
+            .translate('time_months_ago')
+            .replaceAll('{count}', months.toString());
+  } else if (difference.inDays > 0) {
+    return difference.inDays == 1
+        ? localizations.translate('time_day_ago')
+        : localizations
+            .translate('time_days_ago')
+            .replaceAll('{count}', difference.inDays.toString());
+  } else if (difference.inHours > 0) {
+    return difference.inHours == 1
+        ? localizations.translate('time_hour_ago')
+        : localizations
+            .translate('time_hours_ago')
+            .replaceAll('{count}', difference.inHours.toString());
+  } else if (difference.inMinutes > 0) {
+    return difference.inMinutes == 1
+        ? localizations.translate('time_minute_ago')
+        : localizations
+            .translate('time_minutes_ago')
+            .replaceAll('{count}', difference.inMinutes.toString());
+  } else {
+    return localizations.translate('time_just_now');
   }
+}

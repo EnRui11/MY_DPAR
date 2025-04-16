@@ -10,18 +10,20 @@ import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 
 /// Displays a list of ongoing disasters with filtering and sorting capabilities.
-class DisastersScreen extends StatefulWidget {
-  const DisastersScreen({super.key});
+class OfficerAllDisastersScreen extends StatefulWidget {
+  const OfficerAllDisastersScreen({super.key});
 
   @override
-  State<DisastersScreen> createState() => _DisastersScreenState();
+  State<OfficerAllDisastersScreen> createState() =>
+      _OfficerAllDisastersScreenState();
 }
 
-class _DisastersScreenState extends State<DisastersScreen> {
+class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
   // State variables
   String _selectedSort = 'time';
   bool _isAscending = true;
-  String _selectedType = 'all_types'; 
+  String _selectedType = 'all_types';
+  String _selectedStatus = 'all_status';
   Position? _currentPosition;
   bool _showBackToTop = false;
 
@@ -40,6 +42,15 @@ class _DisastersScreenState extends State<DisastersScreen> {
   static const _spacingSmall = 8.0;
   static const _spacingMedium = 12.0;
   static const _spacingLarge = 24.0;
+
+
+  static const _statusTypes = [
+    'all_status',
+    'happening',
+    'pending',
+    'resolved',
+    'false_alarm', 
+  ];
 
   // Controllers
   final ScrollController _scrollController = ScrollController();
@@ -61,9 +72,9 @@ class _DisastersScreenState extends State<DisastersScreen> {
     _fetchCurrentLocation();
     _scrollController.addListener(_updateBackToTopVisibility);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Use the DisasterService to fetch all disasters
+      // Fetch ALL disasters, not just happening
       Provider.of<DisasterService>(context, listen: false)
-          .fetchDisasters(onlyHappening: true);
+          .fetchDisasters(onlyHappening: false);
     });
   }
 
@@ -145,7 +156,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             Text(
-              AppLocalizations.of(context).translate('happening_disasters'),
+              AppLocalizations.of(context).translate('all_disasters'), 
               style: TextStyle(
                   color: colors.accent200,
                   fontSize: 18,
@@ -166,11 +177,62 @@ class _DisastersScreenState extends State<DisastersScreen> {
                 style: _labelStyle(colors)),
             const SizedBox(height: _spacingSmall),
             _buildTypeFilterChips(colors),
+            const SizedBox(height: _spacingMedium),
+            Text(AppLocalizations.of(context).translate('filter_by_status'), 
+                style: _labelStyle(colors)),
+            const SizedBox(height: _spacingSmall),
+            _buildStatusFilterChips(colors),
             const SizedBox(height: _spacingLarge),
             _buildSortOptions(colors),
           ],
         ),
       );
+
+  // Add this new method for status filter chips
+  Widget _buildStatusFilterChips(AppColorTheme colors) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _statusTypes
+              .map((status) => _buildStatusChip(status, colors))
+              .toList(),
+        ),
+      );
+
+  // Add this new method for individual status chip
+  Widget _buildStatusChip(String status, AppColorTheme colors) {
+    final isSelected = status == _selectedStatus;
+    return Padding(
+      padding: const EdgeInsets.only(right: _spacingSmall),
+      child: FilterChip(
+        avatar: Icon(
+          status == 'all_status'
+              ? Icons.filter_list
+              : status == 'happening'
+                  ? Icons.warning_amber
+                  : status == 'pending'
+                      ? Icons.hourglass_empty
+                      : status == 'resolved' 
+                          ? Icons.check_circle
+                          : Icons.cancel,
+          size: 18,
+          color: isSelected ? colors.accent200 : colors.text200,
+        ),
+        label: Text(AppLocalizations.of(context).translate('status_$status')),
+        selected: isSelected,
+        onSelected: (selected) =>
+            setState(() => _selectedStatus = selected ? status : 'all_status'),
+        backgroundColor: colors.bg100,
+        selectedColor: colors.primary100,
+        labelStyle:
+            TextStyle(color: isSelected ? colors.accent200 : colors.text200),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+              color: isSelected ? colors.accent100 : colors.primary200),
+        ),
+      ),
+    );
+  }
 
   /// Builds the content area with a list of disasters.
   Widget _buildContent(AppColorTheme colors) => Consumer<DisasterService>(
@@ -279,8 +341,8 @@ class _DisastersScreenState extends State<DisastersScreen> {
               style: TextStyle(color: colors.warning)));
     }
 
-    final filteredDisasters =
-        _filterAndSortDisasters(service.happeningDisasters);
+    // Use all disasters, not just happeningDisasters
+    final filteredDisasters = _filterAndSortDisasters(service.disasters);
     if (filteredDisasters.isEmpty) {
       return Center(
           child: Text(AppLocalizations.of(context).translate('no_disasters'),
@@ -289,7 +351,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await service.fetchDisasters(onlyHappening: true);
+        await service.fetchDisasters(onlyHappening: false); // <-- Always fetch all
         await _fetchCurrentLocation();
       },
       color: colors.accent200,
@@ -318,7 +380,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '${AppLocalizations.of(context).translate('happening_disasters')} ($count)',
+              '${AppLocalizations.of(context).translate('all_disasters')} ($count)', // <-- Changed label
               style: TextStyle(
                   color: colors.accent200,
                   fontSize: 16,
@@ -328,7 +390,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
               icon: Icon(Icons.refresh_rounded,
                   color: colors.accent200, size: 20),
               onPressed: () async {
-                await service.fetchDisasters(onlyHappening: true);
+                await service.fetchDisasters(onlyHappening: false); // <-- Always fetch all
                 await _fetchCurrentLocation();
               },
             ),
@@ -566,12 +628,18 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   /// Filters and sorts the disaster list based on user selections.
   List<DisasterModel> _filterAndSortDisasters(List<DisasterModel> disasters) {
-    final filtered = _selectedType == 'all_types' // Use 'all_types'
-        ? disasters
-        : disasters
-            .where((d) =>
-                d.disasterType.toLowerCase() == _selectedType.toLowerCase())
-            .toList();
+    var filtered = disasters;
+    if (_selectedType != 'all_types') { // Check for 'all_types'
+      filtered = filtered
+          .where((d) =>
+              d.disasterType.toLowerCase() == _selectedType.toLowerCase())
+          .toList();
+    }
+    if (_selectedStatus != 'all_status') {
+      filtered = filtered
+          .where((d) => d.status.toLowerCase() == _selectedStatus.toLowerCase())
+          .toList();
+    }
     _sortDisasters(filtered);
     return filtered;
   }

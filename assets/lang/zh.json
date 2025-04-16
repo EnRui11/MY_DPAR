@@ -1131,5 +1131,34 @@
   "failed_to_submit_report": "提交报告失败：{error}",
   "failed_to_upload_photos": "上传照片失败：{error}",
   "failed_to_pick_photo": "选择照片失败：{error}",
-  "please_fill_in": "请填写：{fields}"
+  "please_fill_in": "请填写：{fields}",
+
+
+
+
+
+  "officer_dashboard_screen": "officer_dashboard_screen.dart",
+  "disaster_response_control_center": "灾害应对指挥中心",
+  "active_sos": "活跃SOS",
+  "no_active_sos_emergencies": "当前没有活跃的SOS紧急情况",
+  "situation_under_control": "目前情况已受控",
+  "more_emergencies": "+{count} 个更多紧急情况",
+  "view_all_sos": "查看所有SOS",
+  "disaster_reports": "灾害报告",
+  "minutes_ago": "{count}分钟前",
+  "hours_ago": "{count}小时前",
+  "days_ago": "{count}天前",
+
+
+
+
+
+  "OfficeAllDisastersScreen": "OfficeAllDisastersScreen.dart",
+  "all_disasters": "所有灾害",
+  "filter_by_status": "按状态筛选",
+  "status_all_status": "所有状态",
+  "status_happening": "进行中",
+  "status_pending": "待处理",
+  "status_resolved": "已解决",
+  "status_false_alarm": "误报"
 }

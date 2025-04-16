@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
-import 'package:mydpar/officer/screens/shelter_detail_screen.dart';
+import 'package:mydpar/officer/screens/shelter_and_resource/shelter_detail_screen.dart';
 import 'package:latlong2/latlong.dart';
 
 class ShelterManagementScreen extends StatelessWidget {

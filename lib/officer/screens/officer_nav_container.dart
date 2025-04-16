@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mydpar/services/officer_nav_service.dart';
+import 'package:mydpar/officer/service/officer_nav_service.dart';
 import 'package:mydpar/officer/widgets/officer_nav_bar.dart';
 import 'package:mydpar/officer/screens/officer_dashboard_screen.dart';
 import 'package:mydpar/officer/screens/shelter_management_screen.dart';

@@ -7,6 +7,9 @@ import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/officer/widgets/officer_nav_bar.dart';
 import 'package:mydpar/services/sos_alert_service.dart';
+import 'package:mydpar/services/disaster_information_service.dart';
+
+import 'disaster_information/all_disasters_screen.dart';
 
 class OfficerDashboardScreen extends StatefulWidget {
   const OfficerDashboardScreen({Key? key}) : super(key: key);
@@ -18,6 +21,15 @@ class OfficerDashboardScreen extends StatefulWidget {
 class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   static const double _padding = 16.0;
   static const double _spacing = 24.0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<DisasterService>(context, listen: false)
+          .fetchDisasters(onlyHappening: false);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,16 +61,21 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   Widget _buildHeader(AppColorTheme colors) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Hello, Officer',
-            style: TextStyle(
-              color: colors.primary300,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          Consumer<UserInformationService>(
+            builder: (context, userService, _) => Text(
+              AppLocalizations.of(context)!.translate('hello_user', {
+                'name': userService.lastName ??
+                    AppLocalizations.of(context)!.translate('user')
+              }),
+              style: TextStyle(
+                color: colors.primary300,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           Text(
-            'Disaster Response Control Center',
+            AppLocalizations.of(context)!.translate('disaster_response_control_center'), // L78
             style: TextStyle(
               color: colors.text200,
               fontSize: 16,
@@ -122,7 +139,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Active SOS',
+                    AppLocalizations.of(context)!.translate('active_sos'), // L142
                     style: TextStyle(
                       color: colors.bg100,
                       fontSize: 18,
@@ -175,7 +192,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'No Active SOS Emergencies',
+                          AppLocalizations.of(context)!.translate('no_active_sos_emergencies'), // L195
                           style: TextStyle(
                             color: colors.bg100,
                             fontSize: 16,
@@ -184,7 +201,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'The situation is currently under control',
+                          AppLocalizations.of(context)!.translate('situation_under_control'), // L204
                           style: TextStyle(
                             color: colors.bg100.withOpacity(0.8),
                             fontSize: 14,
@@ -222,7 +239,9 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                '+${alerts.length - 2} more emergencies',
+                                AppLocalizations.of(context)!.translate('more_emergencies', {
+                                  'count': (alerts.length - 2).toString()
+                                }), // L242
                                 style: TextStyle(
                                   color: colors.bg100,
                                   fontSize: 14,
@@ -264,14 +283,14 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return '';
     final now = DateTime.now();
-    final difference = now.difference(timestamp.toDate());
+    final diff = now.difference(timestamp.toDate());
 
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} min ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} hours ago';
+    if (diff.inMinutes < 60) {
+      return AppLocalizations.of(context)!.translate('minutes_ago', {'count': diff.inMinutes.toString()}); // L618
+    } else if (diff.inHours < 24) {
+      return AppLocalizations.of(context)!.translate('hours_ago', {'count': diff.inHours.toString()}); // L620
     } else {
-      return '${difference.inDays} days ago';
+      return AppLocalizations.of(context)!.translate('days_ago', {'count': diff.inDays.toString()}); // L622
     }
   }
 
@@ -333,149 +352,279 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
         ),
       );
 
-  Widget _buildDisasterReportsSection(AppColorTheme colors) => Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Disaster Reports',
+  Widget _buildDisasterReportsSection(AppColorTheme colors) {
+    final localize = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                localize.translate('disaster_reports'),
                 style: TextStyle(
-                  color: colors.primary300,
                   fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
+                  color: colors.primary300,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'View All',
-                  style: TextStyle(color: colors.accent200),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildDisasterCard(
-            'Flash Flood',
-            'Jalan Meru, Klang',
-            '5 minutes ago',
-            Icons.water_drop,
-            'High',
-            const Color(0xFFFF3D3D),
-            colors,
-          ),
-          const SizedBox(height: 12),
-          _buildDisasterCard(
-            'Landslide',
-            'Bukit Antarabangsa',
-            '15 minutes ago',
-            Icons.landscape,
-            'Medium',
-            const Color(0xFFFF8C00),
-            colors,
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.add),
-              label: const Text('Add New Disaster Report'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.accent200,
-                foregroundColor: colors.bg100,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OfficerAllDisastersScreen(),
+                  ),
+                );
+              },
+              child: Text(
+                localize.translate('view_all'),
+                style: TextStyle(
+                  color: colors.accent200,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          ),
-        ],
-      );
-
-  Widget _buildDisasterCard(
-    String title,
-    String location,
-    String time,
-    IconData icon,
-    String severity,
-    Color severityColor,
-    AppColorTheme colors,
-  ) =>
-      Container(
-        padding: const EdgeInsets.all(_padding),
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.bg300.withOpacity(0.2)),
+          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const SizedBox(height: 16),
+        _buildOfficerDisastersList(colors, localize),
+      ],
+    );
+  }
+
+  Widget _buildOfficerDisastersList(
+      AppColorTheme colors, AppLocalizations localize) {
+    return Consumer<DisasterService>(
+      builder: (context, disasterService, child) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(localize.translate('refreshing_disaster_info')),
+                duration: Duration(seconds: 1),
+                backgroundColor: colors.accent200,
+              ),
+            );
+            return await disasterService.fetchDisasters(onlyHappening: false);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
               children: [
-                Row(
-                  children: [
-                    Icon(icon, color: severityColor, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: colors.primary300,
-                        fontWeight: FontWeight.w500,
+                if (disasterService.isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (disasterService.error != null)
+                  Center(
+                    child: Text(
+                      '${localize.translate('error')}: ${disasterService.error}',
+                      style: TextStyle(color: colors.warning),
+                    ),
+                  )
+                else if (disasterService.disasters.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Text(
+                        localize.translate('no_active_disasters'),
+                        style: TextStyle(color: colors.text200),
                       ),
                     ),
-                  ],
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: severityColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                  )
+                else
+                  Column(
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: disasterService.disasters.length > 3
+                            ? 3
+                            : disasterService.disasters.length,
+                        itemBuilder: (context, index) {
+                          final disaster = disasterService.disasters[index];
+                          return GestureDetector(
+                            onTap: () {
+                              // TODO: Navigate to disaster detail screen
+                            },
+                            child: _buildOfficerDisasterCard(
+                              severity: disaster.severity,
+                              location: disaster.location,
+                              time: _formatDisasterTime(disaster.timestamp),
+                              disasterType: disaster.disasterType,
+                              colors: colors,
+                              localize: localize,
+                            ),
+                          );
+                        },
+                      ),
+                      if (disasterService.disasters.length > 3)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.info_outline,
+                                  size: 16, color: colors.text200),
+                              const SizedBox(width: 8),
+                              Text(
+                                localize.translate('showing_x_of_y_disasters', {
+                                  'shown': '3',
+                                  'total': disasterService.disasters.length
+                                      .toString()
+                                }),
+                                style: TextStyle(
+                                  color: colors.text200,
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    severity,
+                    localize.translate('pull_to_refresh'),
                     style: TextStyle(
-                      color: severityColor,
+                      color: colors.text200,
                       fontSize: 12,
-                      fontWeight: FontWeight.w500,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              location,
-              style: TextStyle(color: colors.text200, fontSize: 14),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOfficerDisasterCard({
+    required String severity,
+    required String location,
+    required String time,
+    required String disasterType,
+    required AppColorTheme colors,
+    required AppLocalizations localize,
+  }) =>
+      Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: colors.bg100.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.bg100.withOpacity(0.2)),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: DisasterService.getSeverityColor(severity, colors),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                DisasterService.getDisasterIcon(disasterType),
+                color: colors.bg100,
+                size: 24,
+              ),
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  time,
-                  style: TextStyle(
-                      color: colors.text200.withOpacity(0.7), fontSize: 12),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'View Details →',
-                    style: TextStyle(
-                      color: colors.accent200,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        localize.translate(
+                            'disaster_type_${disasterType.toLowerCase()}'),
+                        style: TextStyle(
+                          color: colors.primary300,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              DisasterService.getSeverityColor(severity, colors)
+                                  .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          localize
+                              .translate('severity_${severity.toLowerCase()}'),
+                          style: TextStyle(
+                            color: DisasterService.getSeverityColor(
+                                severity, colors),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined,
+                          color: colors.text200, size: 16),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          location,
+                          style: TextStyle(
+                            color: colors.text200,
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.access_time, color: colors.text200, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        time,
+                        style: TextStyle(
+                          color: colors.text200,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       );
+
+  String _formatDisasterTime(String timestamp) {
+    try {
+      final dt = DateTime.parse(timestamp);
+      final now = DateTime.now();
+      final diff = now.difference(dt);
+      if (diff.inMinutes < 60) {
+        return '${diff.inMinutes} min ago';
+      } else if (diff.inHours < 24) {
+        return '${diff.inHours} hours ago';
+      } else {
+        return '${diff.inDays} days ago';
+      }
+    } catch (_) {
+      return timestamp;
+    }
+  }
 }

@@ -59,7 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: BottomNavBar(
         onTap: (index) {
-          if (index != 0) { // Only navigate if not already on home screen
+          if (index != 0) {
+            // Only navigate if not already on home screen
             navigationService.changeIndex(index);
             _navigateToScreen(index);
           }
@@ -131,7 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildSOSButton(context, colors, localize),
             const SizedBox(height: _spacingLarge),
             _buildRecentDisastersSection(context, colors, localize),
-            const SizedBox(height: 80), // Space for bottom nav
           ],
         ),
       );
@@ -282,7 +282,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Builds an individual disaster card
   Widget _buildDisasterCard({
-    required String description,
     required String severity,
     required String location,
     required String time,
@@ -350,13 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(color: colors.text200, fontSize: 14),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Icon(Icons.location_on_outlined,
@@ -449,7 +441,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () =>
                                 _navigateToDisasterDetail(context, disaster.id),
                             child: _buildDisasterCard(
-                              description: disaster.description,
                               severity: disaster.severity,
                               location: disaster.location,
                               time: disaster.formattedTime,
@@ -582,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         return;
     }
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => screen),

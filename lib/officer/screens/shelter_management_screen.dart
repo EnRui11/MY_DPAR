@@ -113,6 +113,7 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
                     status: _getShelterStatus(
                       shelter['currentOccupancy'],
                       shelter['capacity'],
+                      shelter['status'],
                     ),
                     currentCapacity: shelter['currentOccupancy'],
                     totalCapacity: shelter['capacity'],
@@ -202,14 +203,23 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
             // Convert local enum to ShelterDetailScreen enum
             ShelterStatus detailStatus;
             switch (status) {
-              case ShelterManagementStatus.available:
-                detailStatus = ShelterStatus.available;
+              case ShelterManagementStatus.preparation:
+                detailStatus = ShelterStatus.preparation;
                 break;
-              case ShelterManagementStatus.nearFull:
-                detailStatus = ShelterStatus.nearFull;
+              case ShelterManagementStatus.lowCapacity:
+                detailStatus = ShelterStatus.lowCapacity;
+                break;
+              case ShelterManagementStatus.mediumCapacity:
+                detailStatus = ShelterStatus.mediumCapacity;
+                break;
+              case ShelterManagementStatus.highCapacity:
+                detailStatus = ShelterStatus.highCapacity;
                 break;
               case ShelterManagementStatus.full:
                 detailStatus = ShelterStatus.full;
+                break;
+              case ShelterManagementStatus.overCapacity:
+                detailStatus = ShelterStatus.overCapacity;
                 break;
             }
 
@@ -323,7 +333,7 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Capacity',
+                            AppLocalizations.of(context).translate('Capacity'),
                             style: TextStyle(
                               color: colors.text200,
                               fontSize: 12,
@@ -360,14 +370,23 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
                     // Convert local enum to ShelterDetailScreen enum
                     ShelterStatus detailStatus;
                     switch (status) {
-                      case ShelterManagementStatus.available:
-                        detailStatus = ShelterStatus.available;
+                      case ShelterManagementStatus.preparation:
+                        detailStatus = ShelterStatus.preparation;
                         break;
-                      case ShelterManagementStatus.nearFull:
-                        detailStatus = ShelterStatus.nearFull;
+                      case ShelterManagementStatus.lowCapacity:
+                        detailStatus = ShelterStatus.lowCapacity;
+                        break;
+                      case ShelterManagementStatus.mediumCapacity:
+                        detailStatus = ShelterStatus.mediumCapacity;
+                        break;
+                      case ShelterManagementStatus.highCapacity:
+                        detailStatus = ShelterStatus.highCapacity;
                         break;
                       case ShelterManagementStatus.full:
                         detailStatus = ShelterStatus.full;
+                        break;
+                      case ShelterManagementStatus.overCapacity:
+                        detailStatus = ShelterStatus.overCapacity;
                         break;
                     }
 
@@ -406,43 +425,74 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
   }
 
   ShelterManagementStatus _getShelterStatus(
-      int currentOccupancy, int capacity) {
+      int currentOccupancy, int capacity, String status) {
+    // First check if the shelter is under preparation
+    if (status == 'preparation') {
+      return ShelterManagementStatus.preparation;
+    }
+
+    // If not under preparation, calculate based on capacity
+    if (capacity == 0) return ShelterManagementStatus.lowCapacity;
+
     final percentage = (currentOccupancy / capacity) * 100;
-    if (percentage >= 100) {
+
+    if (percentage > 100) {
+      return ShelterManagementStatus.overCapacity;
+    } else if (percentage == 100) {
       return ShelterManagementStatus.full;
     } else if (percentage >= 80) {
-      return ShelterManagementStatus.nearFull;
+      return ShelterManagementStatus.highCapacity;
+    } else if (percentage >= 50) {
+      return ShelterManagementStatus.mediumCapacity;
     } else {
-      return ShelterManagementStatus.available;
+      return ShelterManagementStatus.lowCapacity;
     }
   }
 
   _StatusData _getShelterStatusData(
       ShelterManagementStatus status, AppColorTheme colors) {
     switch (status) {
-      case ShelterManagementStatus.available:
+      case ShelterManagementStatus.preparation:
         return _StatusData(
-          color: colors.accent200,
-          label: AppLocalizations.of(context).translate('available'),
+          color: Colors.blue,
+          label: AppLocalizations.of(context).translate('preparation'),
         );
-      case ShelterManagementStatus.nearFull:
+      case ShelterManagementStatus.lowCapacity:
         return _StatusData(
-          color: const Color(0xFFFF8C00),
-          label: AppLocalizations.of(context).translate('near_full'),
+          color: Colors.green,
+          label: AppLocalizations.of(context).translate('low_capacity'),
+        );
+      case ShelterManagementStatus.mediumCapacity:
+        return _StatusData(
+          color: Colors.yellow,
+          label: AppLocalizations.of(context).translate('medium_capacity'),
+        );
+      case ShelterManagementStatus.highCapacity:
+        return _StatusData(
+          color: Colors.orange,
+          label: AppLocalizations.of(context).translate('high_capacity'),
         );
       case ShelterManagementStatus.full:
         return _StatusData(
-          color: colors.warning,
+          color: Colors.red,
           label: AppLocalizations.of(context).translate('full'),
+        );
+      case ShelterManagementStatus.overCapacity:
+        return _StatusData(
+          color: Colors.purple,
+          label: AppLocalizations.of(context).translate('over_capacity'),
         );
     }
   }
 }
 
 enum ShelterManagementStatus {
-  available,
-  nearFull,
+  preparation,
+  lowCapacity,
+  mediumCapacity,
+  highCapacity,
   full,
+  overCapacity,
 }
 
 class _StatusData {

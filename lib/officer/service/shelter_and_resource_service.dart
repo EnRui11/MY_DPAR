@@ -16,19 +16,6 @@ class ShelterService {
     required List<Map<String, dynamic>> resources,
   }) async {
     try {
-      // Convert resources list to map with auto-generated IDs
-      final resourcesMap = {
-        for (var i = 0; i < resources.length; i++)
-          'resource_$i': {
-            'type': resources[i]['type'],
-            'description': resources[i]['description'],
-            'currentStock': resources[i]['currentStock'],
-            'minThreshold': resources[i]['minThreshold'],
-            'createdAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          }
-      };
-
       final docRef = await _firestore.collection(_collection).add({
         'name': name,
         'status': status,
@@ -37,10 +24,25 @@ class ShelterService {
         'capacity': capacity,
         'currentOccupancy': 0,
         'createdBy': createdBy,
-        'resources': resourcesMap,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Add resources to the subcollection
+      for (var resource in resources) {
+        await _firestore
+            .collection(_collection)
+            .doc(docRef.id)
+            .collection('resources')
+            .add({
+          'type': resource['type'],
+          'description': resource['description'],
+          'currentStock': resource['currentStock'],
+          'minThreshold': resource['minThreshold'],
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       return docRef.id;
     } catch (e) {
@@ -138,6 +140,57 @@ class ShelterService {
     }
   }
 
+  // Get shelter resources
+  Stream<List<Map<String, dynamic>>> getShelterResources(String shelterId) {
+    return _firestore
+        .collection(_collection)
+        .doc(shelterId)
+        .collection('resources')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+        };
+      }).toList();
+    });
+  }
+
+  // Add a new resource
+  Future<String> addResource({
+    required String shelterId,
+    required String type,
+    required String description,
+    required int currentStock,
+    required int minThreshold,
+  }) async {
+    try {
+      final docRef = await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('resources')
+          .add({
+        'type': type,
+        'description': description,
+        'currentStock': currentStock,
+        'minThreshold': minThreshold,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await _firestore.collection(_collection).doc(shelterId).update({
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to add resource: $e');
+    }
+  }
+
   // Update resource stock
   Future<void> updateResourceStock(
     String shelterId,
@@ -145,12 +198,150 @@ class ShelterService {
     int newStock,
   ) async {
     try {
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('resources')
+          .doc(resourceId)
+          .update({
+        'currentStock': newStock,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
       await _firestore.collection(_collection).doc(shelterId).update({
-        'resources.$resourceId.currentStock': newStock,
-        'resources.$resourceId.updatedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
       throw Exception('Failed to update resource stock: $e');
+    }
+  }
+
+  // Delete a resource
+  Future<void> deleteResource(String shelterId, String resourceId) async {
+    try {
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('resources')
+          .doc(resourceId)
+          .delete();
+
+      await _firestore.collection(_collection).doc(shelterId).update({
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to delete resource: $e');
+    }
+  }
+
+  // Update shelter demographics
+  Future<void> updateDemographics({
+    required String shelterId,
+    required int elderlyCount,
+    required int adultsCount,
+    required int childrenCount,
+  }) async {
+    try {
+      final totalOccupancy = elderlyCount + adultsCount + childrenCount;
+
+      await _firestore.collection(_collection).doc(shelterId).update({
+        'demographics': {
+          'elderly': elderlyCount,
+          'adults': adultsCount,
+          'children': childrenCount,
+        },
+        'currentOccupancy': totalOccupancy,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update shelter demographics: $e');
+    }
+  }
+
+  // Get help requests for a shelter
+  Stream<List<Map<String, dynamic>>> getHelpRequests(String shelterId) {
+    return _firestore
+        .collection(_collection)
+        .doc(shelterId)
+        .collection('help_requests')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+        };
+      }).toList();
+    });
+  }
+
+  // Create a new help request
+  Future<String> createHelpRequest({
+    required String shelterId,
+    required String type,
+    required String description,
+    required String requestedBy,
+  }) async {
+    try {
+      final docRef = await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('help_requests')
+          .add({
+        'type': type,
+        'description': description,
+        'status': 'pending',
+        'requestedBy': requestedBy,
+        'respondBy': [],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to create help request: $e');
+    }
+  }
+
+  // Update help request status
+  Future<void> updateHelpRequestStatus({
+    required String shelterId,
+    required String requestId,
+    required String status,
+    required String respondBy,
+  }) async {
+    try {
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('help_requests')
+          .doc(requestId)
+          .update({
+        'status': status,
+        'respondBy': FieldValue.arrayUnion([respondBy]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update help request status: $e');
+    }
+  }
+
+  // Delete help request
+  Future<void> deleteHelpRequest({
+    required String shelterId,
+    required String requestId,
+  }) async {
+    try {
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('help_requests')
+          .doc(requestId)
+          .delete();
+    } catch (e) {
+      throw Exception('Failed to delete help request: $e');
     }
   }
 }

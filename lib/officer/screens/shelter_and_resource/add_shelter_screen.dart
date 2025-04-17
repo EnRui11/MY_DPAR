@@ -187,26 +187,24 @@ class _AddShelterScreenState extends State<AddShelterScreen> {
         DropdownButtonFormField<String>(
           value: _selectedStatus,
           decoration: InputDecoration(
-            labelText: localizations.translate('status'),
+            labelText: AppLocalizations.of(context).translate('status'),
             labelStyle: TextStyle(color: colors.text100),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: colors.bg100,
           ),
           items: [
             DropdownMenuItem(
               value: 'available',
-              child: Text(localizations.translate('status_available')),
+              child: Text(AppLocalizations.of(context).translate('available')),
             ),
             DropdownMenuItem(
               value: 'preparation',
-              child: Text(localizations.translate('status_preparation')),
+              child:
+                  Text(AppLocalizations.of(context).translate('preparation')),
             ),
           ],
           onChanged: (value) {
-            setState(() => _selectedStatus = value!);
+            setState(() {
+              _selectedStatus = value!;
+            });
           },
         ),
       ],

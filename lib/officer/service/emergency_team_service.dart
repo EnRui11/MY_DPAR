@@ -7,11 +7,6 @@ class EmergencyTeamService {
   final UserInformationService _userInformationService =
       UserInformationService();
 
-  /// Creates a new emergency team with the provided information.
-  ///
-  /// The current user's ID is automatically used as the leader ID.
-  /// User contact information is obtained from the user's profile.
-  /// If no location is provided, a default Kuala Lumpur location is used.
   Future<String> createTeam({
     required String name,
     required String type,
@@ -26,10 +21,12 @@ class EmergencyTeamService {
           _userInformationService.userId ?? 'default_leader_id';
       final String contact =
           _userInformationService.phoneNumber ?? 'default_contact';
-
+      final String firstName = _userInformationService.firstName ?? '';
+      final String lastName = _userInformationService.lastName ?? '';
+  
       // Use provided location or default to Kuala Lumpur
       final LatLng teamLocation = location ?? LatLng(3.1390, 101.6869);
-
+  
       final docRef = await _firestore.collection('emergency_teams').add({
         'name': name,
         'type': type,
@@ -41,10 +38,24 @@ class EmergencyTeamService {
         'specialization': specialization,
         'status': 'standby',
         'task_count': 0,
-        'member_count': 0,
+        'member_count': 1, 
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
+  
+      // Add creator as official member
+      await _firestore
+          .collection('emergency_teams')
+          .doc(docRef.id)
+          .collection('official_members')
+          .doc(leaderId)
+          .set({
+        'joined_at': FieldValue.serverTimestamp(),
+        'name': '$firstName $lastName',
+        'contact': contact,
+        'role': 'leader',
+      });
+  
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create emergency team: $e');
@@ -425,5 +436,172 @@ class EmergencyTeamService {
     } catch (e) {
       throw Exception('Failed to review volunteer application: $e');
     }
+  }
+
+  Future<void> quitTeam(String teamId, String userId, String userRole) async {
+    try {
+      String collectionName = userRole == 'officer' ? 'official_members' : 'volunteer_members';
+      
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection(collectionName)
+          .doc(userId)
+          .delete();
+    } catch (e) {
+      throw Exception('Failed to quit team: $e');
+    }
+  }
+
+  Future<void> joinTeam(String teamId) async {
+    try {
+      final userId = _userInformationService.userId;
+      final userRole = _userInformationService.role;
+  
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+  
+      // Check if team exists
+      final teamDoc =
+          await _firestore.collection('emergency_teams').doc(teamId).get();
+      if (!teamDoc.exists) {
+        throw Exception('Team not found');
+      }
+  
+      // Check if user is already the leader
+      final isLeader = teamDoc.data()?['leader_id'] == userId;
+      if (isLeader) {
+        throw Exception('You are already the leader of this team');
+      }
+  
+      // Check if user is already an official member
+      final officialMemberDoc = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('official_members')
+          .doc(userId)
+          .get();
+  
+      if (officialMemberDoc.exists) {
+        throw Exception('You are already an official member of this team');
+      }
+  
+      // Check if user is already a volunteer member
+      final volunteerMemberDoc = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('volunteer_members')
+          .doc(userId)
+          .get();
+  
+      if (volunteerMemberDoc.exists) {
+        throw Exception('You are already a volunteer member of this team');
+      }
+  
+      // Add user to the appropriate subcollection
+      if (userRole == 'officer') {
+        await _firestore
+            .collection('emergency_teams')
+            .doc(teamId)
+            .collection('official_members')
+            .doc(userId)
+            .set({
+          'joined_at': FieldValue.serverTimestamp(),
+          'name':
+              '${_userInformationService.firstName} ${_userInformationService.lastName}',
+          'contact': _userInformationService.phoneNumber,
+        });
+      } else {
+        await _firestore
+            .collection('emergency_teams')
+            .doc(teamId)
+            .collection('volunteer_members')
+            .doc(userId)
+            .set({
+          'joined_at': FieldValue.serverTimestamp(),
+          'name':
+              '${_userInformationService.firstName} ${_userInformationService.lastName}',
+          'contact': _userInformationService.phoneNumber,
+        });
+      }
+  
+      // Recalculate total members from both subcollections
+      final officialMembers = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('official_members')
+          .get();
+  
+      final volunteerMembers = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('volunteer_members')
+          .get();
+  
+      final totalMembers = officialMembers.size + volunteerMembers.size;
+  
+      // Update the member count
+      await _firestore.collection('emergency_teams').doc(teamId).update({
+        'member_count': totalMembers,
+      });
+    } catch (e) {
+      throw Exception('Failed to join team: $e');
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> getUserTeams() {
+    final userId = _userInformationService.userId;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('emergency_teams')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final teams = <Map<String, dynamic>>[];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final teamId = doc.id;
+
+        // Check if the user is the leader
+        if (data['leader_id'] == userId) {
+          teams.add({
+            'id': teamId,
+            ...data,
+            'location': LatLng(
+              (data['location'] as GeoPoint).latitude,
+              (data['location'] as GeoPoint).longitude,
+            ),
+            'is_leader': true,
+          });
+          continue;
+        }
+
+        // Check if the user is an official member
+        final officialMemberDoc = await _firestore
+            .collection('emergency_teams')
+            .doc(teamId)
+            .collection('official_members')
+            .doc(userId)
+            .get();
+
+        if (officialMemberDoc.exists) {
+          teams.add({
+            'id': teamId,
+            ...data,
+            'location': LatLng(
+              (data['location'] as GeoPoint).latitude,
+              (data['location'] as GeoPoint).longitude,
+            ),
+            'is_leader': false,
+          });
+        }
+      }
+
+      return teams;
+    });
   }
 }

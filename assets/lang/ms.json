@@ -1382,5 +1382,20 @@
   "specialization_required": "Pengkhususan diperlukan",
   "create_team_button": "Cipta Pasukan",
   "team_created": "Pasukan berjaya dicipta!",
-  "failed_to_create_team": "Gagal mencipta pasukan"
+  "failed_to_create_team": "Gagal mencipta pasukan",
+  "share_team": "Kongsi Pasukan",
+  "join_team": "Sertai Pasukan",
+  "enter_team_id": "Masukkan ID Pasukan",
+  "join": "Sertai",
+  "joining_team": "Sedang menyertai pasukan...",
+  "successfully_joined_team": "Berjaya menyertai pasukan.",
+  "failed_to_join_team": "Gagal menyertai pasukan.",
+  "team_id_copied": "ID pasukan disalin ke papan klip.",
+  "quit_team": "Keluar Pasukan",
+  "successfully_quit_team": "Berjaya keluar dari pasukan.",
+  "failed_to_quit_team": "Gagal keluar dari pasukan.",
+  "official_teams": "Pasukan Rasmi",
+  "volunteer_teams": "Pasukan Sukarelawan",
+  "standby_teams": "Pasukan Siap Sedia",
+  "deactivated_teams": "Pasukan Dinonaktifkan"
 }

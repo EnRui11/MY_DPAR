@@ -1380,5 +1380,20 @@
   "specialization_required": "Specialization is required",
   "create_team_button": "Create Team",
   "team_created": "Team created successfully!",
-  "failed_to_create_team": "Failed to create team"
+  "failed_to_create_team": "Failed to create team",
+  "share_team": "Share Team",
+  "join_team": "Join Team",
+  "enter_team_id": "Enter Team ID",
+  "join": "Join",
+  "joining_team": "Joining team...",
+  "successfully_joined_team": "Successfully joined the team.",
+  "failed_to_join_team": "Failed to join the team.",
+  "team_id_copied": "Team ID copied to clipboard.",
+  "quit_team": "Quit Team",
+  "successfully_quit_team": "Successfully quit the team.",
+  "failed_to_quit_team": "Failed to quit the team.",
+  "official_teams": "Official Teams",
+  "volunteer_teams": "Volunteer Teams",
+  "standby_teams": "Standby Teams",
+  "deactivated_teams": "Deactivated Teams"
 }

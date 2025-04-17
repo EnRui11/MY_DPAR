@@ -5,6 +5,9 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/officer/service/emergency_team_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/officer/screens/emergency_teams/create_emergency_team_screen.dart';
+import 'package:mydpar/officer/screens/emergency_teams/team_detail_screen.dart';
+import 'package:mydpar/services/user_information_service.dart';
+import 'package:flutter/services.dart';
 
 /// Screen for managing emergency teams, including listing, filtering, and status updates.
 class EmergencyTeamsScreen extends StatefulWidget {
@@ -16,8 +19,12 @@ class EmergencyTeamsScreen extends StatefulWidget {
 
 class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _joinTeamController = TextEditingController();
   String _selectedFilter = 'all';
   final EmergencyTeamService _teamService = EmergencyTeamService();
+  final UserInformationService _userInformationService =
+      UserInformationService();
+  bool _isAddMenuOpen = false;
 
   @override
   void initState() {
@@ -31,6 +38,7 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _joinTeamController.dispose();
     super.dispose();
   }
 
@@ -51,9 +59,11 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
       // Apply search text filter
       if (searchText.isEmpty) return true;
       final name = (team['name'] ?? '').toLowerCase();
+      final id = (team['id'] ?? '').toLowerCase();
       final location = (team['location_text'] ?? '').toLowerCase();
       final specialization = (team['specialization'] ?? '').toLowerCase();
       return name.contains(searchText) ||
+          id.contains(searchText) ||
           location.contains(searchText) ||
           specialization.contains(searchText);
     }).toList();
@@ -99,6 +109,10 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
   void _showTeamOptionsMenu(
       BuildContext context, Map<String, dynamic> team, AppColorTheme colors) {
     final localizations = AppLocalizations.of(context)!;
+    final currentUserId = _userInformationService.userId;
+    final isTeamLeader = currentUserId == team['leader_id'];
+    final teamStatus = team['status'];
+
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.bg100,
@@ -115,52 +129,208 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
                   style: TextStyle(color: colors.text200)),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to team details screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TeamDetailScreen(teamId: team['id']),
+                  ),
+                );
               },
             ),
-            if (team['status'] != 'active')
+            if (isTeamLeader) ...[
               ListTile(
-                leading: const Icon(Icons.play_arrow, color: Colors.green),
-                title: Text(localizations.translate('activate_team'),
+                leading: Icon(Icons.share, color: colors.accent200),
+                title: Text(localizations.translate('share_team'),
                     style: TextStyle(color: colors.text200)),
                 onTap: () {
                   Navigator.pop(context);
-                  _changeTeamStatus(team['id'], 'active');
+                  _shareTeamId(team['id'], colors, localizations);
                 },
               ),
-            if (team['status'] != 'standby')
+              if (teamStatus != 'active')
+                ListTile(
+                  leading: const Icon(Icons.play_arrow, color: Colors.green),
+                  title: Text(localizations.translate('activate_team'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _changeTeamStatus(team['id'], 'active');
+                  },
+                ),
+              if (teamStatus != 'standby')
+                ListTile(
+                  leading: const Icon(Icons.pause, color: Colors.orange),
+                  title: Text(localizations.translate('set_to_standby'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _changeTeamStatus(team['id'], 'standby');
+                  },
+                ),
+              if (teamStatus != 'deactivated')
+                ListTile(
+                  leading: const Icon(Icons.block, color: Colors.grey),
+                  title: Text(localizations.translate('deactivate_team'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _changeTeamStatus(team['id'], 'deactivated');
+                  },
+                ),
               ListTile(
-                leading: const Icon(Icons.pause, color: Colors.orange),
-                title: Text(localizations.translate('set_to_standby'),
+                leading: Icon(Icons.delete_outline, color: colors.warning),
+                title: Text(localizations.translate('delete_team'),
+                    style: TextStyle(color: colors.warning)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDeleteConfirmation(team, colors, localizations);
+                },
+              ),
+            ] else ...[
+              ListTile(
+                leading: Icon(Icons.share, color: colors.accent200),
+                title: Text(localizations.translate('share_team'),
                     style: TextStyle(color: colors.text200)),
                 onTap: () {
                   Navigator.pop(context);
-                  _changeTeamStatus(team['id'], 'standby');
+                  _shareTeamId(team['id'], colors, localizations);
                 },
               ),
-            if (team['status'] != 'deactivated')
               ListTile(
-                leading: const Icon(Icons.block, color: Colors.grey),
-                title: Text(localizations.translate('deactivate_team'),
-                    style: TextStyle(color: colors.text200)),
-                onTap: () {
+                leading: Icon(Icons.exit_to_app, color: colors.warning),
+                title: Text(localizations.translate('quit_team'),
+                    style: TextStyle(color: colors.warning)),
+                onTap: () async {
                   Navigator.pop(context);
-                  _changeTeamStatus(team['id'], 'deactivated');
+                  await _quitTeam(team['id'], colors, localizations);
                 },
               ),
-            ListTile(
-              leading: Icon(Icons.delete_outline, color: colors.warning),
-              title: Text(localizations.translate('delete_team'),
-                  style: TextStyle(color: colors.warning)),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirmation(team, colors, localizations);
-              },
-            ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _quitTeam(String teamId, AppColorTheme colors,
+      AppLocalizations localizations) async {
+    try {
+      final userId = _userInformationService.userId!;
+      final userRole = _userInformationService.role!;
+      
+      await _teamService.quitTeam(teamId, userId, userRole);
+      
+      _showSnackBar(
+        localizations.translate('successfully_quit_team'),
+        backgroundColor: Colors.green,
+      );
+
+      // Refresh the team list
+      setState(() {});
+    } catch (e) {
+      _showErrorSnackBar(
+        localizations.translate('failed_to_quit_team'),
+        e,
+      );
+    }
+  }
+
+  /// Copies the team ID to the clipboard and shows a snackbar.
+  void _shareTeamId(
+      String teamId, AppColorTheme colors, AppLocalizations localizations) {
+    Clipboard.setData(ClipboardData(text: teamId));
+    _showSnackBar(
+      localizations.translate('team_id_copied'),
+      backgroundColor: Colors.green,
+    );
+  }
+
+  /// Shows a dialog for joining a team by ID.
+  void _showJoinTeamDialog(
+      AppColorTheme colors, AppLocalizations localizations) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: colors.bg100,
+        title: Text(
+          localizations.translate('join_team'),
+          style: TextStyle(color: colors.primary300),
+        ),
+        content: TextField(
+          controller: _joinTeamController,
+          decoration: InputDecoration(
+            hintText: localizations.translate('enter_team_id'),
+            hintStyle: TextStyle(color: colors.text200.withOpacity(0.6)),
+            filled: true,
+            fillColor: colors.bg200,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.bg300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.bg300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.accent200),
+            ),
+          ),
+          style: TextStyle(color: colors.text200),
+        ),
+        actions: [
+          TextButton(
+            child: Text(
+              localizations.translate('cancel'),
+              style: TextStyle(color: colors.accent200),
+            ),
+            onPressed: () {
+              _joinTeamController.clear();
+              Navigator.pop(context);
+            },
+          ),
+          TextButton(
+            child: Text(
+              localizations.translate('join'),
+              style: TextStyle(color: colors.accent200),
+            ),
+            onPressed: () {
+              final teamId = _joinTeamController.text.trim();
+              if (teamId.isNotEmpty) {
+                Navigator.pop(context);
+                _joinTeam(teamId, colors, localizations);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Attempts to join a team with the given ID.
+  Future<void> _joinTeam(String teamId, AppColorTheme colors,
+      AppLocalizations localizations) async {
+    try {
+      // Show snackbar indicating the joining process has started
+      _showSnackBar(
+        localizations.translate('joining_team'),
+        backgroundColor: Colors.blue,
+      );
+
+      await _teamService.joinTeam(teamId);
+
+      // Show snackbar for successful join
+      _showSnackBar(
+        localizations.translate('successfully_joined_team'),
+        backgroundColor: Colors.green,
+      );
+    } catch (e) {
+      // Show snackbar for failed join
+      _showErrorSnackBar(
+        localizations.translate('failed_to_join_team'),
+        e,
+      );
+    }
   }
 
   /// Shows a confirmation dialog for deleting a team.
@@ -226,13 +396,64 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CreateEmergencyTeamScreen()),
-        ),
-        backgroundColor: colors.accent200,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (_isAddMenuOpen) ...[
+            _buildFloatingActionButton(
+              icon: Icons.group_add,
+              label: localizations.translate('join_team'),
+              onPressed: () {
+                setState(() => _isAddMenuOpen = false);
+                _showJoinTeamDialog(colors, localizations);
+              },
+              colors: colors,
+            ),
+            const SizedBox(height: 16),
+            _buildFloatingActionButton(
+              icon: Icons.add_circle,
+              label: localizations.translate('create_team'),
+              onPressed: () {
+                setState(() => _isAddMenuOpen = false);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const CreateEmergencyTeamScreen()),
+                );
+              },
+              colors: colors,
+            ),
+            const SizedBox(height: 16),
+          ],
+          FloatingActionButton(
+            onPressed: () => setState(() => _isAddMenuOpen = !_isAddMenuOpen),
+            backgroundColor: colors.primary100,
+            child: Icon(
+              _isAddMenuOpen ? Icons.close : Icons.add,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a floating action button with an icon and label.
+  Widget _buildFloatingActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required AppColorTheme colors,
+  }) {
+    return FloatingActionButton.extended(
+      onPressed: onPressed,
+      backgroundColor: colors.primary100,
+      icon: Icon(icon, color: Colors.white),
+      label: Text(
+        label,
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }
@@ -309,41 +530,67 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
 
   /// Builds the statistics section showing active teams and total members.
   Widget _buildTeamStatistics(
-          AppColorTheme colors, AppLocalizations localizations) =>
-      StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _teamService.getAllTeams(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                localizations
-                    .translate('error', {'error': snapshot.error.toString()}),
-                style: TextStyle(color: colors.warning),
-              ),
-            );
-          }
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final teams = snapshot.data!;
-          final activeTeams =
-              teams.where((team) => team['status'] == 'active').length;
-          final totalMembers = teams.fold<int>(
-              0, (sum, team) => sum + ((team['member_count'] as int?) ?? 0));
-          return Row(
-            children: [
-              Expanded(
-                  child: _buildStatCard(localizations.translate('active_teams'),
-                      activeTeams.toString(), colors)),
-              const SizedBox(width: 16),
-              Expanded(
-                  child: _buildStatCard(
-                      localizations.translate('total_members'),
-                      totalMembers.toString(),
-                      colors)),
-            ],
+      AppColorTheme colors, AppLocalizations localizations) =>
+    StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _teamService.getUserTeams(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              localizations
+                  .translate('error', {'error': snapshot.error.toString()}),
+              style: TextStyle(color: colors.warning),
+            ),
           );
-        },
-      );
+        }
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
+        final teams = snapshot.data!;
+        
+        // Filter teams based on the selected filter
+        final filteredTeams = _filterTeams(teams);
+        
+        // Calculate the number of teams and total members based on the filtered teams
+        final teamCount = filteredTeams.length;
+        final totalMembers = filteredTeams.fold<int>(
+            0, (sum, team) => sum + ((team['member_count'] as int?) ?? 0));
+        
+        // Determine the label for the statistics card based on the selected filter
+        String teamLabel;
+        switch (_selectedFilter) {
+          case 'official':
+            teamLabel = localizations.translate('official_teams');
+            break;
+          case 'volunteer':
+            teamLabel = localizations.translate('volunteer_teams');
+            break;
+          case 'active':
+            teamLabel = localizations.translate('active_teams');
+            break;
+          case 'standby':
+            teamLabel = localizations.translate('standby_teams');
+            break;
+          case 'deactivated':
+            teamLabel = localizations.translate('deactivated_teams');
+            break;
+          default:
+            teamLabel = localizations.translate('all_teams');
+        }
+  
+        return Row(
+          children: [
+            Expanded(
+                child: _buildStatCard(teamLabel, teamCount.toString(), colors)),
+            const SizedBox(width: 16),
+            Expanded(
+                child: _buildStatCard(
+                    localizations.translate('total_members'),
+                    totalMembers.toString(),
+                    colors)),
+          ],
+        );
+      },
+    );
 
   /// Builds a statistics card with a label and value.
   Widget _buildStatCard(String label, String value, AppColorTheme colors) =>
@@ -374,7 +621,7 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
   Widget _buildTeamsList(
           AppColorTheme colors, AppLocalizations localizations) =>
       StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _teamService.getAllTeams(),
+        stream: _teamService.getUserTeams(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
@@ -433,123 +680,137 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
     final status = team['status'] as String;
     final statusColor = _getStatusColor(status, colors);
     final typeColor = isOfficial ? colors.accent200 : colors.primary200;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration:
-                      BoxDecoration(color: typeColor, shape: BoxShape.circle),
-                  child: Center(
-                    child: Text(
-                      team['name']
-                          .substring(0, _min(2, team['name'].length))
-                          .toUpperCase(),
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        team['name'],
-                        style: TextStyle(
-                            color: colors.primary300,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TeamDetailScreen(teamId: team['id']),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration:
+                        BoxDecoration(color: typeColor, shape: BoxShape.circle),
+                    child: Center(
+                      child: Text(
+                        team['name']
+                            .substring(0, _min(2, team['name'].length))
+                            .toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          _buildStatusChip(
-                            isOfficial
-                                ? localizations.translate('official')
-                                : localizations.translate('volunteer'),
-                            typeColor,
-                            colors,
-                          ),
-                          const SizedBox(width: 8),
-                          _buildStatusChip(
-                              _getStatusLabel(status, localizations),
-                              statusColor,
-                              colors),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () => _showTeamOptionsMenu(context, team, colors),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildTeamInfo(
-                    Icons.people,
-                    localizations.translate(
-                        'members', {'count': team['member_count'] ?? 0}),
-                    colors),
-                const SizedBox(width: 16),
-                _buildTeamInfo(
-                    Icons.location_on,
-                    team['location_text'] ??
-                        localizations.translate('location_not_set'),
-                    colors),
-                const SizedBox(width: 16),
-                _buildTeamInfo(
-                    Icons.assignment,
-                    localizations
-                        .translate('tasks', {'count': team['task_count'] ?? 0}),
-                    colors),
-              ],
-            ),
-            if (team['specialization'] != null && team['specialization'] != '')
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: _buildTeamInfo(
-                    Icons.security,
-                    _getSpecializationLabel(
-                        team['specialization'], localizations),
-                    colors),
-              ),
-            const SizedBox(height: 8),
-            if (team['current_task'] != null && team['current_task'] != '') ...[
-              const Divider(),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(localizations.translate('current_task'),
-                      style: TextStyle(color: colors.text200, fontSize: 14)),
-                  Text(
-                    team['current_task'] ??
-                        localizations.translate('no_active_task'),
-                    style: TextStyle(
-                        color: colors.accent200,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          team['name'],
+                          style: TextStyle(
+                              color: colors.primary300,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            _buildStatusChip(
+                              isOfficial
+                                  ? localizations.translate('official')
+                                  : localizations.translate('volunteer'),
+                              typeColor,
+                              colors,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildStatusChip(
+                                _getStatusLabel(status, localizations),
+                                statusColor,
+                                colors),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () =>
+                        _showTeamOptionsMenu(context, team, colors),
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildTeamInfo(
+                      Icons.people,
+                      localizations.translate(
+                          'members', {'count': team['member_count'] ?? 0}),
+                      colors),
+                  const SizedBox(width: 16),
+                  _buildTeamInfo(
+                      Icons.location_on,
+                      team['location_text'] ??
+                          localizations.translate('location_not_set'),
+                      colors),
+                  const SizedBox(width: 16),
+                  _buildTeamInfo(
+                      Icons.assignment,
+                      localizations.translate(
+                          'tasks', {'count': team['task_count'] ?? 0}),
+                      colors),
+                ],
+              ),
+              if (team['specialization'] != null &&
+                  team['specialization'] != '')
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: _buildTeamInfo(
+                      Icons.security,
+                      _getSpecializationLabel(
+                          team['specialization'], localizations),
+                      colors),
+                ),
+              const SizedBox(height: 8),
+              if (team['current_task'] != null &&
+                  team['current_task'] != '') ...[
+                const Divider(),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(localizations.translate('current_task'),
+                        style: TextStyle(color: colors.text200, fontSize: 14)),
+                    Text(
+                      team['current_task'] ??
+                          localizations.translate('no_active_task'),
+                      style: TextStyle(
+                          color: colors.accent200,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

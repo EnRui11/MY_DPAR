@@ -1385,5 +1385,20 @@
   "specialization_required": "专长是必需的",
   "create_team_button": "创建团队",
   "team_created": "团队创建成功！",
-  "failed_to_create_team": "无法创建团队"
+  "failed_to_create_team": "无法创建团队",
+  "share_team": "分享团队",
+  "join_team": "加入团队",
+  "enter_team_id": "输入团队ID",
+  "join": "加入",
+  "joining_team": "正在加入团队...",
+  "successfully_joined_team": "成功加入团队。",
+  "failed_to_join_team": "加入团队失败。",
+  "team_id_copied": "团队ID已复制到剪贴板。",
+  "quit_team": "退出团队",
+  "successfully_quit_team": "成功退出团队。",
+  "failed_to_quit_team": "退出团队失败。",
+  "official_teams": "官方团队",
+  "volunteer_teams": "志愿者团队",
+  "standby_teams": "待命团队",
+  "deactivated_teams": "停用团队"
 }

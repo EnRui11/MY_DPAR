@@ -217,9 +217,9 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
     try {
       final userId = _userInformationService.userId!;
       final userRole = _userInformationService.role!;
-      
+
       await _teamService.quitTeam(teamId, userId, userRole);
-      
+
       _showSnackBar(
         localizations.translate('successfully_quit_team'),
         backgroundColor: Colors.green,
@@ -531,67 +531,68 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
 
   /// Builds the statistics section showing active teams and total members.
   Widget _buildTeamStatistics(
-      AppColorTheme colors, AppLocalizations localizations) =>
-    StreamBuilder<List<Map<String, dynamic>>>(
-      stream: _teamService.getUserTeams(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              localizations
-                  .translate('error', {'error': snapshot.error.toString()}),
-              style: TextStyle(color: colors.warning),
-            ),
+          AppColorTheme colors, AppLocalizations localizations) =>
+      StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _teamService.getUserTeams(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                localizations
+                    .translate('error', {'error': snapshot.error.toString()}),
+                style: TextStyle(color: colors.warning),
+              ),
+            );
+          }
+          if (!snapshot.hasData)
+            return const Center(child: CircularProgressIndicator());
+          final teams = snapshot.data!;
+
+          // Filter teams based on the selected filter
+          final filteredTeams = _filterTeams(teams);
+
+          // Calculate the number of teams and total members based on the filtered teams
+          final teamCount = filteredTeams.length;
+          final totalMembers = filteredTeams.fold<int>(
+              0, (sum, team) => sum + ((team['member_count'] as int?) ?? 0));
+
+          // Determine the label for the statistics card based on the selected filter
+          String teamLabel;
+          switch (_selectedFilter) {
+            case 'official':
+              teamLabel = localizations.translate('official_teams');
+              break;
+            case 'volunteer':
+              teamLabel = localizations.translate('volunteer_teams');
+              break;
+            case 'active':
+              teamLabel = localizations.translate('active_teams');
+              break;
+            case 'standby':
+              teamLabel = localizations.translate('standby_teams');
+              break;
+            case 'deactivated':
+              teamLabel = localizations.translate('deactivated_teams');
+              break;
+            default:
+              teamLabel = localizations.translate('all_teams');
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                  child:
+                      _buildStatCard(teamLabel, teamCount.toString(), colors)),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: _buildStatCard(
+                      localizations.translate('total_members'),
+                      totalMembers.toString(),
+                      colors)),
+            ],
           );
-        }
-        if (!snapshot.hasData)
-          return const Center(child: CircularProgressIndicator());
-        final teams = snapshot.data!;
-        
-        // Filter teams based on the selected filter
-        final filteredTeams = _filterTeams(teams);
-        
-        // Calculate the number of teams and total members based on the filtered teams
-        final teamCount = filteredTeams.length;
-        final totalMembers = filteredTeams.fold<int>(
-            0, (sum, team) => sum + ((team['member_count'] as int?) ?? 0));
-        
-        // Determine the label for the statistics card based on the selected filter
-        String teamLabel;
-        switch (_selectedFilter) {
-          case 'official':
-            teamLabel = localizations.translate('official_teams');
-            break;
-          case 'volunteer':
-            teamLabel = localizations.translate('volunteer_teams');
-            break;
-          case 'active':
-            teamLabel = localizations.translate('active_teams');
-            break;
-          case 'standby':
-            teamLabel = localizations.translate('standby_teams');
-            break;
-          case 'deactivated':
-            teamLabel = localizations.translate('deactivated_teams');
-            break;
-          default:
-            teamLabel = localizations.translate('all_teams');
-        }
-  
-        return Row(
-          children: [
-            Expanded(
-                child: _buildStatCard(teamLabel, teamCount.toString(), colors)),
-            const SizedBox(width: 16),
-            Expanded(
-                child: _buildStatCard(
-                    localizations.translate('total_members'),
-                    totalMembers.toString(),
-                    colors)),
-          ],
-        );
-      },
-    );
+        },
+      );
 
   /// Builds a statistics card with a label and value.
   Widget _buildStatCard(String label, String value, AppColorTheme colors) =>
@@ -762,8 +763,8 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
                 children: [
                   _buildTeamInfo(
                       Icons.people,
-                      localizations.translate(
-                          'members', {'count': team['member_count'] ?? 0}),
+                      localizations.translate('number_members',
+                          {'count': team['member_count'] ?? 0}),
                       colors),
                   const SizedBox(width: 16),
                   _buildTeamInfo(
@@ -775,7 +776,7 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
                   _buildTeamInfo(
                       Icons.assignment,
                       localizations.translate(
-                          'tasks', {'count': team['task_count'] ?? 0}),
+                          'number_tasks', {'count': team['task_count'] ?? 0}),
                       colors),
                 ],
               ),

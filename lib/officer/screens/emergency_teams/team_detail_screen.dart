@@ -5,6 +5,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/officer/service/emergency_team_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Screen for displaying detailed information about an emergency team.
 class TeamDetailScreen extends StatefulWidget {
@@ -22,17 +23,23 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   late TabController _tabController;
   bool _isLoading = false;
   Map<String, dynamic>? _teamData;
+  bool _isOnDuty = false;
+  String _userRole = '';
+  TextEditingController _roleController = TextEditingController();
+  Map<String, dynamic>? _userMemberInfo;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadTeamData();
+    _loadUserMemberInfo();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _roleController.dispose();
     super.dispose();
   }
 
@@ -52,6 +59,80 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         setState(() => _isLoading = false);
         _showErrorSnackBar(
             AppLocalizations.of(context)!.translate('failed_to_load_team'), e);
+      }
+    }
+  }
+
+  /// Loads the current user's member information
+  Future<void> _loadUserMemberInfo() async {
+    try {
+      final userMemberInfo =
+          await _teamService.getUserMemberInfo(widget.teamId);
+      if (mounted && userMemberInfo != null) {
+        setState(() {
+          _userMemberInfo = userMemberInfo;
+          _isOnDuty = userMemberInfo['status'] == 'active';
+          _userRole = userMemberInfo['role'] ?? '';
+          _roleController.text = _userRole;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+            AppLocalizations.of(context)!.translate('failed_to_load_user_info'),
+            e);
+      }
+    }
+  }
+
+  /// Updates the user's role
+  Future<void> _updateUserRole(String role) async {
+    try {
+      await _teamService.updateUserRole(
+        teamId: widget.teamId,
+        role: role,
+      );
+      if (mounted) {
+        _showSnackBar(
+          AppLocalizations.of(context)!.translate('role_updated'),
+          backgroundColor: Colors.green,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+          AppLocalizations.of(context)!.translate('failed_to_update_role'),
+          e,
+        );
+      }
+    }
+  }
+
+  /// Updates the user's duty status
+  Future<void> _updateUserDutyStatus(bool isOnDuty) async {
+    try {
+      await _teamService.updateUserDutyStatus(
+        teamId: widget.teamId,
+        isOnDuty: isOnDuty,
+      );
+      if (mounted) {
+        setState(() {
+          _isOnDuty = isOnDuty;
+        });
+        _showSnackBar(
+          isOnDuty
+              ? AppLocalizations.of(context)!.translate('now_on_duty')
+              : AppLocalizations.of(context)!.translate('now_off_duty'),
+          backgroundColor: isOnDuty ? Colors.green : Colors.red,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+          AppLocalizations.of(context)!
+              .translate('failed_to_update_duty_status'),
+          e,
+        );
       }
     }
   }
@@ -530,160 +611,410 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         }
 
         final members = snapshot.data!;
-        if (members.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_outline, size: 64, color: colors.bg300),
-                const SizedBox(height: 16),
-                Text(
-                  localizations.translate('no_members'),
-                  style: TextStyle(color: colors.text200, fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // TODO: Navigate to add member screen
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.accent200,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(localizations.translate('add_member')),
-                ),
-              ],
-            ),
-          );
-        }
+        final currentUserId = _userMemberInfo?['id'];
+        final isOfficialTeam = _teamData?['type'] == 'official';
+        final isCurrentUserLeader = _userMemberInfo?['role'] == 'leader';
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Sort members: current user first, then leader, then others
+        members.sort((a, b) {
+          if (a['id'] == currentUserId) return -1;
+          if (b['id'] == currentUserId) return 1;
+          if (a['role'] == 'leader') return -1;
+          if (b['role'] == 'leader') return 1;
+          return 0;
+        });
+
+        return ListView(
+          padding: const EdgeInsets.only(bottom: 24),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  localizations.translate('team_members'),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: colors.primary300,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to manage members screen
-                  },
-                  child: Text(
-                    localizations.translate('manage'),
-                    style: TextStyle(color: colors.accent200),
-                  ),
-                ),
-              ],
+            Text(
+              localizations.translate('team_members'),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.primary300,
+              ),
             ),
             const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: members.length,
-                itemBuilder: (context, index) {
-                  final member = members[index];
-                  final isLeader = member['role'] == 'leader';
-                  final status = member['status'] as String? ?? 'active';
-                  final statusColor = _getMemberStatusColor(status, colors);
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colors.bg100.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.bg300),
+            if (members.isEmpty)
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.people_outline, size: 64, color: colors.bg300),
+                    const SizedBox(height: 16),
+                    Text(
+                      localizations.translate('no_members'),
+                      style: TextStyle(color: colors.text200, fontSize: 16),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: isLeader ? 48 : 40,
-                          height: isLeader ? 48 : 40,
-                          decoration: BoxDecoration(
-                            color:
-                                isLeader ? colors.accent200 : colors.primary200,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              member['name']
-                                  .substring(0, _min(2, member['name'].length))
-                                  .toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                  ],
+                ),
+              )
+            else
+              ...members.map((member) {
+                final isCurrentUser = member['id'] == currentUserId;
+                final isLeader = member['role'] == 'leader';
+                final status = member['status'] as String? ?? 'active';
+                final statusColor = _getMemberStatusColor(status, colors);
+                final collection =
+                    member['collection'] as String? ?? 'official_members';
+                final isOfficialMember = collection == 'official_members';
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colors.bg100.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.bg300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: isLeader ? 48 : 40,
+                            height: isLeader ? 48 : 40,
+                            decoration: BoxDecoration(
+                              color: isLeader
+                                  ? colors.accent200
+                                  : isOfficialMember
+                                      ? colors.primary200
+                                      : colors.primary100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                member['name']
+                                    .substring(
+                                        0, _min(2, member['name'].length))
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                member['name'],
-                                style: TextStyle(
-                                  fontWeight: isLeader
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                  color: colors.primary300,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  member['name'],
+                                  style: TextStyle(
+                                    fontWeight: isLeader
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
+                                    color: colors.primary300,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  if (isLeader)
-                                    _buildStatusChip(
-                                      localizations.translate('team_leader'),
-                                      Colors.amber,
-                                      colors,
-                                    ),
-                                  if (isLeader) const SizedBox(width: 8),
-                                  Text(
-                                    member['role'] ?? '',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: colors.text200,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildStatusChip(
-                                    _getMemberStatusLabel(
-                                        status, localizations),
-                                    statusColor,
-                                    colors,
-                                  ),
-                                ],
-                              ),
-                            ],
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    if (isLeader)
+                                      _buildStatusChip(
+                                        localizations.translate('team_leader'),
+                                        Colors.amber,
+                                        colors,
+                                      )
+                                    else
+                                      _buildStatusChip(
+                                        member['role'] ?? '',
+                                        colors.primary200,
+                                        colors,
+                                      ),
+                                    if (isCurrentUser) ...[
+                                      if (isLeader) const SizedBox(width: 8),
+                                      _buildStatusChip(
+                                        localizations.translate('me'),
+                                        colors.accent200,
+                                        colors,
+                                      ),
+                                    ],
+                                    if (!isLeader && !isOfficialTeam) ...[
+                                      if (isLeader || isCurrentUser)
+                                        const SizedBox(width: 8),
+                                      _buildStatusChip(
+                                        isOfficialMember
+                                            ? localizations
+                                                .translate('official')
+                                            : localizations
+                                                .translate('volunteer'),
+                                        isOfficialMember
+                                            ? colors.primary200
+                                            : colors.primary100,
+                                        colors,
+                                      ),
+                                    ],
+                                    const SizedBox(width: 8),
+                                    if (!isCurrentUser || !isLeader)
+                                      _buildStatusChip(
+                                        status == 'active'
+                                            ? localizations.translate('on_duty')
+                                            : localizations
+                                                .translate('off_duty'),
+                                        status == 'active'
+                                            ? Colors.green
+                                            : Colors.grey,
+                                        colors,
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.phone, color: colors.accent200),
-                          onPressed: () {
-                            // TODO: Implement call functionality
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+                          if (!isCurrentUser && isCurrentUserLeader)
+                            PopupMenuButton<String>(
+                              icon:
+                                  Icon(Icons.more_vert, color: colors.text200),
+                              onSelected: (value) {
+                                if (value == 'call') {
+                                  _callMember(member['contact']);
+                                } else if (value == 'remove') {
+                                  _showRemoveMemberDialog(
+                                      colors, localizations, member);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'call',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.phone,
+                                          color: colors.accent200, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(localizations.translate('call')),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'remove',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.person_remove,
+                                          color: colors.warning, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(localizations.translate('remove')),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (!isCurrentUser && !isCurrentUserLeader)
+                            IconButton(
+                              icon: Icon(Icons.phone, color: colors.accent200),
+                              onPressed: () => _callMember(member['contact']),
+                            ),
+                          if (isCurrentUser && isLeader)
+                            Row(
+                              children: [
+                                Switch(
+                                  value: _isOnDuty,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _isOnDuty = value;
+                                    });
+                                    _updateUserDutyStatus(value);
+                                  },
+                                  activeColor: colors.accent200,
+                                ),
+                              ],
+                            ),
+                          if (isCurrentUser && !isLeader)
+                            PopupMenuButton<String>(
+                              icon:
+                                  Icon(Icons.more_vert, color: colors.text200),
+                              onSelected: (value) {
+                                if (value == 'change_duty_status') {
+                                  _updateUserDutyStatus(!_isOnDuty);
+                                } else if (value == 'change_role') {
+                                  _showChangeRoleDialog(colors, localizations);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'change_duty_status',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _isOnDuty
+                                            ? Icons.pause_circle_filled
+                                            : Icons.play_circle_filled,
+                                        color: colors.accent200,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _isOnDuty
+                                            ? localizations
+                                                .translate('go_off_duty')
+                                            : localizations
+                                                .translate('go_on_duty'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'change_role',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit,
+                                          color: colors.accent200, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(localizations
+                                          .translate('change_role')),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
           ],
         );
       },
     );
+  }
+
+  void _showChangeRoleDialog(
+      AppColorTheme colors, AppLocalizations localizations) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.bg100,
+        title: Text(
+          localizations.translate('change_role'),
+          style: TextStyle(color: colors.primary300),
+        ),
+        content: TextField(
+          controller: _roleController,
+          decoration: InputDecoration(
+            labelText: localizations.translate('new_role'),
+            labelStyle: TextStyle(color: colors.text200),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              localizations.translate('cancel'),
+              style: TextStyle(color: colors.text200),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _updateUserRole(_roleController.text);
+              Navigator.pop(context);
+              setState(() {});
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.accent200,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(localizations.translate('update')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Shows a confirmation dialog to remove a team member
+  void _showRemoveMemberDialog(AppColorTheme colors,
+      AppLocalizations localizations, Map<String, dynamic> member) {
+    final collection = member['collection'] as String? ?? 'official_members';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.bg100,
+        title: Text(
+          localizations.translate('remove_member'),
+          style: TextStyle(color: colors.primary300),
+        ),
+        content: Text(
+          localizations.translate(
+            'remove_member_confirmation',
+            {'name': member['name']},
+          ),
+          style: TextStyle(color: colors.text200),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              localizations.translate('cancel'),
+              style: TextStyle(color: colors.text200),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await _teamService.removeTeamMember(
+                  teamId: widget.teamId,
+                  userId: member['id'],
+                  collection: collection,
+                );
+
+                if (mounted) {
+                  Navigator.pop(context);
+                  _showSnackBar(
+                    localizations.translate('member_removed'),
+                    backgroundColor: Colors.green,
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  _showErrorSnackBar(
+                    localizations.translate('failed_to_remove_member'),
+                    e,
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.warning,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(localizations.translate('remove')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Calls a team member using their contact information.
+  void _callMember(String? contact) {
+    if (contact == null || contact.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(AppLocalizations.of(context)!.translate('no_contact_info')),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Launch phone call
+    final Uri phoneUri = Uri(scheme: 'tel', path: contact);
+    launchUrl(phoneUri).then((launched) {
+      if (!launched) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!
+                .translate('could_not_launch_phone')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
   }
 
   /// Builds the tasks tab content.
@@ -1005,20 +1336,24 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
 
   /// Builds a status chip with a label and color.
   Widget _buildStatusChip(String label, Color color, AppColorTheme colors) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+    return Wrap(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 

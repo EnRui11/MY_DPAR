@@ -11,6 +11,7 @@ import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/officer/service/shelter_and_resource_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/select_shelter_location_screen.dart';
+import 'package:flutter/services.dart';
 
 /// Screen for viewing and managing shelter details, including demographics, resources, and help requests.
 class ShelterDetailScreen extends StatefulWidget {
@@ -49,6 +50,7 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
   List<Map<String, dynamic>> _helpRequests = [];
   String _cityName = '';
   String _creatorName = '';
+  String? _creatorId;
   DateTime? _createdAt;
   bool _isLoading = true;
 
@@ -84,6 +86,7 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
 
         // Get creator info
         final creatorId = shelter['createdBy'];
+        _creatorId = creatorId;
         final creatorDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(creatorId)
@@ -99,6 +102,9 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
         setState(() {
           _demographics = Map<String, int>.from(shelter['demographics'] ??
               {'elderly': 0, 'adults': 0, 'children': 0});
+
+          _currentStatus =
+              ShelterStatus.fromString(shelter['status'] as String);
           _isLoading = false;
         });
       }
@@ -220,11 +226,10 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
               ),
             ),
             IconButton(
-              icon: Icon(Icons.edit, color: colors.accent200),
-              onPressed: () =>
-                  _showEditShelterDialog(context, colors, localizations),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+              icon: Icon(Icons.more_vert, color: colors.accent200),
+              onPressed: () {
+                _showEditShelterDialog(context, colors, localizations);
+              },
             ),
           ],
         ),
@@ -236,6 +241,9 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
     AppColorTheme colors,
     AppLocalizations localizations,
   ) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isCreator = currentUser?.uid == _creatorId;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.bg100,
@@ -246,6 +254,26 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: Icon(Icons.share, color: colors.accent200),
+              title: Text(
+                localizations.translate('share_shelter'),
+                style: TextStyle(color: colors.text200),
+              ),
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: widget.id));
+                Navigator.pop(context);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text(localizations.translate('shelter_id_copied')),
+                      backgroundColor: colors.accent200,
+                    ),
+                  );
+                }
+              },
+            ),
             if (_currentStatus == ShelterStatus.available) ...[
               ListTile(
                 leading: Icon(Icons.build, color: colors.accent200),
@@ -263,17 +291,19 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
                   );
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.delete_outline, color: colors.warning),
-                title: Text(
-                  localizations.translate('delete_shelter'),
-                  style: TextStyle(color: colors.warning),
+              if (isCreator) ...[
+                ListTile(
+                  leading: Icon(Icons.delete_outline, color: colors.warning),
+                  title: Text(
+                    localizations.translate('delete_shelter'),
+                    style: TextStyle(color: colors.warning),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteShelterDialog(context, colors, localizations);
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteShelterDialog(context, colors, localizations);
-                },
-              ),
+              ],
             ] else if (_currentStatus == ShelterStatus.preparation) ...[
               ListTile(
                 leading: Icon(Icons.check_circle, color: colors.accent200),
@@ -291,6 +321,20 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
                   );
                 },
               ),
+              if (isCreator) ...[
+                ListTile(
+                  leading: Icon(Icons.delete_outline, color: colors.warning),
+                  title: Text(
+                    localizations.translate('delete_shelter'),
+                    style: TextStyle(color: colors.warning),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteShelterDialog(context, colors, localizations);
+                  },
+                ),
+              ],
+            ] else if (isCreator) ...[
               ListTile(
                 leading: Icon(Icons.delete_outline, color: colors.warning),
                 title: Text(
@@ -1394,27 +1438,68 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
   ) {
     final stockController =
         TextEditingController(text: resource['currentStock'].toString());
+    final minThresholdController =
+        TextEditingController(text: resource['minThreshold'].toString());
+    final descriptionController =
+        TextEditingController(text: resource['description'] ?? '');
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: colors.bg100,
         title: Text(
-          localizations.translate('edit_stock'),
+          localizations.translate('edit_resource'),
           style: TextStyle(color: colors.primary300),
         ),
-        content: TextField(
-          controller: stockController,
-          decoration: InputDecoration(
-            labelText: localizations.translate('current_stock'),
-            labelStyle: TextStyle(color: colors.text200),
-            filled: true,
-            fillColor: colors.bg200,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: colors.bg300),
-            ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('resource_description'),
+                  labelStyle: TextStyle(color: colors.text200),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: stockController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('current_stock'),
+                  labelStyle: TextStyle(color: colors.text200),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: minThresholdController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('min_threshold'),
+                  labelStyle: TextStyle(color: colors.text200),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
           ),
-          keyboardType: TextInputType.number,
         ),
         actions: [
           TextButton(
@@ -1425,9 +1510,11 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
             ),
           ),
           ElevatedButton(
-            onPressed: () => _saveResourceStock(
+            onPressed: () => _updateResourceDetails(
               resourceId,
+              descriptionController,
               stockController,
+              minThresholdController,
               colors,
               localizations,
             ),
@@ -1443,23 +1530,27 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
   }
 
   /// Saves updated resource stock.
-  Future<void> _saveResourceStock(
+  Future<void> _updateResourceDetails(
     String resourceId,
+    TextEditingController descriptionController,
     TextEditingController stockController,
+    TextEditingController minThresholdController,
     AppColorTheme colors,
     AppLocalizations localizations,
   ) async {
     try {
-      await _shelterService.updateResourceStock(
+      await _shelterService.updateResource(
         widget.id,
         resourceId,
-        int.parse(stockController.text),
+        description: descriptionController.text,
+        currentStock: int.parse(stockController.text),
+        minThreshold: int.parse(minThresholdController.text),
       );
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.translate('stock_updated')),
+            content: Text(localizations.translate('resource_updated')),
             backgroundColor: colors.accent200,
           ),
         );
@@ -1957,6 +2048,8 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
     Map<String, dynamic> request,
   ) {
     final statusController = TextEditingController(text: request['status']);
+    final descriptionController =
+        TextEditingController(text: request['description']);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -1965,37 +2058,59 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
           localizations.translate('update_request_status'),
           style: TextStyle(color: colors.primary300),
         ),
-        content: DropdownButtonFormField<String>(
-          value: request['status'],
-          decoration: InputDecoration(
-            labelText: localizations.translate('request_status'),
-            labelStyle: TextStyle(color: colors.text200),
-            filled: true,
-            fillColor: colors.bg200,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: colors.bg300),
-            ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: request['status'],
+                decoration: InputDecoration(
+                  labelText: localizations.translate('request_status'),
+                  labelStyle: TextStyle(color: colors.text200),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'pending',
+                    child: Text(localizations.translate('status_pending')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'in_progress',
+                    child: Text(localizations.translate('status_in_progress')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'completed',
+                    child: Text(localizations.translate('status_completed')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'cancelled',
+                    child: Text(localizations.translate('status_cancelled')),
+                  ),
+                ],
+                onChanged: (value) => statusController.text = value!,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('request_description'),
+                  labelStyle: TextStyle(color: colors.text200),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                ),
+                maxLines: 3,
+              ),
+            ],
           ),
-          items: [
-            DropdownMenuItem(
-              value: 'pending',
-              child: Text(localizations.translate('status_pending')),
-            ),
-            DropdownMenuItem(
-              value: 'in_progress',
-              child: Text(localizations.translate('status_in_progress')),
-            ),
-            DropdownMenuItem(
-              value: 'completed',
-              child: Text(localizations.translate('status_completed')),
-            ),
-            DropdownMenuItem(
-              value: 'cancelled',
-              child: Text(localizations.translate('status_cancelled')),
-            ),
-          ],
-          onChanged: (value) => statusController.text = value!,
         ),
         actions: [
           TextButton(
@@ -2006,9 +2121,10 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
             ),
           ),
           ElevatedButton(
-            onPressed: () => _saveHelpRequestStatus(
+            onPressed: () => _updateHelpRequest(
               request['id'],
               statusController,
+              descriptionController,
               colors,
               localizations,
             ),
@@ -2024,9 +2140,10 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
   }
 
   /// Saves updated help request status.
-  Future<void> _saveHelpRequestStatus(
+  Future<void> _updateHelpRequest(
     String requestId,
     TextEditingController statusController,
+    TextEditingController descriptionController,
     AppColorTheme colors,
     AppLocalizations localizations,
   ) async {
@@ -2035,17 +2152,18 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
       if (currentUser == null) {
         throw Exception('User not authenticated');
       }
-      await _shelterService.updateHelpRequestStatus(
+      await _shelterService.updateHelpRequest(
         shelterId: widget.id,
         requestId: requestId,
         status: statusController.text,
-        respondBy: currentUser.uid,
+        description: descriptionController.text,
+        requestedBy: currentUser.uid,
       );
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.translate('status_updated')),
+            content: Text(localizations.translate('request_updated')),
             backgroundColor: colors.accent200,
           ),
         );
@@ -2485,7 +2603,14 @@ enum ShelterStatus {
   mediumCapacity,
   highCapacity,
   full,
-  overCapacity,
+  overCapacity;
+
+  static ShelterStatus fromString(String status) {
+    return ShelterStatus.values.firstWhere(
+      (e) => e.name == status,
+      orElse: () => ShelterStatus.available, // fallback
+    );
+  }
 }
 
 /// Enum for resource status.

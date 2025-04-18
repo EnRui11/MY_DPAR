@@ -324,6 +324,7 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
         localizations.translate('successfully_joined_team'),
         backgroundColor: Colors.green,
       );
+      setState(() {});
     } catch (e) {
       // Show snackbar for failed join
       _showErrorSnackBar(

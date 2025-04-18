@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "979314781879",
+    "project_id": "mydpar-2df4f",
+    "storage_bucket": "mydpar-2df4f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:979314781879:android:6e8f7469118828490a2732",
+        "android_client_info": {
+          "package_name": "com.example.mydpar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApnlaFnA01DlCuINabShuQGlcV8QgQzzQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

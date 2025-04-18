@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mydpar/services/user_information_service.dart';
 
 class ShelterService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'shelters';
+  final UserInformationService _userInformationService =
+      UserInformationService();
 
   // Create a new shelter with resources
   Future<String> createShelter({
@@ -26,6 +29,20 @@ class ShelterService {
         'createdBy': createdBy,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Add creator as member
+      await _firestore
+          .collection(_collection)
+          .doc(docRef.id)
+          .collection('members')
+          .doc(createdBy)
+          .set({
+        'joined_at': FieldValue.serverTimestamp(),
+        'name':
+            '${_userInformationService.firstName} ${_userInformationService.lastName}',
+        'contact': _userInformationService.phoneNumber,
+        'role': 'admin',
       });
 
       // Add resources to the subcollection
@@ -70,7 +87,96 @@ class ShelterService {
     }
   }
 
-  // Get all shelters
+  // Get all shelters for the current user
+  Stream<List<Map<String, dynamic>>> getUserShelters() {
+    final userId = _userInformationService.userId;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection(_collection)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final shelters = <Map<String, dynamic>>[];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final shelterId = doc.id;
+
+        // Check if the user is a member
+        final memberDoc = await _firestore
+            .collection(_collection)
+            .doc(shelterId)
+            .collection('members')
+            .doc(userId)
+            .get();
+
+        if (memberDoc.exists) {
+          shelters.add({
+            'id': shelterId,
+            ...data,
+            'location': LatLng(
+              (data['location'] as GeoPoint).latitude,
+              (data['location'] as GeoPoint).longitude,
+            ),
+            'role': memberDoc.data()?['role'] ?? 'member',
+          });
+        }
+      }
+
+      return shelters;
+    });
+  }
+
+  // Join a shelter by ID
+  Future<void> joinShelter(String shelterId) async {
+    try {
+      final userId = _userInformationService.userId;
+      final userRole = _userInformationService.role;
+
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Check if shelter exists
+      final shelterDoc =
+          await _firestore.collection(_collection).doc(shelterId).get();
+      if (!shelterDoc.exists) {
+        throw Exception('Shelter not found');
+      }
+
+      // Check if user is already a member
+      final memberDoc = await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('members')
+          .doc(userId)
+          .get();
+
+      if (memberDoc.exists) {
+        throw Exception('You are already a member of this shelter');
+      }
+
+      // Add user to members subcollection
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('members')
+          .doc(userId)
+          .set({
+        'joined_at': FieldValue.serverTimestamp(),
+        'name':
+            '${_userInformationService.firstName} ${_userInformationService.lastName}',
+        'contact': _userInformationService.phoneNumber,
+        'role': userRole == 'officer' ? 'officer' : 'member',
+      });
+    } catch (e) {
+      throw Exception('Failed to join shelter: $e');
+    }
+  }
+
+  // Get all shelters (for admin purposes)
   Stream<List<Map<String, dynamic>>> getAllShelters() {
     return _firestore
         .collection(_collection)
@@ -191,28 +297,29 @@ class ShelterService {
     }
   }
 
-  // Update resource stock
-  Future<void> updateResourceStock(
+  // Updating resource details
+  Future<void> updateResource(
     String shelterId,
-    String resourceId,
-    int newStock,
-  ) async {
+    String resourceId, {
+    String? description,
+    int? currentStock,
+    int? minThreshold,
+  }) async {
     try {
+      final updates = <String, dynamic>{
+        if (description != null) 'description': description,
+        if (currentStock != null) 'currentStock': currentStock,
+        if (minThreshold != null) 'minThreshold': minThreshold,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
       await _firestore
           .collection(_collection)
           .doc(shelterId)
           .collection('resources')
           .doc(resourceId)
-          .update({
-        'currentStock': newStock,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      await _firestore.collection(_collection).doc(shelterId).update({
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+          .update(updates);
     } catch (e) {
-      throw Exception('Failed to update resource stock: $e');
+      throw Exception('Failed to update resource: $e');
     }
   }
 
@@ -305,12 +412,13 @@ class ShelterService {
     }
   }
 
-  // Update help request status
-  Future<void> updateHelpRequestStatus({
+  // Updating help request status and description
+  Future<void> updateHelpRequest({
     required String shelterId,
     required String requestId,
     required String status,
-    required String respondBy,
+    required String description,
+    required String requestedBy,
   }) async {
     try {
       await _firestore
@@ -320,11 +428,12 @@ class ShelterService {
           .doc(requestId)
           .update({
         'status': status,
-        'respondBy': FieldValue.arrayUnion([respondBy]),
+        'description': description,
+        'requestedBy': requestedBy,
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception('Failed to update help request status: $e');
+      throw Exception('Failed to update help request: $e');
     }
   }
 

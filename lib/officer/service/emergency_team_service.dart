@@ -470,9 +470,14 @@ class EmergencyTeamService {
   // Team Tasks Collection
   Future<String> createTeamTask({
     required String teamId,
-    required String title,
+    required String taskName,
     required String description,
-    required LatLng location,
+    required DateTime startDate,
+    required String priority,
+    required LatLng startLocation,
+    LatLng? endLocation,
+    Map<String, dynamic>? membersAssigned,
+    DateTime? expectedEndDate,
   }) async {
     try {
       final docRef = await _firestore
@@ -480,11 +485,23 @@ class EmergencyTeamService {
           .doc(teamId)
           .collection('team_tasks')
           .add({
-        'title': title,
+        'task_name': taskName,
         'description': description,
-        'location': GeoPoint(location.latitude, location.longitude),
+        'start_date': Timestamp.fromDate(startDate),
+        'completed_date': null,
+        'expected_end_date': expectedEndDate != null
+            ? Timestamp.fromDate(expectedEndDate)
+            : null,
+        'priority': priority,
         'status': 'pending',
-        'assigned_at': FieldValue.serverTimestamp(),
+        'members_assigned': membersAssigned ?? {},
+        'start_location':
+            GeoPoint(startLocation.latitude, startLocation.longitude),
+        'end_location': endLocation != null
+            ? GeoPoint(endLocation.latitude, endLocation.longitude)
+            : null,
+        'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
       });
       return docRef.id;
     } catch (e) {
@@ -497,7 +514,7 @@ class EmergencyTeamService {
         .collection('emergency_teams')
         .doc(teamId)
         .collection('team_tasks')
-        .orderBy('assigned_at', descending: true)
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -505,13 +522,143 @@ class EmergencyTeamService {
         return {
           'id': doc.id,
           ...data,
-          'location': LatLng(
-            (data['location'] as GeoPoint).latitude,
-            (data['location'] as GeoPoint).longitude,
+          'start_location': LatLng(
+            (data['start_location'] as GeoPoint).latitude,
+            (data['start_location'] as GeoPoint).longitude,
           ),
+          'end_location': data['end_location'] != null
+              ? LatLng(
+                  (data['end_location'] as GeoPoint).latitude,
+                  (data['end_location'] as GeoPoint).longitude,
+                )
+              : null,
+          'start_date': (data['start_date'] as Timestamp).toDate(),
+          'completed_date': data['completed_date'] != null
+              ? (data['completed_date'] as Timestamp).toDate()
+              : null,
+          'expected_end_date': data['expected_end_date'] != null
+              ? (data['expected_end_date'] as Timestamp).toDate()
+              : null,
         };
       }).toList();
     });
+  }
+
+  Future<Map<String, dynamic>?> getTeamTask(
+      String teamId, String taskId) async {
+    try {
+      final doc = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_tasks')
+          .doc(taskId)
+          .get();
+
+      if (!doc.exists) return null;
+
+      final data = doc.data()!;
+      return {
+        'id': doc.id,
+        ...data,
+        'start_location': LatLng(
+          (data['start_location'] as GeoPoint).latitude,
+          (data['start_location'] as GeoPoint).longitude,
+        ),
+        'end_location': data['end_location'] != null
+            ? LatLng(
+                (data['end_location'] as GeoPoint).latitude,
+                (data['end_location'] as GeoPoint).longitude,
+              )
+            : null,
+        'start_date': (data['start_date'] as Timestamp).toDate(),
+        'completed_date': data['completed_date'] != null
+            ? (data['completed_date'] as Timestamp).toDate()
+            : null,
+        'expected_end_date': data['expected_end_date'] != null
+            ? (data['expected_end_date'] as Timestamp).toDate()
+            : null,
+      };
+    } catch (e) {
+      throw Exception('Failed to get team task: $e');
+    }
+  }
+
+  Future<void> updateTeamTask({
+    required String teamId,
+    required String taskId,
+    String? taskName,
+    String? description,
+    DateTime? startDate,
+    DateTime? completedDate,
+    DateTime? expectedEndDate,
+    String? priority,
+    String? status,
+    Map<String, dynamic>? membersAssigned,
+    LatLng? startLocation,
+    LatLng? endLocation,
+  }) async {
+    try {
+      final updates = <String, dynamic>{
+        if (taskName != null) 'task_name': taskName,
+        if (description != null) 'description': description,
+        if (startDate != null) 'start_date': Timestamp.fromDate(startDate),
+        if (completedDate != null)
+          'completed_date': Timestamp.fromDate(completedDate),
+        if (expectedEndDate != null)
+          'expected_end_date': Timestamp.fromDate(expectedEndDate),
+        if (priority != null) 'priority': priority,
+        if (status != null) 'status': status,
+        if (membersAssigned != null) 'members_assigned': membersAssigned,
+        if (startLocation != null)
+          'start_location':
+              GeoPoint(startLocation.latitude, startLocation.longitude),
+        if (endLocation != null)
+          'end_location': GeoPoint(endLocation.latitude, endLocation.longitude),
+        'updated_at': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_tasks')
+          .doc(taskId)
+          .update(updates);
+    } catch (e) {
+      throw Exception('Failed to update team task: $e');
+    }
+  }
+
+  Future<void> deleteTeamTask(String teamId, String taskId) async {
+    try {
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_tasks')
+          .doc(taskId)
+          .delete();
+    } catch (e) {
+      throw Exception('Failed to delete team task: $e');
+    }
+  }
+
+  Future<void> assignMembersToTask({
+    required String teamId,
+    required String taskId,
+    required Map<String, dynamic> membersAssigned,
+  }) async {
+    try {
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_tasks')
+          .doc(taskId)
+          .update({
+        'members_assigned': membersAssigned,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to assign members to task: $e');
+    }
   }
 
   Future<void> updateTaskStatus({
@@ -524,8 +671,10 @@ class EmergencyTeamService {
       final updates = <String, dynamic>{
         'status': status,
         if (feedback != null) 'feedback': feedback,
-        if (status == 'in_progress') 'started_at': FieldValue.serverTimestamp(),
-        if (status == 'completed') 'completed_at': FieldValue.serverTimestamp(),
+        if (status == 'in_progress') 'start_date': FieldValue.serverTimestamp(),
+        if (status == 'completed')
+          'completed_date': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
       };
 
       await _firestore
@@ -537,6 +686,117 @@ class EmergencyTeamService {
     } catch (e) {
       throw Exception('Failed to update task status: $e');
     }
+  }
+
+  Stream<List<Map<String, dynamic>>> getTeamTasksByStatus(
+      String teamId, String status) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_tasks')
+        .where('status', isEqualTo: status)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+          'start_location': LatLng(
+            (data['start_location'] as GeoPoint).latitude,
+            (data['start_location'] as GeoPoint).longitude,
+          ),
+          'end_location': data['end_location'] != null
+              ? LatLng(
+                  (data['end_location'] as GeoPoint).latitude,
+                  (data['end_location'] as GeoPoint).longitude,
+                )
+              : null,
+          'start_date': (data['start_date'] as Timestamp).toDate(),
+          'completed_date': data['completed_date'] != null
+              ? (data['completed_date'] as Timestamp).toDate()
+              : null,
+          'expected_end_date': data['expected_end_date'] != null
+              ? (data['expected_end_date'] as Timestamp).toDate()
+              : null,
+        };
+      }).toList();
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> getTeamTasksByPriority(
+      String teamId, String priority) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_tasks')
+        .where('priority', isEqualTo: priority)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+          'start_location': LatLng(
+            (data['start_location'] as GeoPoint).latitude,
+            (data['start_location'] as GeoPoint).longitude,
+          ),
+          'end_location': data['end_location'] != null
+              ? LatLng(
+                  (data['end_location'] as GeoPoint).latitude,
+                  (data['end_location'] as GeoPoint).longitude,
+                )
+              : null,
+          'start_date': (data['start_date'] as Timestamp).toDate(),
+          'completed_date': data['completed_date'] != null
+              ? (data['completed_date'] as Timestamp).toDate()
+              : null,
+          'expected_end_date': data['expected_end_date'] != null
+              ? (data['expected_end_date'] as Timestamp).toDate()
+              : null,
+        };
+      }).toList();
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> getMemberTasks(
+      String teamId, String memberId) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_tasks')
+        .where('members_assigned.$memberId', isNull: false)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+          'start_location': LatLng(
+            (data['start_location'] as GeoPoint).latitude,
+            (data['start_location'] as GeoPoint).longitude,
+          ),
+          'end_location': data['end_location'] != null
+              ? LatLng(
+                  (data['end_location'] as GeoPoint).latitude,
+                  (data['end_location'] as GeoPoint).longitude,
+                )
+              : null,
+          'start_date': (data['start_date'] as Timestamp).toDate(),
+          'completed_date': data['completed_date'] != null
+              ? (data['completed_date'] as Timestamp).toDate()
+              : null,
+          'expected_end_date': data['expected_end_date'] != null
+              ? (data['expected_end_date'] as Timestamp).toDate()
+              : null,
+        };
+      }).toList();
+    });
   }
 
   // Team Resources Collection
@@ -825,7 +1085,6 @@ class EmergencyTeamService {
           });
         }
       }
-
       return teams;
     });
   }

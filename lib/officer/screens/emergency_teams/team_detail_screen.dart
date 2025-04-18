@@ -6,6 +6,8 @@ import 'package:mydpar/officer/service/emergency_team_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:mydpar/officer/screens/emergency_teams/select_task_location_screen.dart';
 
 /// Screen for displaying detailed information about an emergency team.
 class TeamDetailScreen extends StatefulWidget {
@@ -95,7 +97,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
       if (mounted) {
         _showSnackBar(
           AppLocalizations.of(context)!.translate('role_updated'),
-          backgroundColor: Colors.green,
         );
       }
     } catch (e) {
@@ -123,7 +124,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           isOnDuty
               ? AppLocalizations.of(context)!.translate('now_on_duty')
               : AppLocalizations.of(context)!.translate('now_off_duty'),
-          backgroundColor: isOnDuty ? Colors.green : Colors.red,
         );
       }
     } catch (e) {
@@ -292,7 +292,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
       if (mounted) {
         _showSnackBar(
           localizations.translate('team_archived'),
-          backgroundColor: Colors.green,
         );
         Navigator.pop(context);
       }
@@ -314,7 +313,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
       if (mounted) {
         _showSnackBar(
           localizations.translate('team_deleted'),
-          backgroundColor: Colors.green,
         );
         Navigator.pop(context);
       }
@@ -329,10 +327,10 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   }
 
   /// Shows a snackbar with a message and optional background color.
-  void _showSnackBar(String message, {Color? backgroundColor}) {
+  void _showSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: backgroundColor),
+        SnackBar(content: Text(message)),
       );
     }
   }
@@ -966,7 +964,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   Navigator.pop(context);
                   _showSnackBar(
                     localizations.translate('member_removed'),
-                    backgroundColor: Colors.green,
                   );
                 }
               } catch (e) {
@@ -1017,6 +1014,641 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
     });
   }
 
+  /// Shows the add task modal
+  void _showAddTaskModal(AppColorTheme colors, AppLocalizations localizations) {
+    final TextEditingController taskNameController = TextEditingController();
+    final TextEditingController taskDescriptionController =
+        TextEditingController();
+    final TextEditingController startDateController = TextEditingController();
+    final TextEditingController endDateController = TextEditingController();
+    final TextEditingController priorityController = TextEditingController();
+    final TextEditingController startLocationController =
+        TextEditingController();
+    final TextEditingController endLocationController = TextEditingController();
+    final TextEditingController completedDateController =
+        TextEditingController();
+
+    // Set default date to today
+    final now = DateTime.now();
+    startDateController.text =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    // Store selected members
+    final Map<String, bool> selectedMembers = {};
+
+    // Store selected locations
+    LatLng? startLocation;
+    LatLng? endLocation;
+    String? startLocationName;
+    String? endLocationName;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            decoration: BoxDecoration(
+              color: colors.bg100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: colors.bg300),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        localizations.translate('create_new_task'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary300,
+                          fontSize: 18,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: colors.primary300),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Form
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Task Name
+                        Text(
+                          '${localizations.translate('task_name')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: taskNameController,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('enter_task_name'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Description
+                        Text(
+                          '${localizations.translate('description')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: taskDescriptionController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: localizations.translate('task_details'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Start Location
+                        Text(
+                          '${localizations.translate('start_location')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SelectTaskLocationScreen(),
+                              ),
+                            );
+
+                            if (result != null) {
+                              setState(() {
+                                startLocation = LatLng(
+                                  result['latitude'],
+                                  result['longitude'],
+                                );
+                                startLocationName = result['locationName'];
+                                startLocationController.text =
+                                    startLocationName!;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: colors.bg200,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: colors.bg300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.location_on,
+                                    color: colors.accent200),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    startLocationName ??
+                                        localizations
+                                            .translate('select_start_location'),
+                                    style: TextStyle(
+                                      color: startLocationName != null
+                                          ? colors.text200
+                                          : colors.text200.withOpacity(0.5),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // End Location (Optional)
+                        Text(
+                          localizations.translate('end_location'),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SelectTaskLocationScreen(),
+                              ),
+                            );
+
+                            if (result != null) {
+                              setState(() {
+                                endLocation = LatLng(
+                                  result['latitude'],
+                                  result['longitude'],
+                                );
+                                endLocationName = result['locationName'];
+                                endLocationController.text = endLocationName!;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: colors.bg200,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: colors.bg300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.location_on,
+                                    color: colors.accent200),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    endLocationName ??
+                                        localizations
+                                            .translate('select_end_location'),
+                                    style: TextStyle(
+                                      color: endLocationName != null
+                                          ? colors.text200
+                                          : colors.text200.withOpacity(0.5),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Priority
+                        Text(
+                          '${localizations.translate('priority')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: colors.bg200,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.bg300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: priorityController.text.isEmpty
+                                  ? null
+                                  : priorityController.text,
+                              hint: Text(
+                                localizations.translate('select_priority'),
+                                style: TextStyle(
+                                    color: colors.text200.withOpacity(0.5)),
+                              ),
+                              isExpanded: true,
+                              items: [
+                                DropdownMenuItem(
+                                  value: 'high',
+                                  child: Text(localizations.translate('high')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'medium',
+                                  child:
+                                      Text(localizations.translate('medium')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'low',
+                                  child: Text(localizations.translate('low')),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    priorityController.text = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Start Date
+                        Text(
+                          '${localizations.translate('start_date')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime.now(),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
+                            );
+
+                            if (picked != null) {
+                              setState(() {
+                                startDateController.text =
+                                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: colors.bg200,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: colors.bg300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today,
+                                    color: colors.accent200),
+                                const SizedBox(width: 8),
+                                Text(
+                                  startDateController.text.isEmpty
+                                      ? localizations
+                                          .translate('select_start_date')
+                                      : startDateController.text,
+                                  style: TextStyle(
+                                    color: startDateController.text.isEmpty
+                                        ? colors.text200.withOpacity(0.5)
+                                        : colors.text200,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Completed Date (Optional)
+                        Text(
+                          localizations.translate('expected_end_date'),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate:
+                                  DateTime.now().add(const Duration(days: 1)),
+                              firstDate: DateTime.now(),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
+                            );
+
+                            if (picked != null) {
+                              setState(() {
+                                completedDateController.text =
+                                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: colors.bg200,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: colors.bg300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today,
+                                    color: colors.accent200),
+                                const SizedBox(width: 8),
+                                Text(
+                                  completedDateController.text.isEmpty
+                                      ? localizations
+                                          .translate('select_end_date')
+                                      : completedDateController.text,
+                                  style: TextStyle(
+                                    color: completedDateController.text.isEmpty
+                                        ? colors.text200.withOpacity(0.5)
+                                        : colors.text200,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Assign Members
+                        Text(
+                          localizations.translate('assign_members'),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          decoration: BoxDecoration(
+                            color: colors.bg200,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.bg300),
+                          ),
+                          child: StreamBuilder<List<Map<String, dynamic>>>(
+                            stream: _teamService.getTeamMembers(widget.teamId),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    localizations
+                                        .translate('error_loading_members'),
+                                    style: TextStyle(color: colors.warning),
+                                  ),
+                                );
+                              }
+
+                              if (!snapshot.hasData) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+
+                              final members = snapshot.data!;
+
+                              if (members.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    localizations.translate('no_members'),
+                                    style: TextStyle(color: colors.text200),
+                                  ),
+                                );
+                              }
+
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: members.length,
+                                itemBuilder: (context, index) {
+                                  final member = members[index];
+                                  final memberId = member['id'];
+                                  final memberName = member['name'];
+                                  final memberRole = member['role'] ?? '';
+
+                                  // Initialize selected state if not already set
+                                  if (!selectedMembers.containsKey(memberId)) {
+                                    selectedMembers[memberId] = false;
+                                  }
+
+                                  return CheckboxListTile(
+                                    title: Text(
+                                      '$memberName (${memberRole.isNotEmpty ? memberRole : localizations.translate('member')})',
+                                      style: TextStyle(color: colors.text200),
+                                    ),
+                                    value: selectedMembers[memberId],
+                                    activeColor: colors.accent200,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedMembers[memberId] =
+                                            value ?? false;
+                                      });
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Create Task Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              // Validate required fields
+                              if (taskNameController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('task_name_required'));
+                                return;
+                              }
+                              if (taskDescriptionController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('description_required'));
+                                return;
+                              }
+                              if (startDateController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('start_date_required'));
+                                return;
+                              }
+                              if (priorityController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('priority_required'));
+                                return;
+                              }
+                              if (selectedMembers.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('members_required'));
+                                return;
+                              }
+                              if (startLocation == null) {
+                                _showSnackBar(localizations
+                                    .translate('start_location_required'));
+                                return;
+                              }
+
+                              // Get selected members
+                              final Map<String, dynamic> membersAssigned = {};
+                              selectedMembers.forEach((memberId, isSelected) {
+                                if (isSelected) {
+                                  membersAssigned[memberId] = true;
+                                }
+                              });
+
+                              // Parse dates
+                              final startDate =
+                                  DateTime.parse(startDateController.text);
+                              DateTime? completedDate;
+                              if (completedDateController.text.isNotEmpty) {
+                                completedDate = DateTime.parse(
+                                    completedDateController.text);
+                              }
+
+                              try {
+                                // Create task
+                                await _teamService.createTeamTask(
+                                  teamId: widget.teamId,
+                                  taskName: taskNameController.text,
+                                  description: taskDescriptionController.text,
+                                  startDate: startDate,
+                                  priority: priorityController.text,
+                                  startLocation: startLocation!,
+                                  endLocation: endLocation,
+                                  membersAssigned: membersAssigned,
+                                  expectedEndDate: completedDate,
+                                );
+
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  _showSnackBar(
+                                    localizations
+                                        .translate('task_created_successfully'),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  _showErrorSnackBar(
+                                    localizations
+                                        .translate('error_creating_task'),
+                                    e,
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.accent200,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              localizations.translate('create_task'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Builds the tasks tab content.
   Widget _buildTasksTab(AppColorTheme colors, AppLocalizations localizations) {
     return StreamBuilder<List<Map<String, dynamic>>>(
@@ -1048,19 +1680,18 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   style: TextStyle(color: colors.text200, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // TODO: Navigate to add task screen
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.accent200,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (_userRole == 'leader')
+                  ElevatedButton(
+                    onPressed: () => _showAddTaskModal(colors, localizations),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.accent200,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    child: Text(localizations.translate('add_task')),
                   ),
-                  child: Text(localizations.translate('add_task')),
-                ),
               ],
             ),
           );
@@ -1080,15 +1711,15 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                     color: colors.primary300,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to manage tasks screen
-                  },
-                  child: Text(
-                    localizations.translate('manage'),
-                    style: TextStyle(color: colors.accent200),
+                if (_userRole == 'leader')
+                  TextButton.icon(
+                    onPressed: () => _showAddTaskModal(colors, localizations),
+                    icon: Icon(Icons.add, color: colors.accent200),
+                    label: Text(
+                      localizations.translate('add_task'),
+                      style: TextStyle(color: colors.accent200),
+                    ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -1115,7 +1746,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              task['title'] ?? '',
+                              task['task_name'] ?? '',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: colors.primary300,
@@ -1143,7 +1774,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                                     size: 16, color: colors.text200),
                                 const SizedBox(width: 4),
                                 Text(
-                                  _formatTimestamp(task['assigned_at']),
+                                  _formatTimestamp(task['start_date']),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: colors.text200,
@@ -1151,14 +1782,14 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                                 ),
                               ],
                             ),
-                            if (task['started_at'] != null)
+                            if (task['completed_date'] != null)
                               Row(
                                 children: [
-                                  Icon(Icons.play_circle_outline,
+                                  Icon(Icons.check_circle_outline,
                                       size: 16, color: colors.text200),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _formatTimestamp(task['started_at']),
+                                    _formatTimestamp(task['completed_date']),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: colors.text200,

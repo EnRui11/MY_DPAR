@@ -8,15 +8,18 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 
 class SelectShelterLocationScreen extends StatefulWidget {
-  final LatLng? initialLocation; // Optional initial location from ReportIncidentScreen
+  final LatLng?
+      initialLocation; // Optional initial location from ReportIncidentScreen
 
   const SelectShelterLocationScreen({super.key, this.initialLocation});
 
   @override
-  State<SelectShelterLocationScreen> createState() => _SelectShelterLocationScreenState();
+  State<SelectShelterLocationScreen> createState() =>
+      _SelectShelterLocationScreenState();
 }
 
-class _SelectShelterLocationScreenState extends State<SelectShelterLocationScreen> {
+class _SelectShelterLocationScreenState
+    extends State<SelectShelterLocationScreen> {
   late final MapController _mapController;
   late final TextEditingController _searchController;
 
@@ -26,7 +29,8 @@ class _SelectShelterLocationScreenState extends State<SelectShelterLocationScree
   bool _isSearching = false;
 
   // Constants for consistency and easy tweaking
-  static const LatLng _defaultLocation = LatLng(3.1390, 101.6869); // Kuala Lumpur
+  static const LatLng _defaultLocation =
+      LatLng(3.1390, 101.6869); // Kuala Lumpur
   static const double _defaultZoom = 15.0;
   static const double _paddingValue = 16.0;
   static const double _spacingSmall = 4.0;
@@ -59,7 +63,8 @@ class _SelectShelterLocationScreenState extends State<SelectShelterLocationScree
   Future<void> _initializeCurrentLocation() async {
     await _fetchCurrentLocation();
 
-    final LatLng initialCenter = widget.initialLocation ?? _currentLocation ?? _defaultLocation;
+    final LatLng initialCenter =
+        widget.initialLocation ?? _currentLocation ?? _defaultLocation;
     _mapController.move(initialCenter, _defaultZoom);
   }
 
@@ -89,7 +94,8 @@ class _SelectShelterLocationScreenState extends State<SelectShelterLocationScree
       final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      setState(() => _currentLocation = LatLng(position.latitude, position.longitude));
+      setState(() =>
+          _currentLocation = LatLng(position.latitude, position.longitude));
     } catch (e) {
       _showSnackBar('Failed to fetch current location: $e', Colors.red);
     }
@@ -106,8 +112,10 @@ class _SelectShelterLocationScreenState extends State<SelectShelterLocationScree
         final Placemark place = placemarks[0];
         setState(() {
           _selectedLocationName =
-              '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}'.trim();
-          if (_selectedLocationName!.isEmpty) _selectedLocationName = 'Unnamed Location';
+              '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}'
+                  .trim();
+          if (_selectedLocationName!.isEmpty)
+            _selectedLocationName = 'Unnamed Location';
         });
       }
     } catch (e) {
@@ -123,7 +131,8 @@ class _SelectShelterLocationScreenState extends State<SelectShelterLocationScree
     try {
       final List<Location> locations = await locationFromAddress(query);
       if (locations.isNotEmpty) {
-        final LatLng location = LatLng(locations.first.latitude, locations.first.longitude);
+        final LatLng location =
+            LatLng(locations.first.latitude, locations.first.longitude);
         setState(() => _selectedLocation = location);
         _mapController.move(location, _defaultZoom);
         await _fetchLocationName(location);
@@ -156,197 +165,202 @@ class _SelectShelterLocationScreenState extends State<SelectShelterLocationScree
 
   /// Builds the map with markers for current and selected locations
   Widget _buildMap(AppColorTheme colors) => FlutterMap(
-    mapController: _mapController,
-    options: MapOptions(
-      center: widget.initialLocation ?? _currentLocation ?? _defaultLocation,
-      zoom: _defaultZoom,
-      onTap: (TapPosition tapPosition, LatLng point) async {
-        setState(() => _selectedLocation = point);
-        await _fetchLocationName(point);
-      },
-    ),
-    children: [
-      TileLayer(
-        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        subdomains: const ['a', 'b', 'c'],
-        userAgentPackageName: 'com.mydpar.app',
-      ),
-      MarkerLayer(
-        markers: [
-          if (_selectedLocation != null)
-            Marker(
-              point: _selectedLocation!,
-              builder: (_) => Icon(
-                Icons.location_pin,
-                color: colors.warning,
-                size: 40,
-              ),
-            ),
-          if (_currentLocation != null && _selectedLocation != _currentLocation)
-            Marker(
-              point: _currentLocation!,
-              builder: (_) => const Icon(
-                Icons.my_location,
-                color: Colors.blue,
-                size: 30,
-              ),
-            ),
+        mapController: _mapController,
+        options: MapOptions(
+          center:
+              widget.initialLocation ?? _currentLocation ?? _defaultLocation,
+          zoom: _defaultZoom,
+          onTap: (TapPosition tapPosition, LatLng point) async {
+            setState(() => _selectedLocation = point);
+            await _fetchLocationName(point);
+          },
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            subdomains: const ['a', 'b', 'c'],
+            userAgentPackageName: 'com.mydpar.app',
+          ),
+          MarkerLayer(
+            markers: [
+              if (_selectedLocation != null)
+                Marker(
+                  point: _selectedLocation!,
+                  builder: (_) => Icon(
+                    Icons.location_pin,
+                    color: colors.warning,
+                    size: 40,
+                  ),
+                ),
+              if (_currentLocation != null &&
+                  _selectedLocation != _currentLocation)
+                Marker(
+                  point: _currentLocation!,
+                  builder: (_) => const Icon(
+                    Icons.my_location,
+                    color: Colors.blue,
+                    size: 30,
+                  ),
+                ),
+            ],
+          ),
         ],
-      ),
-    ],
-  );
+      );
 
   /// Builds the top bar with back button and search field
   Widget _buildTopBar(AppColorTheme colors) => Positioned(
-    top: 0,
-    left: 0,
-    right: 0,
-    child: Container(
-      color: colors.bg100.withOpacity(0.9),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.all(_paddingValue),
-          child: Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back, color: colors.primary300),
-                onPressed: () => Navigator.pop(context),
+        top: 0,
+        left: 0,
+        right: 0,
+        child: Container(
+          color: colors.bg100.withOpacity(0.9),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.all(_paddingValue),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: colors.primary300),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(child: _buildSearchField(colors)),
+                ],
               ),
-              Expanded(child: _buildSearchField(colors)),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 
   /// Builds the search field
   Widget _buildSearchField(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      color: colors.bg200,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: TextField(
-      controller: _searchController,
-      style: TextStyle(color: colors.text200),
-      textAlign: TextAlign.center,
-      decoration: InputDecoration(
-        hintText: 'Search location',
-        hintStyle: TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 16),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: _paddingValue),
-          child: Icon(Icons.search, color: colors.primary300),
+        decoration: BoxDecoration(
+          color: colors.bg200,
+          borderRadius: BorderRadius.circular(12),
         ),
-        suffixIcon: _isSearching
-            ? Padding(
-          padding: const EdgeInsets.all(_spacingLarge - 4),
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: colors.accent200,
+        child: TextField(
+          controller: _searchController,
+          style: TextStyle(color: colors.text200),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            hintText: 'Search location',
+            hintStyle:
+                TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 16),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: _paddingValue),
+              child: Icon(Icons.search, color: colors.primary300),
+            ),
+            suffixIcon: _isSearching
+                ? Padding(
+                    padding: const EdgeInsets.all(_spacingLarge - 4),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colors.accent200,
+                    ),
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: _spacingLarge * 3, vertical: _spacingMedium + 4),
           ),
-        )
-            : null,
-        border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: _spacingLarge * 3, vertical: _spacingMedium + 4),
-      ),
-      onSubmitted: _searchLocation,
-    ),
-  );
+          onSubmitted: _searchLocation,
+        ),
+      );
 
   /// Builds the current location button
   Widget _buildCurrentLocationButton(AppColorTheme colors) => Positioned(
-    right: _spacingLarge,
-    bottom: 220,
-    child: FloatingActionButton(
-      onPressed: () async {
-        await _fetchCurrentLocation();
-        if (_currentLocation != null) {
-          _mapController.move(_currentLocation!, _defaultZoom);
-        }
-      },
-      backgroundColor: colors.bg100,
-      child: Icon(Icons.my_location, color: colors.accent200),
-    ),
-  );
+        right: _spacingLarge,
+        bottom: 220,
+        child: FloatingActionButton(
+          onPressed: () async {
+            await _fetchCurrentLocation();
+            if (_currentLocation != null) {
+              _mapController.move(_currentLocation!, _defaultZoom);
+            }
+          },
+          backgroundColor: colors.bg100,
+          child: Icon(Icons.my_location, color: colors.accent200),
+        ),
+      );
 
   /// Builds the bottom controls with location info and confirm button
   Widget _buildBottomControls(AppColorTheme colors) => Positioned(
-    bottom: _spacingLarge,
-    left: _spacingLarge,
-    right: _spacingLarge,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_selectedLocation != null) _buildSelectedLocationInfo(colors),
-        const SizedBox(height: _spacingLarge),
-        _buildConfirmButton(colors),
-      ],
-    ),
-  );
+        bottom: _spacingLarge,
+        left: _spacingLarge,
+        right: _spacingLarge,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_selectedLocation != null) _buildSelectedLocationInfo(colors),
+            const SizedBox(height: _spacingLarge),
+            _buildConfirmButton(colors),
+          ],
+        ),
+      );
 
   /// Builds the selected location info card
   Widget _buildSelectedLocationInfo(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.all(_paddingValue),
-    decoration: BoxDecoration(
-      color: colors.bg100,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Selected Location:',
-          style: TextStyle(color: colors.text200.withOpacity(0.7), fontSize: 12),
+        padding: const EdgeInsets.all(_paddingValue),
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(height: _spacingSmall),
-        Text(
-          _selectedLocationName ?? 'Loading location name...',
-          style: TextStyle(color: colors.text200, fontSize: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Selected Location:',
+              style: TextStyle(
+                  color: colors.text200.withOpacity(0.7), fontSize: 12),
+            ),
+            const SizedBox(height: _spacingSmall),
+            Text(
+              _selectedLocationName ?? 'Loading location name...',
+              style: TextStyle(color: colors.text200, fontSize: 16),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   /// Builds the confirm button
   Widget _buildConfirmButton(AppColorTheme colors) => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [colors.accent200, colors.accent200.withOpacity(0.8)],
-      ),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: ElevatedButton(
-      onPressed: _selectedLocation != null ? _confirmLocation : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        foregroundColor: colors.bg100,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.check_circle_outline, color: colors.bg100),
-          const SizedBox(width: _spacingMedium),
-          const Text(
-            'Confirm Location',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [colors.accent200, colors.accent200.withOpacity(0.8)],
           ),
-        ],
-      ),
-    ),
-  );
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ElevatedButton(
+          onPressed: _selectedLocation != null ? _confirmLocation : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: colors.bg100,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: _spacingLarge),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.check_circle_outline, color: colors.bg100),
+              const SizedBox(width: _spacingMedium),
+              const Text(
+                'Confirm Location',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
 
   /// Confirms the selected location and returns it to the parent screen
   void _confirmLocation() {
-    if (_selectedLocation != null) {
+    if (_selectedLocation != null && _selectedLocationName != null) {
       Navigator.pop(context, {
         'latitude': _selectedLocation!.latitude,
         'longitude': _selectedLocation!.longitude,
-        'locationName': _selectedLocationName ?? 'Selected Location',
+        'locationName': _selectedLocationName!,
       });
     }
   }

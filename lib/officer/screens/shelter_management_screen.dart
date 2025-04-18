@@ -21,6 +21,23 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
   static const double _padding = 16.0;
   static const double _spacing = 24.0;
   final ShelterService _shelterService = ShelterService();
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +49,7 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(colors),
+            _buildSearchBar(colors),
             Expanded(
               child: _buildShelterList(context, colors),
             ),
@@ -42,29 +59,27 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
     );
   }
 
-  Widget _buildHeader(AppColorTheme colors) => Container(
+  Widget _buildSearchBar(AppColorTheme colors) => Padding(
         padding: const EdgeInsets.all(_padding),
-        decoration: BoxDecoration(
-          color: colors.bg100,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context).translate('search_shelters'),
+            hintStyle: TextStyle(color: colors.text200),
+            prefixIcon: Icon(Icons.search, color: colors.text200),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.bg300),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Text(
-              AppLocalizations.of(context).translate('shelter_management'),
-              style: TextStyle(
-                color: colors.primary300,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.bg300),
             ),
-          ],
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.accent200),
+            ),
+          ),
         ),
       );
 
@@ -86,7 +101,12 @@ class _ShelterManagementScreenState extends State<ShelterManagementScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final shelters = snapshot.data!;
+          final searchText = _searchController.text.toLowerCase();
+          final shelters = snapshot.data!
+              .where((shelter) => shelter['name']
+                  .toLowerCase()
+                  .contains(searchText))
+              .toList();
 
           return ListView.builder(
             padding: const EdgeInsets.all(_padding),

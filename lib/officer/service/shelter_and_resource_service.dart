@@ -344,4 +344,74 @@ class ShelterService {
       throw Exception('Failed to delete help request: $e');
     }
   }
+
+  // Get location history for a shelter
+  Stream<List<Map<String, dynamic>>> getLocationHistory(String shelterId) {
+    return _firestore
+        .collection(_collection)
+        .doc(shelterId)
+        .collection('location_history')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+          'location': LatLng(
+            (data['location'] as GeoPoint).latitude,
+            (data['location'] as GeoPoint).longitude,
+          ),
+        };
+      }).toList();
+    });
+  }
+
+  // Add a new location history entry
+  Future<void> addLocationHistory({
+    required String shelterId,
+    required LatLng location,
+    required String locationName,
+    String? notes,
+  }) async {
+    try {
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('location_history')
+          .add({
+        'location': GeoPoint(location.latitude, location.longitude),
+        'locationName': locationName,
+        'notes': notes,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Update the shelter's current location
+      await _firestore.collection(_collection).doc(shelterId).update({
+        'location': GeoPoint(location.latitude, location.longitude),
+        'locationName': locationName,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to add location history: $e');
+    }
+  }
+
+  // Delete a location history entry
+  Future<void> deleteLocationHistory({
+    required String shelterId,
+    required String historyId,
+  }) async {
+    try {
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('location_history')
+          .doc(historyId)
+          .delete();
+    } catch (e) {
+      throw Exception('Failed to delete location history: $e');
+    }
+  }
 }

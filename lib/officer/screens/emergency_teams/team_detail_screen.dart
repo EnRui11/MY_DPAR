@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/officer/screens/emergency_teams/select_task_location_screen.dart';
+import 'package:mydpar/officer/screens/emergency_teams/task_management_screen.dart';
 
 /// Screen for displaying detailed information about an emergency team.
 class TeamDetailScreen extends StatefulWidget {
@@ -330,7 +331,10 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   void _showSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+        ),
       );
     }
   }
@@ -1711,18 +1715,27 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                     color: colors.primary300,
                   ),
                 ),
-                if (_userRole == 'leader')
-                  TextButton.icon(
-                    onPressed: () => _showAddTaskModal(colors, localizations),
-                    icon: Icon(Icons.add, color: colors.accent200),
-                    label: Text(
-                      localizations.translate('add_task'),
-                      style: TextStyle(color: colors.accent200),
-                    ),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskManagementScreen(
+                          teamId: widget.teamId,
+                          isLeader: _userRole == 'leader',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.settings, color: colors.accent200),
+                  label: Text(
+                    localizations.translate('manage_task'),
+                    style: TextStyle(color: colors.accent200),
                   ),
+                ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Expanded(
               child: ListView.builder(
                 itemCount: tasks.length,
@@ -1782,21 +1795,25 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                                 ),
                               ],
                             ),
-                            if (task['completed_date'] != null)
-                              Row(
-                                children: [
-                                  Icon(Icons.check_circle_outline,
-                                      size: 16, color: colors.text200),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _formatTimestamp(task['completed_date']),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: colors.text200,
-                                    ),
+                            Row(
+                              children: [
+                                Icon(Icons.group_outlined,
+                                    size: 16, color: colors.text200),
+                                const SizedBox(width: 4),
+                                Text(
+                                  localizations.translate('number_members', {
+                                    'count': (task['members_assigned']
+                                            as Map<String, dynamic>)
+                                        .length
+                                        .toString()
+                                  }),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colors.text200,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ],
@@ -2059,21 +2076,72 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   String _formatTimestamp(dynamic timestamp) {
     if (timestamp == null) return '';
 
-    final DateTime dateTime =
-        timestamp is Timestamp ? timestamp.toDate() : DateTime.now();
+    DateTime dateTime;
+    if (timestamp is Timestamp) {
+      dateTime = timestamp.toDate();
+    } else if (timestamp is DateTime) {
+      dateTime = timestamp;
+    } else if (timestamp is String) {
+      try {
+        dateTime = DateTime.parse(timestamp);
+      } catch (e) {
+        return timestamp.toString();
+      }
+    } else {
+      return '';
+    }
 
+    // Format the date based on how long ago it was
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
+    // If it's a future date
+    if (difference.isNegative) {
+      return '${dateTime.day} ${_getMonthName(dateTime.month)} ${dateTime.year}';
     }
+
+    // If it's within the last 24 hours
+    if (difference.inHours < 24 && dateTime.day == now.day) {
+      return 'Today at ${_formatTime(dateTime)}';
+    }
+
+    // If it's yesterday
+    if (difference.inHours < 48 && dateTime.day == now.day - 1) {
+      return 'Yesterday at ${_formatTime(dateTime)}';
+    }
+
+    // If it's within the current year
+    if (dateTime.year == now.year) {
+      return '${dateTime.day} ${_getMonthName(dateTime.month)} at ${_formatTime(dateTime)}';
+    }
+
+    // If it's a different year
+    return '${dateTime.day} ${_getMonthName(dateTime.month)} ${dateTime.year} at ${_formatTime(dateTime)}';
+  }
+
+  /// Helper method to get month name
+  String _getMonthName(int month) {
+    return [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ][month - 1];
+  }
+
+  /// Helper method to format time
+  String _formatTime(DateTime dateTime) {
+    String hours = dateTime.hour.toString().padLeft(2, '0');
+    String minutes = dateTime.minute.toString().padLeft(2, '0');
+    return '$hours:$minutes';
   }
 
   /// Returns the minimum of two integers.

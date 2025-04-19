@@ -9,12 +9,19 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/officer/screens/emergency_teams/select_task_location_screen.dart';
 import 'package:mydpar/officer/screens/emergency_teams/task_management_screen.dart';
+import 'package:mydpar/officer/screens/emergency_teams/task_detail_screen.dart';
+import 'package:flutter/services.dart';
 
 /// Screen for displaying detailed information about an emergency team.
 class TeamDetailScreen extends StatefulWidget {
   final String teamId;
+  final bool isLeader;
 
-  const TeamDetailScreen({super.key, required this.teamId});
+  const TeamDetailScreen({
+    super.key,
+    required this.teamId,
+    required this.isLeader,
+  });
 
   @override
   State<TeamDetailScreen> createState() => _TeamDetailScreenState();
@@ -138,107 +145,153 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
     }
   }
 
-  /// Shows the team options bottom sheet.
-  void _showTeamOptionsSheet(BuildContext context, AppColorTheme colors) {
-    final localizations = AppLocalizations.of(context)!;
+  /// Shows the team options menu when more vert icon is clicked
+  void _showTeamOptionsMenu(BuildContext context, AppColorTheme colors,
+      AppLocalizations localizations) {
+    final isLeader = _userRole == 'leader';
+    final teamStatus = _teamData?['status'] as String? ?? 'standby';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.bg100,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(38)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    localizations.translate('team_options'),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: colors.primary300,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: colors.primary300),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildOptionButton(
-                icon: Icons.history,
-                label: localizations.translate('view_team_history'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLeader) ...[
+              ListTile(
+                leading: Icon(Icons.edit, color: colors.accent200),
+                title: Text(localizations.translate('edit_team_details'),
+                    style: TextStyle(color: colors.text200)),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to team history screen
+                  _showEditTeamDialog(colors, localizations);
                 },
-                colors: colors,
               ),
-              const SizedBox(height: 16),
-              _buildOptionButton(
-                icon: Icons.archive,
-                label: localizations.translate('archive_team'),
+              ListTile(
+                leading: Icon(Icons.share, color: colors.accent200),
+                title: Text(localizations.translate('share_team'),
+                    style: TextStyle(color: colors.text200)),
                 onTap: () {
                   Navigator.pop(context);
-                  _archiveTeam(colors, localizations);
+                  _shareTeamId(colors, localizations);
                 },
-                colors: colors,
               ),
-              const SizedBox(height: 16),
-              _buildOptionButton(
-                icon: Icons.delete,
-                label: localizations.translate('delete_team'),
+              if (teamStatus != 'active')
+                ListTile(
+                  leading: const Icon(Icons.play_arrow, color: Colors.green),
+                  title: Text(localizations.translate('activate_team'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _updateTeamStatus('active');
+                  },
+                ),
+              if (teamStatus != 'standby')
+                ListTile(
+                  leading: const Icon(Icons.pause, color: Colors.orange),
+                  title: Text(localizations.translate('set_to_standby'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _updateTeamStatus('standby');
+                  },
+                ),
+              if (teamStatus != 'deactivated')
+                ListTile(
+                  leading: const Icon(Icons.block, color: Colors.grey),
+                  title: Text(localizations.translate('deactivate_team'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _updateTeamStatus('deactivated');
+                  },
+                ),
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: colors.warning),
+                title: Text(localizations.translate('delete_team'),
+                    style: TextStyle(color: colors.warning)),
                 onTap: () {
                   Navigator.pop(context);
                   _showDeleteConfirmation(colors, localizations);
                 },
-                colors: colors,
-                isDestructive: true,
               ),
-              const SizedBox(height: 24),
             ],
-          ),
+            if (!isLeader)
+              ListTile(
+                leading: Icon(Icons.exit_to_app, color: colors.warning),
+                title: Text(localizations.translate('quit_team'),
+                    style: TextStyle(color: colors.warning)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _quitTeam(colors, localizations);
+                },
+              ),
+          ],
         ),
       ),
     );
   }
 
-  /// Builds an option button for the team options sheet.
-  Widget _buildOptionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required AppColorTheme colors,
-    bool isDestructive = false,
-  }) {
-    final color = isDestructive ? colors.warning : colors.accent200;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
-        child: Row(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDestructive ? colors.warning : colors.text200,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  /// Updates the team status
+  Future<void> _updateTeamStatus(String status) async {
+    try {
+      await _teamService.updateTeam(
+        teamId: widget.teamId,
+        status: status,
+      );
+      if (mounted) {
+        _showSnackBar(
+          AppLocalizations.of(context)!.translate('team_status_updated'),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+          AppLocalizations.of(context)!
+              .translate('failed_to_update_team_status'),
+          e,
+        );
+      }
+    }
+  }
+
+  /// Shares the team ID by copying it to clipboard
+  void _shareTeamId(AppColorTheme colors, AppLocalizations localizations) {
+    Clipboard.setData(ClipboardData(text: widget.teamId));
+    _showSnackBar(localizations.translate('team_id_copied'));
+  }
+
+  /// Handles the quit team action
+  Future<void> _quitTeam(
+      AppColorTheme colors, AppLocalizations localizations) async {
+    try {
+      final userId = _userMemberInfo?['id'];
+      final userRole = _userMemberInfo?['collection'] == 'official_members'
+          ? 'officer'
+          : 'volunteer';
+
+      if (userId == null) {
+        throw Exception('User information not found');
+      }
+
+      await _teamService.quitTeam(widget.teamId, userId, userRole);
+
+      if (mounted) {
+        _showSnackBar(localizations.translate('successfully_quit_team'));
+        Navigator.pop(context); // Return to previous screen after quitting
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+          localizations.translate('failed_to_quit_team'),
+          e,
+        );
+      }
+    }
   }
 
   /// Shows a confirmation dialog for deleting a team.
@@ -280,30 +333,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         ],
       ),
     );
-  }
-
-  /// Archives the team.
-  Future<void> _archiveTeam(
-      AppColorTheme colors, AppLocalizations localizations) async {
-    try {
-      await _teamService.updateTeam(
-        teamId: widget.teamId,
-        status: 'archived',
-      );
-      if (mounted) {
-        _showSnackBar(
-          localizations.translate('team_archived'),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showErrorSnackBar(
-          localizations.translate('failed_to_archive_team'),
-          e,
-        );
-      }
-    }
   }
 
   /// Deletes the team.
@@ -349,6 +378,391 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         ),
       );
     }
+  }
+
+  /// Shows edit team details dialog
+  void _showEditTeamDialog(
+      AppColorTheme colors, AppLocalizations localizations) {
+    final TextEditingController nameController =
+        TextEditingController(text: _teamData?['name'] ?? '');
+    final TextEditingController descriptionController =
+        TextEditingController(text: _teamData?['description'] ?? '');
+    final TextEditingController contactController =
+        TextEditingController(text: _teamData?['contact'] ?? '');
+    final TextEditingController locationTextController =
+        TextEditingController(text: _teamData?['location_text'] ?? '');
+    String selectedType = _teamData?['type'] ?? 'official';
+    String selectedSpecialization = _teamData?['specialization'] ?? 'general';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            decoration: BoxDecoration(
+              color: colors.bg100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: colors.bg300)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        localizations.translate('edit_team_details'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary300,
+                          fontSize: 18,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: colors.primary300),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Form
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Team Name
+                        Text(
+                          '${localizations.translate('team_name')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('enter_team_name'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Description
+                        Text(
+                          '${localizations.translate('description')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('team_description'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Contact
+                        Text(
+                          '${localizations.translate('contact')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: contactController,
+                          decoration: InputDecoration(
+                            hintText: localizations.translate('enter_contact'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Location Text
+                        Text(
+                          '${localizations.translate('location')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: locationTextController,
+                          decoration: InputDecoration(
+                            hintText: localizations.translate('enter_location'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Team Type
+                        Text(
+                          '${localizations.translate('team_type')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: colors.bg200,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.bg300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedType,
+                              isExpanded: true,
+                              items: [
+                                DropdownMenuItem(
+                                  value: 'official',
+                                  child:
+                                      Text(localizations.translate('official')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'volunteer',
+                                  child: Text(
+                                      localizations.translate('volunteer')),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() => selectedType = value);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Specialization
+                        Text(
+                          '${localizations.translate('specialization')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: colors.bg200,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.bg300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedSpecialization,
+                              isExpanded: true,
+                              items: [
+                                DropdownMenuItem(
+                                  value: 'rescue',
+                                  child: Text(localizations
+                                      .translate('search_and_rescue')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'medical',
+                                  child:
+                                      Text(localizations.translate('medical')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'fire',
+                                  child: Text(
+                                      localizations.translate('fire_response')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'logistics',
+                                  child: Text(localizations
+                                      .translate('logistics_and_supply')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'evacuation',
+                                  child: Text(
+                                      localizations.translate('evacuation')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'general',
+                                  child: Text(localizations
+                                      .translate('general_response')),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(
+                                      () => selectedSpecialization = value);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Update Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              // Validate required fields
+                              if (nameController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('team_name_required'));
+                                return;
+                              }
+                              if (descriptionController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('description_required'));
+                                return;
+                              }
+                              if (contactController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('contact_required'));
+                                return;
+                              }
+                              if (locationTextController.text.isEmpty) {
+                                _showSnackBar(localizations
+                                    .translate('location_required'));
+                                return;
+                              }
+
+                              try {
+                                await _teamService.updateTeam(
+                                  teamId: widget.teamId,
+                                  name: nameController.text,
+                                  type: selectedType,
+                                  description: descriptionController.text,
+                                  contact: contactController.text,
+                                  specialization: selectedSpecialization,
+                                  locationText: locationTextController.text,
+                                );
+
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  _showSnackBar(localizations
+                                      .translate('team_updated_successfully'));
+                                  // Refresh team data
+                                  _loadTeamData();
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  _showErrorSnackBar(
+                                    localizations
+                                        .translate('failed_to_update_team'),
+                                    e,
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.accent200,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              localizations.translate('update_team'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -425,19 +839,10 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
               ),
             ],
           ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.edit, color: colors.accent200),
-                onPressed: () {
-                  // TODO: Navigate to edit team screen
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.more_vert, color: colors.primary300),
-                onPressed: () => _showTeamOptionsSheet(context, colors),
-              ),
-            ],
+          IconButton(
+            icon: Icon(Icons.more_vert, color: colors.primary300),
+            onPressed: () =>
+                _showTeamOptionsMenu(context, colors, localizations),
           ),
         ],
       ),
@@ -714,7 +1119,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Row(
+                                Wrap(
                                   children: [
                                     if (isLeader)
                                       _buildStatusChip(
@@ -1729,7 +2134,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   },
                   icon: Icon(Icons.settings, color: colors.accent200),
                   label: Text(
-                    localizations.translate('manage_task'),
+                    localizations.translate('view_all'),
                     style: TextStyle(color: colors.accent200),
                   ),
                 ),
@@ -1744,79 +2149,93 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   final status = task['status'] as String? ?? 'pending';
                   final statusColor = _getTaskStatusColor(status, colors);
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colors.bg100.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.bg300),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              task['task_name'] ?? '',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: colors.primary300,
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskDetailScreen(
+                            teamId: widget.teamId,
+                            taskId: task['id'],
+                            isLeader: _userRole == 'leader',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colors.bg100.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.bg300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                task['task_name'] ?? '',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.primary300,
+                                ),
                               ),
-                            ),
-                            _buildStatusChip(
-                              _getTaskStatusLabel(status, localizations),
-                              statusColor,
-                              colors,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          task['description'] ?? '',
-                          style: TextStyle(color: colors.text200),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.access_time,
-                                    size: 16, color: colors.text200),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _formatTimestamp(task['start_date']),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.text200,
+                              _buildStatusChip(
+                                _getTaskStatusLabel(status, localizations),
+                                statusColor,
+                                colors,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            task['description'] ?? '',
+                            style: TextStyle(color: colors.text200),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time,
+                                      size: 16, color: colors.text200),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _formatTimestamp(task['start_date']),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colors.text200,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Icon(Icons.group_outlined,
-                                    size: 16, color: colors.text200),
-                                const SizedBox(width: 4),
-                                Text(
-                                  localizations.translate('number_members', {
-                                    'count': (task['members_assigned']
-                                            as Map<String, dynamic>)
-                                        .length
-                                        .toString()
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.text200,
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(Icons.group_outlined,
+                                      size: 16, color: colors.text200),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    localizations.translate('number_members', {
+                                      'count': (task['members_assigned']
+                                              as Map<String, dynamic>)
+                                          .length
+                                          .toString()
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colors.text200,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -2012,14 +2431,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         'standby' => localizations.translate('on_standby'),
         'deactivated' => localizations.translate('deactivated'),
         'archived' => localizations.translate('archived'),
-        _ => status.toUpperCase(),
-      };
-
-  /// Returns the localized label for member status.
-  String _getMemberStatusLabel(String status, AppLocalizations localizations) =>
-      switch (status.toLowerCase()) {
-        'active' => localizations.translate('on_duty'),
-        'inactive' => localizations.translate('off_duty'),
         _ => status.toUpperCase(),
       };
 

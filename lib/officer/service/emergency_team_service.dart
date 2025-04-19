@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/services/user_information_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EmergencyTeamService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserInformationService _userInformationService =
       UserInformationService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String get currentUserId => _auth.currentUser?.uid ?? '';
 
   Future<String> createTeam({
     required String name,
@@ -13,7 +17,6 @@ class EmergencyTeamService {
     required String description,
     required String locationText,
     required String specialization,
-    LatLng? location,
   }) async {
     try {
       // Get user information from the UserInformationService
@@ -24,16 +27,12 @@ class EmergencyTeamService {
       final String firstName = _userInformationService.firstName ?? '';
       final String lastName = _userInformationService.lastName ?? '';
 
-      // Use provided location or default to Kuala Lumpur
-      final LatLng teamLocation = location ?? LatLng(3.1390, 101.6869);
-
       final docRef = await _firestore.collection('emergency_teams').add({
         'name': name,
         'type': type,
         'description': description,
         'leader_id': leaderId,
         'contact': contact,
-        'location': GeoPoint(teamLocation.latitude, teamLocation.longitude),
         'location_text': locationText,
         'specialization': specialization,
         'status': 'standby',
@@ -73,10 +72,6 @@ class EmergencyTeamService {
         return {
           'id': doc.id,
           ...data,
-          'location': LatLng(
-            (data['location'] as GeoPoint).latitude,
-            (data['location'] as GeoPoint).longitude,
-          ),
         };
       }).toList();
     });
@@ -92,10 +87,6 @@ class EmergencyTeamService {
       return {
         'id': doc.id,
         ...data,
-        'location': LatLng(
-          (data['location'] as GeoPoint).latitude,
-          (data['location'] as GeoPoint).longitude,
-        ),
       };
     } catch (e) {
       throw Exception('Failed to get emergency team: $e');
@@ -109,7 +100,6 @@ class EmergencyTeamService {
     String? description,
     String? leaderId,
     String? contact,
-    LatLng? location,
     String? status,
     String? specialization,
     String? locationText,
@@ -123,8 +113,6 @@ class EmergencyTeamService {
         if (description != null) 'description': description,
         if (leaderId != null) 'leader_id': leaderId,
         if (contact != null) 'contact': contact,
-        if (location != null)
-          'location': GeoPoint(location.latitude, location.longitude),
         if (status != null) 'status': status,
         if (specialization != null) 'specialization': specialization,
         if (locationText != null) 'location_text': locationText,
@@ -503,6 +491,17 @@ class EmergencyTeamService {
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
+
+      // Add initial status to status_history
+      final user = _auth.currentUser;
+      await docRef.collection('status_history').add({
+        'status': 'pending',
+        'changed_at': FieldValue.serverTimestamp(),
+        'changed_by': user?.uid ?? '',
+        'changed_by_name':
+            '${_userInformationService.firstName ?? ''} ${_userInformationService.lastName ?? ''}',
+      });
+
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create team task: $e');
@@ -661,6 +660,57 @@ class EmergencyTeamService {
     }
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> getTaskStatusHistory(
+      String teamId, String taskId) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_tasks')
+        .doc(taskId)
+        .collection('status_history')
+        .orderBy('changed_at', descending: true)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> getTaskComments(
+      String teamId, String taskId) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_tasks')
+        .doc(taskId)
+        .collection('comments')
+        .orderBy('created_at', descending: true)
+        .snapshots();
+  }
+
+  Future<void> addTaskComment({
+    required String teamId,
+    required String taskId,
+    required String message,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final String firstName = _userInformationService.firstName ?? '';
+    final String lastName = _userInformationService.lastName ?? '';
+    final String userName = ('$firstName $lastName').trim();
+
+    await _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_tasks')
+        .doc(taskId)
+        .collection('comments')
+        .add({
+      'message': message,
+      'user_id': user.uid,
+      'user_name': userName.isEmpty ? 'Anonymous' : userName,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Consolidated updateTaskStatus method
   Future<void> updateTaskStatus({
     required String teamId,
     required String taskId,
@@ -668,6 +718,17 @@ class EmergencyTeamService {
     String? feedback,
   }) async {
     try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      final batch = _firestore.batch();
+      final taskRef = _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_tasks')
+          .doc(taskId);
+
+      // Update task status
       final updates = <String, dynamic>{
         'status': status,
         if (feedback != null) 'feedback': feedback,
@@ -676,13 +737,20 @@ class EmergencyTeamService {
           'completed_date': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       };
+      batch.update(taskRef, updates);
 
-      await _firestore
-          .collection('emergency_teams')
-          .doc(teamId)
-          .collection('team_tasks')
-          .doc(taskId)
-          .update(updates);
+      // Add status history entry
+      final historyRef = taskRef.collection('status_history').doc();
+      batch.set(historyRef, {
+        'status': status,
+        'changed_at': FieldValue.serverTimestamp(),
+        'changed_by': user.uid,
+        'changed_by_name':
+            '${_userInformationService.firstName} ${_userInformationService.lastName}',
+        if (feedback != null) 'feedback': feedback,
+      });
+
+      await batch.commit();
     } catch (e) {
       throw Exception('Failed to update task status: $e');
     }
@@ -1056,10 +1124,6 @@ class EmergencyTeamService {
           teams.add({
             'id': teamId,
             ...data,
-            'location': LatLng(
-              (data['location'] as GeoPoint).latitude,
-              (data['location'] as GeoPoint).longitude,
-            ),
             'is_leader': true,
           });
           continue;
@@ -1077,10 +1141,6 @@ class EmergencyTeamService {
           teams.add({
             'id': teamId,
             ...data,
-            'location': LatLng(
-              (data['location'] as GeoPoint).latitude,
-              (data['location'] as GeoPoint).longitude,
-            ),
             'is_leader': false,
           });
         }

@@ -132,7 +132,10 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => TeamDetailScreen(teamId: team['id']),
+                    builder: (_) => TeamDetailScreen(
+                      teamId: team['id'],
+                      isLeader: team['role'] == 'leader',
+                    ),
                   ),
                 );
               },
@@ -687,7 +690,10 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => TeamDetailScreen(teamId: team['id']),
+            builder: (_) => TeamDetailScreen(
+              teamId: team['id'],
+              isLeader: team['role'] == 'leader',
+            ),
           ),
         );
       },

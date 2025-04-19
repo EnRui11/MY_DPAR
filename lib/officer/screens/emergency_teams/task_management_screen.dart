@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:mydpar/officer/screens/emergency_teams/select_task_location_screen.dart';
+import 'package:mydpar/officer/screens/emergency_teams/task_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -207,202 +208,217 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
         (task['members_assigned'] as Map<String, dynamic>?) ?? {};
     final memberCount = assignedMembers.length;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: colors.bg100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.bg300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        task['task_name'] ?? '',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: colors.primary300,
-                        ),
-                      ),
-                    ),
-                    if (widget.isLeader && !isCompleted)
-                      InkWell(
-                        onTap: () =>
-                            _showEditTaskModal(task, colors, localizations),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: colors.bg200,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            Icons.edit,
-                            size: 16,
-                            color: colors.accent200,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  task['description'] ?? '',
-                  style: TextStyle(color: colors.text200),
-                ),
-                const SizedBox(height: 12),
-                // Row with date and priority/member count information
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Date information
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_today,
-                            size: 16, color: colors.text200),
-                        const SizedBox(width: 4),
-                        Text(
-                          isCompleted && task['completed_date'] != null
-                              ? '${localizations.translate('completed')}: ${_formatDate(task['completed_date'])}'
-                              : '${localizations.translate('started')}: ${_formatDate(task['start_date'])}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.text200,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Priority or member count
-                    isCompleted
-                        ? Row(
-                            children: [
-                              Icon(Icons.group,
-                                  size: 16, color: colors.text200),
-                              const SizedBox(width: 4),
-                              Text(
-                                '$memberCount ${localizations.translate(memberCount == 1 ? 'member_participated' : 'members_participated')}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.text200,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            children: [
-                              Icon(Icons.flag, size: 16, color: colors.text200),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${localizations.translate('priority')}: ${_capitalize(task['priority'] as String? ?? 'medium')}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.text200,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Task chips (status, member count, location)
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildStatusChip(
-                      _getStatusLabel(status, localizations),
-                      statusColor,
-                      colors,
-                    ),
-                    _buildStatusChip(
-                      '$memberCount ${localizations.translate(memberCount == 1 ? 'member_assigned' : 'members_assigned')}',
-                      Colors.blue,
-                      colors,
-                    ),
-                    FutureBuilder<String>(
-                      future: task['start_location'] is LatLng
-                          ? _getCityNameFromLatLng(task['start_location'])
-                          : Future.value(''),
-                      builder: (context, snapshot) {
-                        final city = snapshot.data ?? '';
-                        return _buildStatusChip(
-                          city.isNotEmpty
-                              ? city
-                              : localizations.translate('location'),
-                          Colors.purple,
-                          colors,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskDetailScreen(
+              teamId: widget.teamId,
+              taskId: task['id'],
+              isLeader: widget.isLeader,
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: colors.bg300)),
-            ),
-            child: isCompleted
-                ? Row(
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: colors.bg100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.bg300),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: InkWell(
+                        child: Text(
+                          task['task_name'] ?? '',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: colors.primary300,
+                          ),
+                        ),
+                      ),
+                      if (widget.isLeader && !isCompleted)
+                        InkWell(
                           onTap: () =>
-                              _showTaskDetails(task, colors, localizations),
+                              _showEditTaskModal(task, colors, localizations),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: colors.bg200,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: colors.accent200,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    task['description'] ?? '',
+                    style: TextStyle(color: colors.text200),
+                  ),
+                  const SizedBox(height: 12),
+                  // Row with date and priority/member count information
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Date information
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today,
+                              size: 16, color: colors.text200),
+                          const SizedBox(width: 4),
+                          Text(
+                            isCompleted && task['completed_date'] != null
+                                ? '${localizations.translate('completed')}: ${_formatDate(task['completed_date'])}'
+                                : '${localizations.translate('started')}: ${_formatDate(task['start_date'])}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.text200,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Priority or member count
+                      isCompleted
+                          ? Row(
                               children: [
-                                Icon(Icons.description,
-                                    size: 16, color: colors.accent200),
-                                const SizedBox(width: 8),
+                                Icon(Icons.group,
+                                    size: 16, color: colors.text200),
+                                const SizedBox(width: 4),
                                 Text(
-                                  localizations.translate('view_details'),
+                                  '$memberCount ${localizations.translate(memberCount == 1 ? 'member_participated' : 'members_participated')}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: colors.accent200,
+                                    color: colors.text200,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Icon(Icons.flag,
+                                    size: 16, color: colors.text200),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${localizations.translate('priority')}: ${_capitalize(task['priority'] as String? ?? 'medium')}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colors.text200,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Task chips (status, member count, location)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildStatusChip(
+                        _getStatusLabel(status, localizations),
+                        statusColor,
+                        colors,
+                      ),
+                      _buildStatusChip(
+                        '$memberCount ${localizations.translate(memberCount == 1 ? 'member_assigned' : 'members_assigned')}',
+                        Colors.blue,
+                        colors,
+                      ),
+                      FutureBuilder<String>(
+                        future: task['start_location'] is LatLng
+                            ? _getCityNameFromLatLng(task['start_location'])
+                            : Future.value(''),
+                        builder: (context, snapshot) {
+                          final city = snapshot.data ?? '';
+                          return _buildStatusChip(
+                            city.isNotEmpty
+                                ? city
+                                : localizations.translate('location'),
+                            Colors.purple,
+                            colors,
+                          );
+                        },
                       ),
                     ],
-                  )
-                : Row(
-                    children: [
-                      if (widget.isLeader) ...[
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: colors.bg300)),
+              ),
+              child: isCompleted
+                  ? Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () =>
+                                _showTaskDetails(task, colors, localizations),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.description,
+                                      size: 16, color: colors.accent200),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    localizations.translate('view_details'),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colors.accent200,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        if (widget.isLeader) ...[
+                          _buildActionButton(
+                            icon: Icons.group,
+                            label: localizations.translate('assign_members'),
+                            onTap: () => _showAssignMembersModal(
+                                task, colors, localizations),
+                            colors: colors,
+                          ),
+                        ],
                         _buildActionButton(
-                          icon: Icons.group,
-                          label: localizations.translate('assign_members'),
-                          onTap: () => _showAssignMembersModal(
+                          icon: Icons.update,
+                          label: localizations.translate('update_status'),
+                          onTap: () => _showUpdateStatusModal(
                               task, colors, localizations),
                           colors: colors,
                         ),
                       ],
-                      _buildActionButton(
-                        icon: Icons.update,
-                        label: localizations.translate('update_status'),
-                        onTap: () =>
-                            _showUpdateStatusModal(task, colors, localizations),
-                        colors: colors,
-                      ),
-                    ],
-                  ),
-          ),
-        ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

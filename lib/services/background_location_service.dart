@@ -26,7 +26,7 @@ class BackgroundLocationService {
   /// Private constructor for singleton initialization with default dependencies.
   BackgroundLocationService._internal(this._auth, this._firestore);
 
-  /// Constructs the service with optional Firebase dependencies for testing.
+  /// Constructs the services with optional Firebase dependencies for testing.
   BackgroundLocationService.withDependencies({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,

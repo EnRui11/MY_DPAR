@@ -9,7 +9,7 @@ class DisasterVerificationService {
   final FirebaseFirestore _firestore;
   List<DocumentSnapshot> _cachedDisasters = [];
 
-  /// Constructs the service with an optional Firestore instance for testing.
+  /// Constructs the services with an optional Firestore instance for testing.
   DisasterVerificationService({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 

@@ -82,7 +82,7 @@ class _OfficerDisasterDetailScreenState
     }
   }
 
-  /// Loads disaster data from the service using the provided disaster ID.
+  /// Loads disaster data from the services using the provided disaster ID.
   Future<void> _loadDisasterData() async {
     final disasterService =
         Provider.of<DisasterService>(context, listen: false);
@@ -798,7 +798,7 @@ class _OfficerDisasterDetailScreenState
         ),
       );
 
-  /// Saves updated disaster data to the service.
+  /// Saves updated disaster data to the services.
   Future<void> _saveChanges() async {
     if (_disaster == null) return;
     setState(() => _isSaving = true);

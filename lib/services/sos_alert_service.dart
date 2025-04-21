@@ -98,7 +98,7 @@ class SOSAlertService extends ChangeNotifier {
     }
   }
 
-  /// Marks the service as initialized and notifies listeners.
+  /// Marks the services as initialized and notifies listeners.
   void _markAsInitialized() {
     _isInitialized = true;
     notifyListeners();

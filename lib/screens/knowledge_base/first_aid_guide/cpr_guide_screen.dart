@@ -9,7 +9,7 @@ import 'package:mydpar/localization/app_localizations.dart';
 
 /// A screen providing a step-by-step CPR guide with multi-language support and audio rhythm.
 ///
-/// Displays emergency call instructions, CPR steps, and integrates an audio service for compression rhythm.
+/// Displays emergency call instructions, CPR steps, and integrates an audio services for compression rhythm.
 class CPRGuideScreen extends StatefulWidget {
   const CPRGuideScreen({super.key});
 
@@ -40,7 +40,7 @@ class _CPRGuideScreenState extends State<CPRGuideScreen> {
     super.dispose();
   }
 
-  /// Updates overlay visibility based on audio service state.
+  /// Updates overlay visibility based on audio services state.
   void _updateOverlayVisibility() {
     if (mounted) {
       setState(() {

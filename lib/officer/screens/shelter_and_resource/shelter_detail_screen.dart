@@ -8,7 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
-import 'package:mydpar/officer/service/shelter_and_resource_service.dart';
+import 'package:mydpar/officer/services/shelter_and_resource_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/select_shelter_location_screen.dart';
 import 'package:flutter/services.dart';

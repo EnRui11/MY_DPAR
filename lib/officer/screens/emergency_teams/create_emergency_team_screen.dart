@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/localization/app_localizations.dart';
-import 'package:mydpar/officer/service/emergency_team_service.dart';
+import 'package:mydpar/officer/services/emergency_team_service.dart';
 
 /// Screen for creating a new emergency team with name, type, description, location, and specialization.
 class CreateEmergencyTeamScreen extends StatefulWidget {
@@ -49,7 +49,7 @@ class _CreateEmergencyTeamScreenState extends State<CreateEmergencyTeamScreen> {
     super.dispose();
   }
 
-  /// Creates a new team and saves it to the service.
+  /// Creates a new team and saves it to the services.
   Future<void> _createTeam() async {
     final localizations = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate() || _specialization.isEmpty) {

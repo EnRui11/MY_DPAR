@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-/// A singleton service to manage CPR audio playback and overlay visibility.
+/// A singleton services to manage CPR audio playback and overlay visibility.
 class CPRAudioService extends ChangeNotifier {
   // Singleton instance
   static final CPRAudioService _instance = CPRAudioService._internal();

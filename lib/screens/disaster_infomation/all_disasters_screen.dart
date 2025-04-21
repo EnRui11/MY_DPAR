@@ -269,7 +269,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
         ),
       );
 
-  /// Builds the disaster list based on service state.
+  /// Builds the disaster list based on services state.
   Widget _buildDisasterList(DisasterService service, AppColorTheme colors) {
     if (service.isLoading)
       return const Center(child: CircularProgressIndicator());

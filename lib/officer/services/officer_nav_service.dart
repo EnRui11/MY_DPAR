@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mydpar/officer/screens/community_groups_screen.dart';
 import 'package:mydpar/officer/screens/emergency_teams_screen.dart';
 import 'package:mydpar/officer/screens/officer_dashboard_screen.dart';
 import 'package:mydpar/officer/screens/shelter_management_screen.dart';
@@ -37,7 +38,7 @@ class OfficerNavigationService extends ChangeNotifier {
       case 2:
         return const EmergencyTeamsScreen();
       case 3:
-        return const Placeholder(); // TODO: Implement OfficerCommunityScreen
+        return const CommunityGroupsScreen();
       default:
         return const OfficerDashboardScreen();
     }

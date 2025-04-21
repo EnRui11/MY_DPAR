@@ -5,7 +5,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/shelter_detail_screen.dart';
 import 'package:mydpar/officer/screens/shelter_and_resource/add_shelter_screen.dart';
-import 'package:mydpar/officer/service/shelter_and_resource_service.dart';
+import 'package:mydpar/officer/services/shelter_and_resource_service.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
 

@@ -702,20 +702,6 @@ class _TreatmentContent extends StatelessWidget {
     };
   }
 
-  Color _getTypeColor(String burnType, String severity) {
-    return switch (burnType) {
-      'thermal' => switch (severity) {
-          'first' => Colors.green,
-          'second' => Colors.orange,
-          'third' => Colors.red,
-          _ => Colors.red,
-        },
-      'chemical' => Colors.orange,
-      'electrical' => Colors.yellow,
-      _ => Colors.grey,
-    };
-  }
-
   IconData _getStepIcon(int stepIndex) {
     const icons = [
       Icons.healing,

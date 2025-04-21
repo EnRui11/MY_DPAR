@@ -599,15 +599,6 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
         onTap: _callEmergencyServices,
         isPulsing: true,
       ),
-      const SizedBox(height: _spacingLarge),
-      _buildEmergencyButton(
-        icon: Icons.people,
-        title: 'Emergency Contacts',
-        subtitle: 'Alert your emergency contacts',
-        colors: colors,
-        onTap: _alertEmergencyContacts,
-        isPulsing: false,
-      ),
     ],
   );
 

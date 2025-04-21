@@ -5,6 +5,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:mydpar/screens/report_disaster/report_disaster_screen.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -14,6 +16,8 @@ import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
+import 'package:mydpar/services/map_marker_service.dart';
+import 'package:intl/intl.dart';
 
 const double _paddingValue = 16.0;
 const double _spacingSmall = 8.0;
@@ -32,11 +36,11 @@ class _MapScreenState extends State<MapScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _locationTimer;
   LatLng? _currentLocation;
-  Set<String> _activeFilters = {};
   bool _isSearching = false;
   List<Location>? _searchResults;
   double _currentHeading = 0.0;
   LatLng? _searchedLocation;
+  late MapMarkerService _markerService;
 
   static const LatLng _defaultLocation =
       LatLng(3.1390, 101.6869); // Kuala Lumpur
@@ -44,6 +48,8 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+    _markerService = MapMarkerService();
+    _markerService.addListener(_onMarkersUpdated);
     _initializeLocation();
     _locationTimer =
         Timer.periodic(const Duration(seconds: 1), (_) => _updateLocation());
@@ -52,10 +58,18 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  void _onMarkersUpdated() {
+    debugPrint(
+        'Markers updated: ${_markerService.getVisibleMarkers().length} markers visible');
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
     _locationTimer?.cancel();
+    _markerService.removeListener(_onMarkersUpdated);
+    _markerService.dispose();
     super.dispose();
   }
 
@@ -124,9 +138,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _toggleFilter(String filter) {
-    setState(() => _activeFilters.contains(filter)
-        ? _activeFilters.remove(filter)
-        : _activeFilters.add(filter));
+    _markerService.toggleFilter(filter);
   }
 
   void _showSnackBar(String messageKey, Color backgroundColor,
@@ -140,31 +152,1105 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    final AppColorTheme colors = themeProvider.currentTheme;
-    final navigationService = Provider.of<NavigationService>(context);
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      throw 'Could not launch $launchUri';
+    }
+  }
 
-    return Scaffold(
-      backgroundColor: colors.bg200,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            _Map(colors: colors),
-            _SearchBar(colors: colors),
-            _FilterControls(colors: colors),
-            _LocationControl(colors: colors),
-            _ReportButton(colors: colors),
-          ],
+  // Add the Google Maps navigation method
+  void _openGoogleMaps(double latitude, double longitude) async {
+    final Uri googleMapUrl = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude');
+
+    if (await canLaunchUrl(googleMapUrl)) {
+      await launchUrl(googleMapUrl, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint('Could not open the map.');
+    }
+  }
+
+  void _showMarkerDetails(Map<String, dynamic> marker) {
+    final l = AppLocalizations.of(context);
+    final colors =
+        Provider.of<ThemeProvider>(context, listen: false).currentTheme;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: const Duration(milliseconds: 300),
+      ),
+      enableDrag: true,
+      isDismissible: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.25,
+        minChildSize: 0.15,
+        maxChildSize: 0.75,
+        snap: true,
+        snapSizes: const [0.25, 0.5, 0.75],
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: colors.bg100,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.text200.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              _markerService.getMarkerIcon(
+                                marker['type'],
+                                disasterType: marker['disasterType'],
+                              ),
+                              color: _markerService.getMarkerColor(
+                                marker['type'],
+                                severity: marker['severity'],
+                                colors: colors,
+                              ),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                marker['title'] ??
+                                    marker['name'] ??
+                                    l.translate('unknown'),
+                                style: TextStyle(
+                                  color: colors.primary300,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildMarkerContent(marker, colors, l),
+                        const SizedBox(height: 16),
+                        _buildActionButtons(marker, colors, l),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        onTap: (index) {
-          if (index != 1) { // Only navigate if not already on map screen
-            navigationService.changeIndex(index);
-            _navigateToScreen(index);
-          }
+    );
+  }
+
+  Widget _buildMarkerContent(
+      Map<String, dynamic> marker, AppColorTheme colors, AppLocalizations l) {
+    switch (marker['type']) {
+      case 'SOS':
+        return _buildSOSContent(marker, colors, l);
+      case 'Shelter':
+        return _buildShelterContent(marker, colors, l);
+      case 'Disaster':
+        return _buildDisasterContent(marker, colors, l);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildSOSContent(
+      Map<String, dynamic> marker, AppColorTheme colors, AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Alert Status and Time
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: marker['isActive'] == true
+                    ? colors.warning.withOpacity(0.1)
+                    : colors.text200.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                marker['isActive'] == true ? 'Active' : 'Inactive',
+                style: TextStyle(
+                  color: marker['isActive'] == true
+                      ? colors.warning
+                      : colors.text200,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Spacer(),
+            if (marker['alertStartTime'] != null)
+              Text(
+                _formatTimestamp(marker['alertStartTime']),
+                style: TextStyle(color: colors.text200),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Description
+        if (marker['description'] != null && marker['description'].isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              marker['description'],
+              style: TextStyle(color: colors.text200),
+            ),
+          ),
+
+        // Location
+        if (marker['address'] != null && marker['address'].isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    marker['address'],
+                    style: TextStyle(color: colors.text200),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Reporter Information Section
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.translate('reporter_information'),
+                style: TextStyle(
+                  color: colors.primary300,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.bg200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // User Photo and Name
+                    Row(
+                      children: [
+                        if (marker['userPhotoUrl'] != null)
+                          Container(
+                            width: 40,
+                            height: 40,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: NetworkImage(marker['userPhotoUrl']),
+                                fit: BoxFit.cover,
+                              ),
+                              color: colors.bg100,
+                            ),
+                            child: marker['userPhotoUrl'] != null
+                                ? null
+                                : Icon(Icons.person, color: colors.text200),
+                          )
+                        else
+                          Container(
+                            width: 40,
+                            height: 40,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.bg100,
+                            ),
+                            child: Icon(Icons.person, color: colors.text200),
+                          ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${marker['firstName']} ${marker['lastName']}'
+                                    .trim(),
+                                style: TextStyle(
+                                  color: colors.text200,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              if (marker['userCreatedAt'] != null)
+                                Text(
+                                  'Member since ${_formatDate(marker['userCreatedAt'])}',
+                                  style: TextStyle(
+                                    color: colors.text200.withOpacity(0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Phone Number
+                    if (marker['userPhone'] != null &&
+                        marker['userPhone'].isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 16, color: colors.text200),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () =>
+                                _makePhoneCall(marker['userPhone']),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              marker['userPhone'],
+                              style: TextStyle(
+                                color: colors.accent200,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Emergency Contacts Section
+        if (marker['emergencyContacts'] != null &&
+            (marker['emergencyContacts'] as List).isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.translate('emergency_contacts'),
+                  style: TextStyle(
+                    color: colors.primary300,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...(marker['emergencyContacts'] as List).map((contact) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.bg200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.person_outline,
+                                  size: 16, color: colors.text200),
+                              const SizedBox(width: 4),
+                              Text(
+                                contact['name'] ?? 'Unknown',
+                                style: TextStyle(
+                                  color: colors.text200,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (contact['relation'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.people_outline,
+                                      size: 16, color: colors.text200),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    contact['relation'],
+                                    style: TextStyle(color: colors.text200),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (contact['phone'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.phone_outlined,
+                                      size: 16, color: colors.text200),
+                                  const SizedBox(width: 4),
+                                  TextButton(
+                                    onPressed: () =>
+                                        _makePhoneCall(contact['phone']),
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      contact['phone'],
+                                      style: TextStyle(
+                                        color: colors.accent200,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Latest Update Time
+        if (marker['latestUpdateTime'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.update, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Text(
+                  'Last Updated: ${_formatTimestamp(marker['latestUpdateTime'])}',
+                  style: TextStyle(color: colors.text200),
+                ),
+              ],
+            ),
+          ),
+
+        // Cancel Time if available
+        if (marker['cancelTime'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.cancel_outlined, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Text(
+                  'Cancelled: ${_formatTimestamp(marker['cancelTime'])}',
+                  style: TextStyle(color: colors.text200),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildShelterContent(
+      Map<String, dynamic> marker, AppColorTheme colors, AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Status
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: colors.accent200.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              marker['status'] ?? l.translate('unknown'),
+              style: TextStyle(
+                color: colors.accent200,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+
+        // Location
+        if (marker['locationName'] != null && marker['locationName'].isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    marker['locationName'],
+                    style: TextStyle(color: colors.text200),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Occupancy
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.bg200,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.people, size: 20, color: colors.text200),
+                    const SizedBox(width: 8),
+                    Text(
+                      l.translate('current_occupancy'),
+                      style: TextStyle(
+                        color: colors.text200,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${marker['currentOccupancy'] ?? 0}',
+                      style: TextStyle(
+                        color: colors.accent200,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      ' / ${marker['capacity'] ?? 0}',
+                      style: TextStyle(
+                        color: colors.text200,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Demographics
+        if (marker['demographics'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.bg200,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.groups, size: 20, color: colors.text200),
+                      const SizedBox(width: 8),
+                      Text(
+                        l.translate('demographics'),
+                        style: TextStyle(
+                          color: colors.text200,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDemographicItem(
+                    colors,
+                    Icons.elderly,
+                    l.translate('elderly'),
+                    marker['demographics']['elderly'] ?? 0,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildDemographicItem(
+                    colors,
+                    Icons.person,
+                    l.translate('adults'),
+                    marker['demographics']['adults'] ?? 0,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildDemographicItem(
+                    colors,
+                    Icons.child_care,
+                    l.translate('children'),
+                    marker['demographics']['children'] ?? 0,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Creator Information
+        if (marker['createdBy'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.translate('creator_information'),
+                  style: TextStyle(
+                    color: colors.primary300,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colors.bg200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Creator Photo and Name
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.bg100,
+                            ),
+                            child: marker['creatorPhotoUrl'] != null
+                                ? ClipOval(
+                                    child: Image.network(
+                                      marker['creatorPhotoUrl'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) => Icon(
+                                              Icons.person,
+                                              color: colors.text200),
+                                    ),
+                                  )
+                                : Icon(Icons.person, color: colors.text200),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  marker['creatorName'] ??
+                                      l.translate('unknown'),
+                                  style: TextStyle(
+                                    color: colors.text200,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                if (marker['creatorRole'] != null)
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: colors.accent200.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      marker['creatorRole']
+                                          .toString()
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        color: colors.accent200,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                if (marker['creatorCreatedAt'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      l.translate('member_since', {
+                                        'date': _formatDate(
+                                            marker['creatorCreatedAt'])
+                                      }),
+                                      style: TextStyle(
+                                        color: colors.text200.withOpacity(0.7),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Phone Number
+                      if (marker['creatorPhone'] != null &&
+                          marker['creatorPhone'].toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.phone,
+                                  size: 16, color: colors.text200),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () =>
+                                    _makePhoneCall(marker['creatorPhone']),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  marker['creatorPhone'],
+                                  style: TextStyle(
+                                    color: colors.accent200,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Timestamps
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            children: [
+              if (marker['createdAt'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time, size: 16, color: colors.text200),
+                      const SizedBox(width: 4),
+                      Text(
+                        l.translate('created_at',
+                            {'time': _formatTimestamp(marker['createdAt'])}),
+                        style: TextStyle(color: colors.text200),
+                      ),
+                    ],
+                  ),
+                ),
+              if (marker['updatedAt'] != null)
+                Row(
+                  children: [
+                    Icon(Icons.update, size: 16, color: colors.text200),
+                    const SizedBox(width: 4),
+                    Text(
+                      l.translate('updated_at',
+                          {'time': _formatTimestamp(marker['updatedAt'])}),
+                      style: TextStyle(color: colors.text200),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDemographicItem(
+      AppColorTheme colors, IconData icon, String label, int count) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: colors.text200),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(color: colors.text200),
+        ),
+        const Spacer(),
+        Text(
+          count.toString(),
+          style: TextStyle(
+            color: colors.text200,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDisasterContent(
+      Map<String, dynamic> marker, AppColorTheme colors, AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Disaster Type with Severity
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getSeverityColor(marker['severity'], colors)
+                      .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  l.translate(
+                      'disaster_type_${marker['disasterType'].toString().toLowerCase()}'),
+                  style: TextStyle(
+                    color: _getSeverityColor(marker['severity'], colors),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getSeverityColor(marker['severity'], colors)
+                      .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  l.translate(
+                      'severity_${marker['severity'].toString().toLowerCase()}'),
+                  style: TextStyle(
+                    color: _getSeverityColor(marker['severity'], colors),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Description
+        if (marker['description'] != null && marker['description'].isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              marker['description'],
+              style: TextStyle(color: colors.text200),
+            ),
+          ),
+
+        // Location
+        if (marker['location'] != null && marker['location'].isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    marker['location'],
+                    style: TextStyle(color: colors.text200),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Timestamp
+        if (marker['timestamp'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.access_time, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Text(
+                  l.translate('reported_at',
+                      {'time': _formatTimestamp(marker['timestamp'])}),
+                  style: TextStyle(color: colors.text200),
+                ),
+              ],
+            ),
+          ),
+
+        // Status
+        if (marker['status'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Text(
+                  l.translate(
+                      'status_with_value', {'status': marker['status']}),
+                  style: TextStyle(color: colors.text200),
+                ),
+              ],
+            ),
+          ),
+
+        // Verification Count
+        if (marker['verificationCount'] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.verified, size: 16, color: colors.text200),
+                const SizedBox(width: 4),
+                Text(
+                  l.translate('verification_count',
+                      {'count': marker['verificationCount'].toString()}),
+                  style: TextStyle(color: colors.text200),
+                ),
+              ],
+            ),
+          ),
+
+        // Photos
+        if (marker['photoPaths'] != null &&
+            (marker['photoPaths'] as List).isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    l.translate('photos'),
+                    style: TextStyle(
+                      color: colors.text200,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 150,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: (marker['photoPaths'] as List).length,
+                    itemBuilder: (context, index) {
+                      final photoPath = (marker['photoPaths'] as List)[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            photoPath,
+                            height: 150,
+                            width: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              height: 150,
+                              width: 150,
+                              color: colors.bg200,
+                              child: Center(
+                                child: Icon(Icons.image_not_supported,
+                                    color: colors.text200),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Color _getSeverityColor(String? severity, AppColorTheme colors) {
+    switch (severity?.toLowerCase()) {
+      case 'high':
+        return colors.warning;
+      case 'medium':
+        return const Color(0xFFFF8C00); // Orange
+      case 'low':
+        return const Color(0xFF71C4EF); // Light blue
+      default:
+        return colors.text200;
+    }
+  }
+
+  Widget _buildActionButtons(
+      Map<String, dynamic> marker, AppColorTheme colors, AppLocalizations l) {
+    // Don't show navigation button for disasters
+    if (marker['type'] == 'Disaster') {
+      return const SizedBox.shrink();
+    }
+
+    final position = marker['position'] as LatLng;
+    String buttonText = marker['type'] == 'SOS'
+        ? l.translate('respond_to_sos')
+        : l.translate('navigate_to_shelter');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          Navigator.pop(context);
+          _openGoogleMaps(position.latitude, position.longitude);
+        },
+        icon: const Icon(Icons.directions),
+        label: Text(buttonText),
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              marker['type'] == 'SOS' ? colors.warning : colors.accent200,
+          foregroundColor: colors.bg100,
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToMarkerLocation(Map<String, dynamic> marker) {
+    if (marker['position'] == null) return;
+
+    final position = marker['position'] as LatLng;
+    _openGoogleMaps(position.latitude, position.longitude);
+
+    // Close the bottom sheet
+    Navigator.pop(context);
+  }
+
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp == null) return 'Unknown';
+
+    DateTime dateTime;
+    if (timestamp is Timestamp) {
+      dateTime = timestamp.toDate();
+    } else if (timestamp is DateTime) {
+      dateTime = timestamp;
+    } else {
+      return 'Unknown';
+    }
+
+    return DateFormat('MMM d, y h:mm a').format(dateTime);
+  }
+
+  String _formatDate(dynamic timestamp) {
+    if (timestamp == null) return '';
+
+    try {
+      DateTime dateTime;
+      if (timestamp is Timestamp) {
+        dateTime = timestamp.toDate();
+      } else if (timestamp is String) {
+        dateTime = DateTime.parse(timestamp);
+      } else {
+        return '';
+      }
+
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider.value(
+      value: _markerService,
+      child: Builder(
+        builder: (context) {
+          final colors = context.watch<ThemeProvider>().currentTheme;
+          final navigationService = Provider.of<NavigationService>(context);
+
+          return Scaffold(
+            backgroundColor: colors.bg200,
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  _Map(
+                    colors: colors,
+                    markerService: _markerService,
+                    onMarkerTap: _showMarkerDetails,
+                  ),
+                  _SearchBar(colors: colors),
+                  _FilterControls(colors: colors),
+                  _LocationControl(colors: colors),
+                  _ReportButton(colors: colors),
+                ],
+              ),
+            ),
+            bottomNavigationBar: BottomNavBar(
+              onTap: (index) {
+                if (index != 1) {
+                  // Only navigate if not already on map screen
+                  navigationService.changeIndex(index);
+                  _navigateToScreen(index);
+                }
+              },
+            ),
+          );
         },
       ),
     );
@@ -185,7 +1271,7 @@ class _MapScreenState extends State<MapScreen> {
       default:
         return;
     }
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => screen),
@@ -195,8 +1281,14 @@ class _MapScreenState extends State<MapScreen> {
 
 class _Map extends StatelessWidget {
   final AppColorTheme colors;
+  final MapMarkerService markerService;
+  final Function(Map<String, dynamic>) onMarkerTap;
 
-  const _Map({required this.colors});
+  const _Map({
+    required this.colors,
+    required this.markerService,
+    required this.onMarkerTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +1313,28 @@ class _Map extends StatelessWidget {
                 builder: (_) =>
                     const Icon(Icons.my_location, color: Colors.blue, size: 30),
               ),
+            ...markerService.getVisibleMarkers().map((marker) {
+              return Marker(
+                point: marker['position'] as LatLng,
+                width: 40,
+                height: 40,
+                builder: (_) => GestureDetector(
+                  onTap: () => onMarkerTap(marker),
+                  child: Icon(
+                    markerService.getMarkerIcon(
+                      marker['type'],
+                      disasterType: marker['disasterType'],
+                    ),
+                    color: markerService.getMarkerColor(
+                      marker['type'],
+                      severity: marker['severity'],
+                      colors: colors,
+                    ),
+                    size: 30,
+                  ),
+                ),
+              );
+            }).toList(),
           ],
         ),
       ],
@@ -295,6 +1409,8 @@ class _FilterControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final state = context.findAncestorStateOfType<_MapScreenState>()!;
+    final markerService = state._markerService;
+
     return Positioned(
       top: 120,
       left: _spacingLarge,
@@ -319,36 +1435,22 @@ class _FilterControls extends StatelessWidget {
               _FilterButton(
                 icon: Icons.emergency,
                 labelKey: 'sos',
-                isActive: state._activeFilters.contains('SOS'),
+                isActive: markerService.activeFilters.contains('SOS'),
                 onTap: () => state._toggleFilter('SOS'),
                 colors: colors,
               ),
               _FilterButton(
                 icon: Icons.warning_amber_rounded,
                 labelKey: 'disasters',
-                isActive: state._activeFilters.contains('Disasters'),
+                isActive: markerService.activeFilters.contains('Disasters'),
                 onTap: () => state._toggleFilter('Disasters'),
                 colors: colors,
               ),
               _FilterButton(
                 icon: Icons.home_outlined,
                 labelKey: 'shelters',
-                isActive: state._activeFilters.contains('Shelters'),
+                isActive: markerService.activeFilters.contains('Shelters'),
                 onTap: () => state._toggleFilter('Shelters'),
-                colors: colors,
-              ),
-              _FilterButton(
-                icon: Icons.local_hospital_outlined,
-                labelKey: 'medical',
-                isActive: state._activeFilters.contains('Medical'),
-                onTap: () => state._toggleFilter('Medical'),
-                colors: colors,
-              ),
-              _FilterButton(
-                icon: Icons.inventory_2_outlined,
-                labelKey: 'supplies',
-                isActive: state._activeFilters.contains('Supplies'),
-                onTap: () => state._toggleFilter('Supplies'),
                 colors: colors,
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mydpar/officer/screens/community_group/group_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -22,6 +23,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
   final UserInformationService _userInformationService =
       UserInformationService();
   bool _isAddMenuOpen = false;
+  String _selectedFilter = 'all'; // 'all', 'joined', 'not_joined'
 
   @override
   void initState() {
@@ -39,17 +41,31 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
     super.dispose();
   }
 
-  /// Filters groups based on search text.
+  /// Filters groups based on search text and selected filter.
   List<Map<String, dynamic>> _filterGroups(List<Map<String, dynamic>> groups) {
     final searchText = _searchController.text.toLowerCase();
     return groups.where((group) {
-      if (searchText.isEmpty) return true;
-      final name = (group['name'] ?? '').toLowerCase();
-      final description = (group['description'] ?? '').toLowerCase();
-      final communityName = (group['community_name'] ?? '').toLowerCase();
-      return name.contains(searchText) ||
-          description.contains(searchText) ||
-          communityName.contains(searchText);
+      // First apply text search filter
+      if (searchText.isNotEmpty) {
+        final name = (group['name'] ?? '').toLowerCase();
+        final description = (group['description'] ?? '').toLowerCase();
+        final communityName = (group['community_name'] ?? '').toLowerCase();
+        if (!name.contains(searchText) &&
+            !description.contains(searchText) &&
+            !communityName.contains(searchText)) {
+          return false;
+        }
+      }
+
+      // Then apply membership filter
+      switch (_selectedFilter) {
+        case 'joined':
+          return group['is_member'] == true;
+        case 'not_joined':
+          return group['is_member'] != true;
+        default:
+          return true;
+      }
     }).toList();
   }
 
@@ -58,6 +74,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
       BuildContext context, Map<String, dynamic> group, AppColorTheme colors) {
     final localizations = AppLocalizations.of(context)!;
     final isAdmin = group['is_admin'] ?? false;
+    final isMember = group['is_member'] ?? false;
 
     showModalBottomSheet(
       context: context,
@@ -69,51 +86,69 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: Icon(Icons.info_outline, color: colors.accent200),
-              title: Text(localizations.translate('view_details'),
-                  style: TextStyle(color: colors.text200)),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Navigate to group detail screen
-              },
-            ),
-            if (isAdmin) ...[
+            if (isMember) ...[
               ListTile(
-                leading: Icon(Icons.share, color: colors.accent200),
-                title: Text(localizations.translate('share_group'),
+                leading: Icon(Icons.info_outline, color: colors.accent200),
+                title: Text(localizations.translate('view_details'),
                     style: TextStyle(color: colors.text200)),
                 onTap: () {
                   Navigator.pop(context);
-                  _shareGroupId(group['id'], colors, localizations);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          GroupDetailScreen(groupId: group['id']),
+                    ),
+                  );
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.edit, color: colors.accent200),
-                title: Text(localizations.translate('edit_group'),
-                    style: TextStyle(color: colors.text200)),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Show edit group modal
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.delete_outline, color: colors.warning),
-                title: Text(localizations.translate('delete_group'),
-                    style: TextStyle(color: colors.warning)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteConfirmation(group, colors, localizations);
-                },
-              ),
+              if (isAdmin) ...[
+                ListTile(
+                  leading: Icon(Icons.share, color: colors.accent200),
+                  title: Text(localizations.translate('share_group'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _shareGroupId(group['id'], colors, localizations);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.edit, color: colors.accent200),
+                  title: Text(localizations.translate('edit_group'),
+                      style: TextStyle(color: colors.text200)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // TODO: Show edit group modal
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.delete_outline, color: colors.warning),
+                  title: Text(localizations.translate('delete_group'),
+                      style: TextStyle(color: colors.warning)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteConfirmation(group, colors, localizations);
+                  },
+                ),
+              ] else ...[
+                ListTile(
+                  leading: Icon(Icons.exit_to_app, color: colors.warning),
+                  title: Text(localizations.translate('leave_group'),
+                      style: TextStyle(color: colors.warning)),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _leaveGroup(group['id'], colors, localizations);
+                  },
+                ),
+              ],
             ] else ...[
               ListTile(
-                leading: Icon(Icons.exit_to_app, color: colors.warning),
-                title: Text(localizations.translate('leave_group'),
-                    style: TextStyle(color: colors.warning)),
+                leading: Icon(Icons.group_add, color: colors.accent200),
+                title: Text(localizations.translate('join_group'),
+                    style: TextStyle(color: colors.text200)),
                 onTap: () async {
                   Navigator.pop(context);
-                  await _leaveGroup(group['id'], colors, localizations);
+                  await _joinGroup(group['id'], colors, localizations);
                 },
               ),
             ],
@@ -303,7 +338,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSearchBar(colors, localizations),
+                      _buildSearchAndFilter(colors, localizations),
                       const SizedBox(height: 24),
                       _buildGroupStatistics(colors, localizations),
                       const SizedBox(height: 24),
@@ -374,69 +409,117 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
     );
   }
 
-  /// Builds the search bar.
-  Widget _buildSearchBar(
+  /// Builds the search bar and filter chips.
+  Widget _buildSearchAndFilter(
           AppColorTheme colors, AppLocalizations localizations) =>
-      TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: localizations.translate('search_groups'),
-          hintStyle: TextStyle(color: colors.text100),
-          prefixIcon: Icon(Icons.search, color: colors.text100),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colors.bg300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colors.bg300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colors.accent200),
-          ),
-        ),
-      );
-
-  /// Builds the statistics section showing total groups and total members.
-  Widget _buildGroupStatistics(
-          AppColorTheme colors, AppLocalizations localizations) =>
-      StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _groupService.getCommunityGroups(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                localizations
-                    .translate('error', {'error': snapshot.error.toString()}),
-                style: TextStyle(color: colors.warning),
+      Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: localizations.translate('search_groups'),
+              hintStyle: TextStyle(color: colors.text100),
+              prefixIcon: Icon(Icons.search, color: colors.text100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.bg300),
               ),
-            );
-          }
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final groups = snapshot.data!;
-          final filteredGroups = _filterGroups(groups);
-
-          final groupCount = filteredGroups.length;
-          final totalMembers = filteredGroups.fold<int>(
-              0, (sum, group) => sum + ((group['member_count'] as int?) ?? 0));
-
-          return Row(
-            children: [
-              Expanded(
-                  child: _buildStatCard(localizations.translate('total_groups'),
-                      groupCount.toString(), colors)),
-              const SizedBox(width: 16),
-              Expanded(
-                  child: _buildStatCard(
-                      localizations.translate('total_members'),
-                      totalMembers.toString(),
-                      colors)),
-            ],
-          );
-        },
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.bg300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.accent200),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip(
+                    localizations.translate('all_groups'), 'all', colors),
+                _buildFilterChip(
+                    localizations.translate('my_groups'), 'joined', colors),
+                _buildFilterChip(localizations.translate('not_joined'),
+                    'not_joined', colors),
+              ],
+            ),
+          ),
+        ],
       );
+
+  /// Builds a filter chip for group filtering.
+  Widget _buildFilterChip(String label, String value, AppColorTheme colors) {
+    final isSelected = _selectedFilter == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) =>
+            setState(() => _selectedFilter = selected ? value : 'all'),
+        backgroundColor: colors.bg100,
+        selectedColor: colors.accent200,
+        labelStyle:
+            TextStyle(color: isSelected ? colors.bg100 : colors.text200),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: isSelected ? colors.accent200 : colors.bg300),
+        ),
+      ),
+    );
+  }
+
+  /// Builds the statistics section showing total groups and my groups count.
+  Widget _buildGroupStatistics(
+      AppColorTheme colors, AppLocalizations localizations) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _groupService.getCommunityGroups(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              localizations
+                  .translate('error', {'error': snapshot.error.toString()}),
+              style: TextStyle(color: colors.warning),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final groups = snapshot.data!;
+        final filteredGroups = _filterGroups(groups);
+
+        final totalGroups = groups.length;
+        final myGroups =
+            groups.where((group) => group['is_member'] == true).length;
+
+        return Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                localizations.translate('total_groups'),
+                totalGroups.toString(),
+                colors,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                localizations.translate('my_groups'),
+                myGroups.toString(),
+                colors,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   /// Builds a statistics card with a label and value.
   Widget _buildStatCard(String label, String value, AppColorTheme colors) =>
@@ -517,14 +600,66 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
         },
       );
 
+  /// Shows a dialog prompting the user to join the group
+  Future<void> _showJoinGroupPrompt(String groupId, String groupName,
+      AppColorTheme colors, AppLocalizations localizations) async {
+    final shouldJoin = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: colors.bg100,
+        title: Text(
+          localizations.translate('join_group_prompt'),
+          style: TextStyle(color: colors.primary300),
+        ),
+        content: Text(
+          localizations
+              .translate('join_group_message', {'groupName': groupName}),
+          style: TextStyle(color: colors.text200),
+        ),
+        actions: [
+          TextButton(
+            child: Text(
+              localizations.translate('cancel'),
+              style: TextStyle(color: colors.text200),
+            ),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          TextButton(
+            child: Text(
+              localizations.translate('join'),
+              style: TextStyle(color: colors.accent200),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldJoin == true) {
+      await _joinGroup(groupId, colors, localizations);
+    }
+  }
+
   /// Builds a card for a single group.
   Widget _buildGroupCard(Map<String, dynamic> group, AppColorTheme colors,
       AppLocalizations localizations) {
     final isAdmin = group['is_admin'] ?? false;
+    final isMember = group['is_member'] ?? false;
     final roleColor = isAdmin ? colors.accent200 : colors.primary200;
+
     return InkWell(
-      onTap: () {
-        // TODO: Navigate to group detail screen
+      onTap: () async {
+        if (isMember) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GroupDetailScreen(groupId: group['id']),
+            ),
+          );
+        } else {
+          await _showJoinGroupPrompt(
+              group['id'], group['name'], colors, localizations);
+        }
       },
       borderRadius: BorderRadius.circular(12),
       child: Card(
@@ -566,7 +701,26 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 4)
+                        const SizedBox(height: 4),
+                        if (isMember)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: colors.accent200.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              isAdmin
+                                  ? localizations.translate('admin')
+                                  : localizations.translate('member'),
+                              style: TextStyle(
+                                color: colors.accent200,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

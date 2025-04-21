@@ -49,14 +49,41 @@ class CommunityGroupService {
         .collection('community_groups')
         .orderBy('created_at', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
+        .asyncMap((snapshot) async {
+      final groups = <Map<String, dynamic>>[];
+      for (final doc in snapshot.docs) {
         final data = doc.data();
-        return {
-          'id': doc.id,
+        final groupId = doc.id;
+
+        // Get member count
+        final membersSnapshot = await _firestore
+            .collection('community_groups')
+            .doc(groupId)
+            .collection('group_members')
+            .get();
+        final memberCount = membersSnapshot.docs.length;
+
+        // Check if current user is a member and their role
+        final memberDoc = await _firestore
+            .collection('community_groups')
+            .doc(groupId)
+            .collection('group_members')
+            .doc(currentUserId)
+            .get();
+
+        final isMember = memberDoc.exists;
+        final isAdmin =
+            memberDoc.exists && memberDoc.data()?['role'] == 'admin';
+
+        groups.add({
+          'id': groupId,
           ...data,
-        };
-      }).toList();
+          'member_count': memberCount,
+          'is_member': isMember,
+          'is_admin': isAdmin,
+        });
+      }
+      return groups;
     });
   }
 
@@ -82,6 +109,12 @@ class CommunityGroupService {
     String? communityName,
   }) async {
     try {
+      // Check if user has permission to update the group
+      final isAdmin = await isUserAdmin(id);
+      if (!isAdmin) {
+        throw Exception('Only admins can update group details');
+      }
+
       final updates = <String, dynamic>{
         if (name != null) 'name': name,
         if (description != null) 'description': description,
@@ -260,6 +293,9 @@ class CommunityGroupService {
     required String title,
     required String description,
     required DateTime eventTime,
+    double? latitude,
+    double? longitude,
+    String? locationName,
   }) async {
     try {
       final docRef = await _firestore
@@ -273,6 +309,9 @@ class CommunityGroupService {
         'created_by': currentUserId,
         'participants': [currentUserId],
         'created_at': FieldValue.serverTimestamp(),
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (locationName != null) 'location_name': locationName,
       });
 
       return docRef.id;
@@ -305,12 +344,18 @@ class CommunityGroupService {
     String? title,
     String? description,
     DateTime? eventTime,
+    double? latitude,
+    double? longitude,
+    String? locationName,
   }) async {
     try {
       final updates = <String, dynamic>{
         if (title != null) 'title': title,
         if (description != null) 'description': description,
         if (eventTime != null) 'event_time': Timestamp.fromDate(eventTime),
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (locationName != null) 'location_name': locationName,
       };
 
       await _firestore

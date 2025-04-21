@@ -536,7 +536,8 @@ class _EmergencyTeamsScreenState extends State<EmergencyTeamsScreen> {
   Widget _buildTeamStatistics(
           AppColorTheme colors, AppLocalizations localizations) =>
       StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _teamService.getUserTeams(),
+        // Use the new method that provides accurate member counts
+        stream: _teamService.getUserTeamsWithAccurateCounts(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(

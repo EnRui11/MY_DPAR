@@ -296,35 +296,30 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
                         ],
                       ),
                       // Priority or member count
-                      isCompleted
-                          ? Row(
-                              children: [
-                                Icon(Icons.group,
-                                    size: 16, color: colors.text200),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$memberCount ${localizations.translate(memberCount == 1 ? 'member_participated' : 'members_participated')}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.text200,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Row(
-                              children: [
-                                Icon(Icons.flag,
-                                    size: 16, color: colors.text200),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${localizations.translate('priority')}: ${_capitalize(task['priority'] as String? ?? 'medium')}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.text200,
-                                  ),
-                                ),
-                              ],
+                      Flexible(
+                        child: Row(
+                          children: [
+                            Icon(
+                              isCompleted ? Icons.group : Icons.flag,
+                              size: 16,
+                              color: colors.text200,
                             ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                isCompleted
+                                    ? '$memberCount ${localizations.translate(memberCount == 1 ? 'member_participated' : 'members_participated')}'
+                                    : '${localizations.translate('priority')}: ${_capitalize(task['priority'] as String? ?? 'medium')}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.text200,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -373,7 +368,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
                         Expanded(
                           child: InkWell(
                             onTap: () =>
-                                _showTaskDetails(task, colors, localizations),
+                                _showTaskSummary(task, colors, localizations),
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Row(
@@ -383,7 +378,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
                                       size: 16, color: colors.accent200),
                                   const SizedBox(width: 8),
                                   Text(
-                                    localizations.translate('view_details'),
+                                    localizations.translate('view_summary'),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: colors.accent200,
@@ -2039,7 +2034,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  void _showTaskDetails(
+  void _showTaskSummary(
     Map<String, dynamic> task,
     AppColorTheme colors,
     AppLocalizations localizations,
@@ -2181,36 +2176,6 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
                             task['status'] as String? ?? 'pending', colors),
                         colors,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        localizations.translate('start_location'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: colors.text200,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _extractLocationName(task['start_location'] as LatLng),
-                        style: TextStyle(color: colors.text200),
-                      ),
-                      if (task['end_location'] != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          localizations.translate('end_location'),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: colors.text200,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _extractLocationName(task['end_location'] as LatLng),
-                          style: TextStyle(color: colors.text200),
-                        ),
-                      ],
                       const SizedBox(height: 16),
                       Text(
                         localizations.translate('assigned_members'),

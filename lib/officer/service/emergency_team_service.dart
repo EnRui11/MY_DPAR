@@ -93,6 +93,113 @@ class EmergencyTeamService {
     }
   }
 
+  /// Gets the accurate member count by counting members in subcollections
+  Future<int> getAccurateMemberCount(String teamId) async {
+    try {
+      // Get counts from both collections
+      final officialMembers = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('official_members')
+          .get();
+
+      final volunteerMembers = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('volunteer_members')
+          .get();
+
+      return officialMembers.size + volunteerMembers.size;
+    } catch (e) {
+      throw Exception('Failed to get accurate member count: $e');
+    }
+  }
+
+  /// Updates the member count in Firestore after recalculating
+  Future<void> updateMemberCountInFirestore(
+      String teamId, int memberCount) async {
+    try {
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .update({'member_count': memberCount});
+    } catch (e) {
+      throw Exception('Failed to update member count in Firestore: $e');
+    }
+  }
+
+  /// Gets all teams with accurate member counts
+  Stream<List<Map<String, dynamic>>> getUserTeamsWithAccurateCounts() {
+    return getAllTeams().asyncMap((teams) async {
+      final List<Map<String, dynamic>> updatedTeams = [];
+
+      for (var team in teams) {
+        try {
+          final memberCount = await getAccurateMemberCount(team['id']);
+
+          // Update the member count in Firestore
+          await updateMemberCountInFirestore(team['id'], memberCount);
+
+          updatedTeams.add({
+            ...team,
+            'member_count': memberCount,
+          });
+        } catch (e) {
+          // If there's an error, keep the original count
+          updatedTeams.add(team);
+        }
+      }
+
+      return updatedTeams;
+    });
+  }
+
+  /// Gets the accurate active task count by counting tasks with status != 'completed'
+  Future<int> getAccurateActiveTaskCount(String teamId) async {
+    try {
+      final taskSnapshot = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_tasks')
+          .where('status', isNotEqualTo: 'completed')
+          .get();
+
+      return taskSnapshot.size;
+    } catch (e) {
+      throw Exception('Failed to get accurate active task count: $e');
+    }
+  }
+
+  /// Returns a stream of team data with accurate task count for real-time updates
+  Stream<Map<String, dynamic>> getTeamStream(String teamId) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      if (!snapshot.exists) {
+        return {};
+      }
+
+      final data = snapshot.data() as Map<String, dynamic>;
+
+      // Get accurate active task count
+      final activeTaskCount = await getAccurateActiveTaskCount(teamId);
+
+      // Update the task_count in Firestore
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .update({'task_count': activeTaskCount});
+
+      return {
+        'id': snapshot.id,
+        ...data,
+        'task_count': activeTaskCount, // Use the accurate count
+      };
+    });
+  }
+
   Future<void> updateTeam({
     required String teamId,
     String? name,
@@ -870,10 +977,10 @@ class EmergencyTeamService {
   // Team Resources Collection
   Future<String> addTeamResource({
     required String teamId,
-    required String resourceType,
+    required String resourceName,
     required String description,
     required int quantity,
-    required String unit,
+    required String type,
   }) async {
     try {
       final docRef = await _firestore
@@ -881,10 +988,11 @@ class EmergencyTeamService {
           .doc(teamId)
           .collection('team_resources')
           .add({
-        'resource_type': resourceType,
+        'resource_name': resourceName,
         'description': description,
         'quantity': quantity,
-        'unit': unit,
+        'type': type,
+        'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
       return docRef.id;
@@ -898,7 +1006,7 @@ class EmergencyTeamService {
         .collection('emergency_teams')
         .doc(teamId)
         .collection('team_resources')
-        .orderBy('updated_at', descending: true)
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -910,24 +1018,83 @@ class EmergencyTeamService {
     });
   }
 
-  Future<void> updateResourceQuantity({
+  Future<Map<String, dynamic>?> getTeamResource(
+      String teamId, String resourceId) async {
+    try {
+      final doc = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_resources')
+          .doc(resourceId)
+          .get();
+
+      if (!doc.exists) return null;
+
+      return {
+        'id': doc.id,
+        ...doc.data()!,
+      };
+    } catch (e) {
+      throw Exception('Failed to get team resource: $e');
+    }
+  }
+
+  Future<void> updateTeamResource({
     required String teamId,
     required String resourceId,
-    required int quantity,
+    String? resourceName,
+    String? description,
+    int? quantity,
+    String? type,
   }) async {
+    try {
+      final updates = <String, dynamic>{
+        if (resourceName != null) 'resource_name': resourceName,
+        if (description != null) 'description': description,
+        if (quantity != null) 'quantity': quantity,
+        if (type != null) 'type': type,
+        'updated_at': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('team_resources')
+          .doc(resourceId)
+          .update(updates);
+    } catch (e) {
+      throw Exception('Failed to update team resource: $e');
+    }
+  }
+
+  Future<void> deleteTeamResource(String teamId, String resourceId) async {
     try {
       await _firestore
           .collection('emergency_teams')
           .doc(teamId)
           .collection('team_resources')
           .doc(resourceId)
-          .update({
-        'quantity': quantity,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+          .delete();
     } catch (e) {
-      throw Exception('Failed to update resource quantity: $e');
+      throw Exception('Failed to delete team resource: $e');
     }
+  }
+
+  // Get team resources by type
+  Stream<List<Map<String, dynamic>>> getTeamResourcesByType(
+      String teamId, String type) {
+    return _firestore
+        .collection('emergency_teams')
+        .doc(teamId)
+        .collection('team_resources')
+        .where('type', isEqualTo: type)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => {
+                  ...doc.data(),
+                  'id': doc.id,
+                })
+            .toList());
   }
 
   // Volunteer Applications Collection

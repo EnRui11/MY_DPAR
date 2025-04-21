@@ -11,6 +11,7 @@ import 'package:mydpar/officer/screens/emergency_teams/select_task_location_scre
 import 'package:mydpar/officer/screens/emergency_teams/task_management_screen.dart';
 import 'package:mydpar/officer/screens/emergency_teams/task_detail_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:mydpar/officer/screens/emergency_teams/resource_management_screen.dart';
 
 /// Screen for displaying detailed information about an emergency team.
 class TeamDetailScreen extends StatefulWidget {
@@ -57,18 +58,54 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   Future<void> _loadTeamData() async {
     setState(() => _isLoading = true);
     try {
-      final teamData = await _teamService.getTeam(widget.teamId);
-      if (mounted) {
+      // Get team data
+      final teamDoc = await FirebaseFirestore.instance
+          .collection('emergency_teams')
+          .doc(widget.teamId)
+          .get();
+      if (teamDoc.exists) {
         setState(() {
-          _teamData = teamData;
-          _isLoading = false;
+          _teamData = {
+            'id': teamDoc.id,
+            ...teamDoc.data()!,
+          };
+        });
+      }
+
+      // Get user member info
+      final userMemberInfo =
+          await _teamService.getUserMemberInfo(widget.teamId);
+      if (userMemberInfo != null) {
+        setState(() {
+          _userMemberInfo = userMemberInfo;
+          _isOnDuty = userMemberInfo['status'] == 'active';
+          _userRole = userMemberInfo['role'] ?? '';
+          _roleController.text = _userRole;
+        });
+      }
+
+      // Get accurate task count
+      final activeTaskCount =
+          await _teamService.getAccurateActiveTaskCount(widget.teamId);
+
+      // Update the task_count in Firestore
+      await FirebaseFirestore.instance
+          .collection('emergency_teams')
+          .doc(widget.teamId)
+          .update({'task_count': activeTaskCount});
+
+      if (_teamData != null) {
+        setState(() {
+          _teamData!['task_count'] = activeTaskCount;
         });
       }
     } catch (e) {
       if (mounted) {
+        _showErrorSnackBar('Failed to load team data', e);
+      }
+    } finally {
+      if (mounted) {
         setState(() => _isLoading = false);
-        _showErrorSnackBar(
-            AppLocalizations.of(context)!.translate('failed_to_load_team'), e);
       }
     }
   }
@@ -856,8 +893,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
     final status = _teamData?['status'] as String? ?? 'standby';
     final statusColor = _getStatusColor(status, colors);
     final typeColor = isOfficial ? colors.accent200 : colors.primary200;
-    final memberCount = _teamData?['member_count'] as int? ?? 0;
-    final taskCount = _teamData?['task_count'] as int? ?? 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -927,24 +962,43 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           style: TextStyle(color: colors.text200),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                localizations.translate('members'),
-                memberCount.toString(),
-                colors,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
-                localizations.translate('active_tasks'),
-                taskCount.toString(),
-                colors,
-              ),
-            ),
-          ],
+        // Replace static statistics with StreamBuilder to get real-time updates
+        StreamBuilder<Map<String, dynamic>>(
+          stream: _teamService.getTeamStream(widget.teamId),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Text(
+                localizations
+                    .translate('error', {'error': snapshot.error.toString()}),
+                style: TextStyle(color: colors.warning),
+              );
+            }
+
+            // Use the latest data from the stream, or fall back to the cached data
+            final teamData = snapshot.data ?? _teamData;
+            final memberCount = teamData?['member_count'] as int? ?? 0;
+            final taskCount = teamData?['task_count'] as int? ?? 0;
+
+            return Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    localizations.translate('members'),
+                    memberCount.toString(),
+                    colors,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatCard(
+                    localizations.translate('active_tasks'),
+                    taskCount.toString(),
+                    colors,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -2279,10 +2333,9 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
                   style: TextStyle(color: colors.text200, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
+                // Removed role check to allow all users to add resources
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO: Navigate to add resource screen
-                  },
+                  onPressed: () => _showAddResourceModal(colors, localizations),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.accent200,
                     foregroundColor: Colors.white,
@@ -2297,16 +2350,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           );
         }
 
-        // Group resources by type
-        final Map<String, List<Map<String, dynamic>>> groupedResources = {};
-        for (final resource in resources) {
-          final type = resource['resource_type'] as String? ?? 'other';
-          if (!groupedResources.containsKey(type)) {
-            groupedResources[type] = [];
-          }
-          groupedResources[type]!.add(resource);
-        }
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2314,82 +2357,154 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  localizations.translate('equipment_resources'),
+                  localizations.translate('team_resources'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: colors.primary300,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to manage resources screen
-                  },
-                  child: Text(
-                    localizations.translate('manage'),
-                    style: TextStyle(color: colors.accent200),
-                  ),
+                Row(
+                  children: [
+                    // Manage resources button
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ResourceManagementScreen(
+                              teamId: widget.teamId,
+                              isLeader: widget.isLeader,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.settings, color: colors.accent200),
+                      label: Text(
+                        localizations.translate('view_all'),
+                        style: TextStyle(color: colors.accent200),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView.builder(
-                itemCount: groupedResources.length,
+                itemCount: resources.length,
                 itemBuilder: (context, index) {
-                  final type = groupedResources.keys.elementAt(index);
-                  final typeResources = groupedResources[type]!;
+                  final resource = resources[index];
+                  final type = resource['type'] as String? ?? 'Equipment';
+                  final typeColor = _getResourceTypeColor(type, colors);
+                  final quantity = resource['quantity'] as int? ?? 0;
 
-                  return Container(
+                  return Card(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colors.bg100.withOpacity(0.7),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.bg300),
+                      side: BorderSide(color: colors.bg300, width: 1),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        // Show resource details or edit dialog
+                        _showResourceDetailsModal(
+                            colors, localizations, resource);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _getResourceTypeLabel(type, localizations),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: colors.primary300,
-                              ),
-                            ),
-                            Text(
-                              '${typeResources.length} ${localizations.translate('items')}',
-                              style: TextStyle(
-                                color: colors.accent200,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ...typeResources.map((resource) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Row(
                               children: [
-                                Text(
-                                  resource['description'] ?? '',
-                                  style: TextStyle(color: colors.text200),
+                                // Resource type icon with background
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: typeColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    _getResourceTypeIcon(type),
+                                    color: typeColor,
+                                    size: 24,
+                                  ),
                                 ),
-                                Text(
-                                  '${resource['quantity']} ${resource['unit']}',
-                                  style: TextStyle(color: colors.text200),
+                                const SizedBox(width: 12),
+                                // Resource name and type
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        resource['resource_name'] ?? '',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: colors.primary300,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      _buildStatusChip(
+                                        _getResourceTypeLabel(
+                                            type, localizations),
+                                        typeColor,
+                                        colors,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Quantity indicator
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.bg200,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: colors.bg300),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.inventory_2,
+                                        size: 16,
+                                        color: colors.accent200,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '$quantity ${quantity == 1 ? localizations.translate('unit') : localizations.translate('units')}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: colors.accent200,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          );
-                        }).toList(),
-                      ],
+                            if (resource['description'] != null &&
+                                resource['description'].toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(
+                                  resource['description'] ?? '',
+                                  style: TextStyle(
+                                    color: colors.text200,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -2398,6 +2513,787 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
           ],
         );
       },
+    );
+  }
+
+  /// Shows resource details modal with options to edit or delete
+  void _showResourceDetailsModal(AppColorTheme colors,
+      AppLocalizations localizations, Map<String, dynamic> resource) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.bg100,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              resource['resource_name'] ?? '',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: colors.primary300,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _buildStatusChip(
+                  _getResourceTypeLabel(
+                      resource['type'] ?? 'Equipment', localizations),
+                  _getResourceTypeColor(
+                      resource['type'] ?? 'Equipment', colors),
+                  colors,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${resource['quantity'] ?? 0} ${(resource['quantity'] ?? 0) == 1 ? localizations.translate('unit') : localizations.translate('units')}',
+                  style: TextStyle(color: colors.text200),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              resource['description'] ?? '',
+              style: TextStyle(color: colors.text200),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showEditResourceModal(resource, colors, localizations);
+                    },
+                    icon: Icon(Icons.edit, color: colors.accent200),
+                    label: Text(localizations.translate('edit')),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.accent200,
+                      side: BorderSide(color: colors.accent200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showDeleteResourceConfirmation(
+                          colors, localizations, resource);
+                    },
+                    icon: Icon(Icons.delete, color: colors.warning),
+                    label: Text(localizations.translate('delete')),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.warning,
+                      side: BorderSide(color: colors.warning),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditResourceModal(
+    Map<String, dynamic> resource,
+    AppColorTheme colors,
+    AppLocalizations localizations,
+  ) {
+    final TextEditingController resourceNameController =
+        TextEditingController(text: resource['resource_name']);
+    final TextEditingController descriptionController =
+        TextEditingController(text: resource['description']);
+    final TextEditingController quantityController =
+        TextEditingController(text: resource['quantity'].toString());
+    final TextEditingController typeController =
+        TextEditingController(text: resource['type']);
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            decoration: BoxDecoration(
+              color: colors.bg100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: colors.bg300)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        localizations.translate('edit_resource'),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary300,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: colors.primary300),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${localizations.translate('resource_name')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: resourceNameController,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('enter_resource_name'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${localizations.translate('description')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('resource_details'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${localizations.translate('quantity')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: quantityController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: localizations.translate('enter_quantity'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${localizations.translate('type')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: colors.bg200,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.bg300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: typeController.text.isEmpty
+                                  ? null
+                                  : typeController.text,
+                              hint: Text(
+                                localizations.translate('select_type'),
+                                style: TextStyle(
+                                  color: colors.text200.withOpacity(0.5),
+                                ),
+                              ),
+                              isExpanded: true,
+                              items: [
+                                DropdownMenuItem(
+                                  value: 'Equipment',
+                                  child: Text(
+                                      localizations.translate('equipment')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Vehicle',
+                                  child:
+                                      Text(localizations.translate('vehicle')),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Supply',
+                                  child:
+                                      Text(localizations.translate('supply')),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    typeController.text = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (resourceNameController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('resource_name_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (descriptionController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('description_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (quantityController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('quantity_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (typeController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations.translate('type_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              int quantity;
+                              try {
+                                quantity = int.parse(quantityController.text);
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('valid_number_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                await _teamService.updateTeamResource(
+                                  teamId: widget.teamId,
+                                  resourceId: resource['id'],
+                                  resourceName: resourceNameController.text,
+                                  description: descriptionController.text,
+                                  quantity: quantity,
+                                  type: typeController.text,
+                                );
+
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        localizations.translate(
+                                            'resource_updated_successfully'),
+                                      ),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        localizations.translate(
+                                            'error_updating_resource'),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.accent200,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              localizations.translate('update_resource'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Returns the icon for a resource type
+  IconData _getResourceTypeIcon(String type) => switch (type.toLowerCase()) {
+        'equipment' => Icons.handyman,
+        'vehicle' => Icons.directions_car,
+        'supply' => Icons.inventory,
+        _ => Icons.category,
+      };
+
+  void _showAddResourceModal(
+      AppColorTheme colors, AppLocalizations localizations) {
+    final TextEditingController resourceNameController =
+        TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController quantityController = TextEditingController();
+    final TextEditingController typeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            decoration: BoxDecoration(
+              color: colors.bg100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: colors.bg300)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        localizations.translate('add_new_resource'),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary300,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: colors.primary300),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${localizations.translate('resource_name')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: resourceNameController,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('enter_resource_name'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${localizations.translate('description')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText:
+                                localizations.translate('enter_description'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${localizations.translate('quantity')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: quantityController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: localizations.translate('enter_quantity'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${localizations.translate('type')}*',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.text200,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: typeController.text.isEmpty
+                              ? null
+                              : typeController.text,
+                          decoration: InputDecoration(
+                            hintText: localizations.translate('select_type'),
+                            filled: true,
+                            fillColor: colors.bg200,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.bg300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: colors.accent200),
+                            ),
+                          ),
+                          items: [
+                            'equipment',
+                            'vehicle',
+                            'supply',
+                          ].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _getResourceTypeIcon(value),
+                                    size: 20,
+                                    color: _getResourceTypeColor(value, colors),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    localizations.translate(value),
+                                    style: TextStyle(color: colors.text200),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                typeController.text = value;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (resourceNameController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('resource_name_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (descriptionController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('description_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (quantityController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('quantity_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (typeController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations.translate('type_required'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              final quantity =
+                                  int.tryParse(quantityController.text);
+                              if (quantity == null || quantity < 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations
+                                          .translate('invalid_quantity'),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                await _teamService.addTeamResource(
+                                  teamId: widget.teamId,
+                                  resourceName: resourceNameController.text,
+                                  description: descriptionController.text,
+                                  quantity: quantity,
+                                  type: typeController.text,
+                                );
+
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        localizations.translate(
+                                            'resource_added_successfully'),
+                                      ),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        localizations
+                                            .translate('error_adding_resource'),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.accent200,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              localizations.translate('add_resource'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -2447,13 +3343,25 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
   /// Returns the localized label for resource type.
   String _getResourceTypeLabel(String type, AppLocalizations localizations) =>
       switch (type.toLowerCase()) {
-        'rescue_equipment' => localizations.translate('rescue_equipment'),
-        'medical_supplies' => localizations.translate('medical_supplies'),
-        'communication' => localizations.translate('communication_equipment'),
-        'transportation' => localizations.translate('transportation'),
-        'other' => localizations.translate('other_resources'),
-        _ => type,
+        'equipment' => localizations.translate('equipment'),
+        'vehicle' => localizations.translate('vehicle'),
+        'supply' => localizations.translate('supply'),
+        _ => localizations.translate('other'),
       };
+
+  /// Returns the color for a resource type.
+  Color _getResourceTypeColor(String type, AppColorTheme colors) {
+    switch (type.toLowerCase()) {
+      case 'equipment':
+        return colors.primary300; // Blue
+      case 'vehicle':
+        return Colors.green;
+      case 'supply':
+        return Colors.orange;
+      default:
+        return colors.text200;
+    }
+  }
 
   /// Returns the color for a team status.
   Color _getStatusColor(String status, AppColorTheme colors) =>
@@ -2461,7 +3369,6 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
         'active' => Colors.green,
         'standby' => Colors.orange,
         'deactivated' => Colors.grey,
-        'archived' => Colors.purple,
         _ => colors.accent200,
       };
 
@@ -2557,4 +3464,64 @@ class _TeamDetailScreenState extends State<TeamDetailScreen>
 
   /// Returns the minimum of two integers.
   int _min(int a, int b) => a < b ? a : b;
+
+  /// Shows a confirmation dialog for deleting a resource
+  void _showDeleteResourceConfirmation(AppColorTheme colors,
+      AppLocalizations localizations, Map<String, dynamic> resource) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.bg100,
+        title: Text(
+          localizations.translate('confirm_delete'),
+          style: TextStyle(color: colors.primary300),
+        ),
+        content: Text(
+          localizations.translate(
+            'delete_resource_confirmation',
+            {'name': resource['resource_name'] ?? ''},
+          ),
+          style: TextStyle(color: colors.text200),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              localizations.translate('cancel'),
+              style: TextStyle(color: colors.text200),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await _teamService.deleteTeamResource(
+                  widget.teamId,
+                  resource['id'],
+                );
+
+                if (mounted) {
+                  Navigator.pop(context);
+                  _showSnackBar(
+                    localizations.translate('resource_deleted_successfully'),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  _showErrorSnackBar(
+                    localizations.translate('error_deleting_resource'),
+                    e,
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.warning,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(localizations.translate('delete')),
+          ),
+        ],
+      ),
+    );
+  }
 }

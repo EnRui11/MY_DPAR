@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mydpar/officer/screens/community_group/event_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -1210,103 +1211,131 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   final eventTime = (event['event_time'] as Timestamp).toDate();
                   final isPast = eventTime.isBefore(DateTime.now());
 
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  event['title'] ?? '',
-                                  style: TextStyle(
-                                    color: colors.primary300,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EventDetailScreen(
+                            groupId: widget.groupId,
+                            eventId: event['id'],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    event['title'] ?? '',
+                                    style: TextStyle(
+                                      color: colors.primary300,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (_isAdmin)
-                                PopupMenuButton<String>(
-                                  icon: Icon(Icons.more_vert,
-                                      color: colors.text200),
-                                  onSelected: (value) {
-                                    if (value == 'edit') {
-                                      _showEditEventDialog(
-                                          event, colors, localizations);
-                                    } else if (value == 'delete') {
-                                      _showDeleteEventConfirmation(
-                                          event, colors, localizations);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child:
-                                          Text(localizations.translate('edit')),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                          localizations.translate('delete')),
-                                    ),
-                                  ],
+                                if (_isAdmin)
+                                  PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert,
+                                        color: colors.text200),
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showEditEventDialog(
+                                            event, colors, localizations);
+                                      } else if (value == 'delete') {
+                                        _showDeleteEventConfirmation(
+                                            event, colors, localizations);
+                                      } else if (value == 'view') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => EventDetailScreen(
+                                              groupId: widget.groupId,
+                                              eventId: event['id'],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'view',
+                                        child: Text(localizations
+                                            .translate('view_details')),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'edit',
+                                        child: Text(
+                                            localizations.translate('edit')),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text(
+                                            localizations.translate('delete')),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              event['description'] ?? '',
+                              style: TextStyle(color: colors.text200),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Icon(Icons.access_time,
+                                    size: 16, color: colors.text200),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDateTime(eventTime),
+                                  style: TextStyle(color: colors.text200),
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            event['description'] ?? '',
-                            style: TextStyle(color: colors.text200),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Icon(Icons.access_time,
-                                  size: 16, color: colors.text200),
-                              const SizedBox(width: 4),
-                              Text(
-                                _formatDateTime(eventTime),
-                                style: TextStyle(color: colors.text200),
-                              ),
-                              const SizedBox(width: 16),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isPast
-                                      ? colors.bg300.withOpacity(0.5)
-                                      : colors.accent200.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  isPast
-                                      ? localizations.translate('past')
-                                      : localizations.translate('upcoming'),
-                                  style: TextStyle(
+                                const SizedBox(width: 16),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
                                     color: isPast
-                                        ? colors.text100
-                                        : colors.accent200,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
+                                        ? colors.bg300.withOpacity(0.5)
+                                        : colors.accent200.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    isPast
+                                        ? localizations.translate('past')
+                                        : localizations.translate('upcoming'),
+                                    style: TextStyle(
+                                      color: isPast
+                                          ? colors.text100
+                                          : colors.accent200,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

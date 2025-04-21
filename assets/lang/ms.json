@@ -1898,5 +1898,29 @@
   "description": "Penerangan",
   "community_name": "Nama Komuniti",
   "group_updated": "Kumpulan Berjaya Dikemas Kini",
-  "failed_to_update_group": "Gagal Mengemas Kini Kumpulan"
+  "failed_to_update_group": "Gagal Mengemas Kini Kumpulan",
+
+
+
+
+
+  "event_detail_screen": "event_detail_screen.dart",
+  "event_not_found": "Acara Tidak Dijumpai",
+  "edit_event": "Edit Acara",
+  "share_event": "Kongsi Acara",
+  "delete_event": "Padam Acara",
+  "event_edited": "Acara Berjaya Diedit",
+  "event_id_copied": "ID Acara Disalin ke Papan Klip",
+  "confirm_delete": "Sahkan Padam",
+  "delete_event_confirmation": "Adakah anda pasti ingin memadam acara ini?",
+  "event_deleted": "Acara Berjaya Dipadam",
+  "failed_to_delete_event": "Gagal Memadam Acara",
+  "event_participants": "Peserta Acara",
+  "error_loading_participants": "Ralat Memuat Peserta",
+  "no_participants": "Tiada Peserta Dijumpai",
+  "admin": "Pentadbir",
+  "member": "Ahli",
+  "no_location_available": "Tiada Lokasi Tersedia",
+  "participants": "Peserta",
+  "location": "Lokasi"
 }

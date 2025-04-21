@@ -1901,5 +1901,30 @@
   "description": "描述",
   "community_name": "社区名称",
   "group_updated": "群组更新成功",
-  "failed_to_update_group": "更新群组失败"
+  "failed_to_update_group": "更新群组失败",
+
+
+
+
+
+
+  "event_detail_screen": "event_detail_screen.dart",
+  "event_not_found": "未找到活动",
+  "edit_event": "编辑活动",
+  "share_event": "分享活动",
+  "delete_event": "删除活动",
+  "event_edited": "活动编辑成功",
+  "event_id_copied": "活动ID已复制到剪贴板",
+  "confirm_delete": "确认删除",
+  "delete_event_confirmation": "您确定要删除此活动吗？",
+  "event_deleted": "活动删除成功",
+  "failed_to_delete_event": "删除活动失败",
+  "event_participants": "活动参与者",
+  "error_loading_participants": "加载参与者错误",
+  "no_participants": "未找到参与者",
+  "admin": "管理员",
+  "member": "成员",
+  "no_location_available": "无可用地点",
+  "participants": "参与者",
+  "location": "地点"
 }

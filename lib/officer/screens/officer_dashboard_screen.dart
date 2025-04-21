@@ -258,27 +258,6 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                     ],
                   ),
           ),
-          const SizedBox(height: 16),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: Implement view all SOS screen
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.bg100,
-                foregroundColor: hasActiveAlerts
-                    ? const Color(0xFFFF3D3D)
-                    : const Color(0xFF4CAF50),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('View All SOS'),
-            ),
-          ),
         ],
       ),
     );

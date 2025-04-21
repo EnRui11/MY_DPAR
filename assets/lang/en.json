@@ -1894,5 +1894,29 @@
   "description": "Description",
   "community_name": "Community Name",
   "group_updated": "Group Updated Successfully",
-  "failed_to_update_group": "Failed to Update Group"
+  "failed_to_update_group": "Failed to Update Group",
+
+
+
+
+
+  "event_detail_screen": "event_detail_screen.dart",
+  "event_not_found": "Event Not Found",
+  "edit_event": "Edit Event",
+  "share_event": "Share Event",
+  "delete_event": "Delete Event",
+  "event_edited": "Event Edited Successfully",
+  "event_id_copied": "Event ID Copied to Clipboard",
+  "confirm_delete": "Confirm Delete",
+  "delete_event_confirmation": "Are you sure you want to delete this event?",
+  "event_deleted": "Event Deleted Successfully",
+  "failed_to_delete_event": "Failed to Delete Event",
+  "event_participants": "Event Participants",
+  "error_loading_participants": "Error Loading Participants",
+  "no_participants": "No Participants Found",
+  "admin": "Admin",
+  "member": "Member",
+  "no_location_available": "No Location Available",
+  "participants": "Participants",
+  "location": "Location"
 }

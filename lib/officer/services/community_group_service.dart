@@ -298,6 +298,20 @@ class CommunityGroupService {
     String? locationName,
   }) async {
     try {
+      // Get all admin members
+      final adminMembers = await _firestore
+          .collection('community_groups')
+          .doc(groupId)
+          .collection('group_members')
+          .where('role', isEqualTo: 'admin')
+          .get();
+
+      // Create list of participant IDs including all admins and the creator
+      final participantIds = adminMembers.docs.map((doc) => doc.id).toList();
+      if (!participantIds.contains(currentUserId)) {
+        participantIds.add(currentUserId);
+      }
+
       final docRef = await _firestore
           .collection('community_groups')
           .doc(groupId)
@@ -307,7 +321,7 @@ class CommunityGroupService {
         'description': description,
         'event_time': Timestamp.fromDate(eventTime),
         'created_by': currentUserId,
-        'participants': [currentUserId],
+        'participants': participantIds,
         'created_at': FieldValue.serverTimestamp(),
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
@@ -399,5 +413,79 @@ class CommunityGroupService {
     } catch (e) {
       throw Exception('Failed to check admin status: $e');
     }
+  }
+
+  // Get a specific group event by ID
+  Future<Map<String, dynamic>?> getGroupEventById(
+      String groupId, String eventId) async {
+    try {
+      final doc = await _firestore
+          .collection('community_groups')
+          .doc(groupId)
+          .collection('group_events')
+          .doc(eventId)
+          .get();
+
+      if (!doc.exists) return null;
+
+      final data = doc.data()!;
+      return {
+        'id': doc.id,
+        ...data,
+      };
+    } catch (e) {
+      throw Exception('Failed to get group event: $e');
+    }
+  }
+
+  // Get participants of a specific event
+  Stream<List<Map<String, dynamic>>> getEventParticipants(
+      String groupId, String eventId) {
+    return _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .collection('group_events')
+        .doc(eventId)
+        .snapshots()
+        .asyncMap((eventDoc) async {
+      if (!eventDoc.exists) return [];
+
+      final data = eventDoc.data()!;
+      final participants = List<String>.from(data['participants'] ?? []);
+
+      final participantsData = <Map<String, dynamic>>[];
+      for (final userId in participants) {
+        try {
+          // Get user information
+          final userDoc =
+              await _firestore.collection('users').doc(userId).get();
+
+          // Get member role from group_members subcollection
+          final memberDoc = await _firestore
+              .collection('community_groups')
+              .doc(groupId)
+              .collection('group_members')
+              .doc(userId)
+              .get();
+
+          if (userDoc.exists) {
+            final userData = userDoc.data()!;
+            participantsData.add({
+              'id': userId,
+              'name': userData['name'] ?? 'Unknown User',
+              'email': userData['email'] ?? '',
+              'photo_url': userData['photo_url'],
+              'role': memberDoc.exists
+                  ? (memberDoc.data()?['role'] ?? 'member')
+                  : 'member',
+            });
+          }
+        } catch (e) {
+          print('Error fetching user data: $e');
+        }
+      }
+
+      return participantsData;
+    });
   }
 }

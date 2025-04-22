@@ -1091,15 +1091,19 @@
   "shelters": "Tempat Perlindungan",
   "report_disaster": "Laporkan Bencana",
   "unknown": "Tidak Diketahui",
+  "active": "Aktif",
+  "inactive": "Tidak Aktif",
   "reporter_information": "Maklumat Pelapor",
   "emergency_contacts": "Kenalan Kecemasan",
+  "member_since": "Ahli sejak {date}",
+  "last_updated": "Dikemas kini Terakhir: {time}",
+  "cancelled": "Dibatalkan: {time}",
   "current_occupancy": "Kedudukan Semasa",
   "demographics": "Demografi",
   "elderly": "Warga Emas",
   "adults": "Dewasa",
   "children": "Kanak-kanak",
   "creator_information": "Maklumat Pencipta",
-  "member_since": "Ahli sejak {date}",
   "created_at": "Dicipta pada {time}",
   "updated_at": "Dikemas kini pada {time}",
   "disaster_type_flood": "Banjir",
@@ -1112,11 +1116,24 @@
   "severity_medium": "Sederhana",
   "severity_high": "Tinggi",
   "reported_at": "Dilaporkan pada {time}",
-  "status_with_value": "Status: {status}",
+  "status_active": "Status: Aktif",
+  "status_resolved": "Status: Selesai",
+  "status_false_alarm": "Status: Amaran Palsu",
   "verification_count": "Bilangan Pengesahan: {count}",
   "photos": "Foto",
   "respond_to_sos": "Respons kepada SOS",
   "navigate_to_shelter": "Navigasi ke Tempat Perlindungan",
+  "verified_true": "Disahkan Benar",
+  "verified_not_true": "Disahkan Tidak Benar",
+  "location_required_for_verification": "Lokasi semasa diperlukan untuk pengesahan.",
+  "verification_successful": "Bencana disahkan dengan jayanya.",
+  "verification_failed": "Gagal mengesahkan bencana.",
+  "not_true": "Tandakan sebagai Tidak Benar",
+  "not_true_confirmation": "Adakah anda pasti ingin menandakan bencana ini sebagai tidak benar?",
+  "cancel": "Batal",
+  "confirm": "Sahkan",
+  "marked_as_not_true": "Bencana ditandakan sebagai tidak benar.",
+  "not_true_marking_failed": "Gagal menandakan bencana sebagai tidak benar.",
 
 
 
@@ -1947,5 +1964,23 @@
   "member": "Ahli",
   "no_location_available": "Tiada Lokasi Tersedia",
   "participants": "Peserta",
-  "location": "Lokasi"
+  "location": "Lokasi",
+
+
+
+
+
+  "alert_notification_service": "alert_notification_service.dart",
+  "a_user": "Seorang Pengguna",
+  "offline": "Luar Talian",
+  "disaster_alert_title": "Amaran {severity} {type}",
+  "disaster_alert_body": "{name} melaporkan {severity} {type} di {location}",
+  "sos_alert_title": "Amaran SOS",
+  "sos_alert_body": "{name} menghantar SOS dari {address}",
+  "disaster_type_flood": "Banjir",
+  "disaster_type_earthquake": "Gempa Bumi",
+  "disaster_type_fire": "Kebakaran",
+  "disaster_type_hurricane": "Taufan",
+  "disaster_type_tornado": "Puting Beliung",
+  "disaster_type_other": "Lain-lain"
 }

@@ -13,7 +13,7 @@ class MapMarkerService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final SOSAlertService _sosService = SOSAlertService();
   final ShelterService _shelterService = ShelterService();
-  final DisasterService _disasterService = DisasterService();
+  final DisasterService disasterService = DisasterService();
   final UserInformationService _userService = UserInformationService();
 
   // Stream subscriptions
@@ -92,7 +92,7 @@ class MapMarkerService extends ChangeNotifier {
             (data['location'] as GeoPoint).latitude,
             (data['location'] as GeoPoint).longitude,
           ),
-          'title': 'SOS Alert',
+          'title': 'sos_alert_title',
           'description': data['description'] ?? '',
           'location': data['address'] ?? '',
           'timestamp': data['alertStartTime'],
@@ -107,8 +107,8 @@ class MapMarkerService extends ChangeNotifier {
           // Alert information
           'emergencyContacts': data['emergencyContacts'] ?? [],
           'isActive': data['isActive'] ?? true,
-          'emergencyType': 'Emergency Alert',
-          'status': data['isActive'] ? 'Active' : 'Inactive',
+          'emergencyType': 'emergency_alert',
+          'status': data['isActive'] ? 'active' : 'inactive',
           'latestUpdateTime': data['latestUpdateTime'],
           'cancelTime': data['cancelTime'],
           'address': data['address'],
@@ -159,7 +159,7 @@ class MapMarkerService extends ChangeNotifier {
             (data['location'] as GeoPoint).latitude,
             (data['location'] as GeoPoint).longitude,
           ),
-          'name': data['name'] ?? 'Shelter',
+          'name': data['name'] ?? 'shelter',
           'status': data['status'] ?? 'unknown',
           'locationName': data['locationName'] ?? '',
           'capacity': data['capacity'] ?? 0,
@@ -187,8 +187,8 @@ class MapMarkerService extends ChangeNotifier {
     });
 
     // Listen to disasters
-    _disasterService.fetchDisasters().then((_) {
-      _disasterMarkers = _disasterService.disasters
+    disasterService.fetchDisasters().then((_) {
+      _disasterMarkers = disasterService.disasters
           .map((disaster) => {
                 'id': disaster.id,
                 'type': 'Disaster',
@@ -196,7 +196,7 @@ class MapMarkerService extends ChangeNotifier {
                   disaster.coordinates?.latitude ?? 0,
                   disaster.coordinates?.longitude ?? 0,
                 ),
-                'title': disaster.disasterType,
+                'title': 'disaster_type_${disaster.disasterType.toLowerCase()}',
                 'description': disaster.description,
                 'location': disaster.location,
                 'disasterType': disaster.disasterType,
@@ -269,6 +269,25 @@ class MapMarkerService extends ChangeNotifier {
       default:
         return colors.text200;
     }
+  }
+
+  Map<String, dynamic>? getMarkerById(String id) {
+    for (final marker in _sosMarkers) {
+      if (marker['id'] == id) {
+        return marker;
+      }
+    }
+    for (final marker in _shelterMarkers) {
+      if (marker['id'] == id) {
+        return marker;
+      }
+    }
+    for (final marker in _disasterMarkers) {
+      if (marker['id'] == id) {
+        return marker;
+      }
+    }
+    return null;
   }
 
   @override

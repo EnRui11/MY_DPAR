@@ -18,6 +18,7 @@ import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
 import 'package:mydpar/services/map_marker_service.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 const double _paddingValue = 16.0;
 const double _spacingSmall = 8.0;
@@ -25,7 +26,14 @@ const double _spacingMedium = 12.0;
 const double _spacingLarge = 24.0;
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key}) : super(key: key);
+  final String? initialMarkerId;
+  final String? initialMarkerType;
+
+  const MapScreen({
+    Key? key,
+    this.initialMarkerId,
+    this.initialMarkerType,
+  }) : super(key: key);
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -41,6 +49,7 @@ class _MapScreenState extends State<MapScreen> {
   double _currentHeading = 0.0;
   LatLng? _searchedLocation;
   late MapMarkerService _markerService;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   static const LatLng _defaultLocation =
       LatLng(3.1390, 101.6869); // Kuala Lumpur
@@ -55,7 +64,21 @@ class _MapScreenState extends State<MapScreen> {
         Timer.periodic(const Duration(seconds: 1), (_) => _updateLocation());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NavigationService>(context, listen: false).changeIndex(1);
+      if (widget.initialMarkerId != null && widget.initialMarkerType != null) {
+        _showInitialMarker();
+      }
     });
+  }
+
+  void _showInitialMarker() {
+    final marker = _markerService.getMarkerById(widget.initialMarkerId!);
+    if (marker != null) {
+      _showMarkerDetails(marker);
+      _mapController.move(
+        LatLng(marker['latitude'], marker['longitude']),
+        15,
+      );
+    }
   }
 
   void _onMarkersUpdated() {
@@ -181,6 +204,65 @@ class _MapScreenState extends State<MapScreen> {
     final colors =
         Provider.of<ThemeProvider>(context, listen: false).currentTheme;
 
+    // Create a stream controller for the marker data
+    final markerStreamController = StreamController<Map<String, dynamic>>();
+
+    // Initialize with current marker data
+    markerStreamController.add(marker);
+
+    // Set up Firebase listeners based on marker type
+    StreamSubscription? subscription;
+    switch (marker['type']) {
+      case 'SOS':
+        subscription = _firestore
+            .collection('alerts')
+            .doc(marker['id'])
+            .snapshots()
+            .listen((snapshot) {
+          if (snapshot.exists) {
+            final data = snapshot.data()!;
+            markerStreamController.add({
+              ...marker,
+              ...data,
+              'id': snapshot.id,
+            });
+          }
+        });
+        break;
+      case 'Shelter':
+        subscription = _firestore
+            .collection('shelters')
+            .doc(marker['id'])
+            .snapshots()
+            .listen((snapshot) {
+          if (snapshot.exists) {
+            final data = snapshot.data()!;
+            markerStreamController.add({
+              ...marker,
+              ...data,
+              'id': snapshot.id,
+            });
+          }
+        });
+        break;
+      case 'Disaster':
+        subscription = _firestore
+            .collection('disaster_reports')
+            .doc(marker['id'])
+            .snapshots()
+            .listen((snapshot) {
+          if (snapshot.exists) {
+            final data = snapshot.data()!;
+            markerStreamController.add({
+              ...marker,
+              ...data,
+              'id': snapshot.id,
+            });
+          }
+        });
+        break;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -197,80 +279,103 @@ class _MapScreenState extends State<MapScreen> {
         maxChildSize: 0.75,
         snap: true,
         snapSizes: const [0.25, 0.5, 0.75],
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: colors.bg100,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 8),
-                width: 40,
-                height: 4,
+        builder: (context, scrollController) =>
+            StreamBuilder<Map<String, dynamic>>(
+          stream: markerStreamController.stream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container(
                 decoration: BoxDecoration(
-                  color: colors.text200.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  color: colors.bg100,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final currentMarker = snapshot.data!;
+            return Container(
+              decoration: BoxDecoration(
+                color: colors.bg100,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              _markerService.getMarkerIcon(
-                                marker['type'],
-                                disasterType: marker['disasterType'],
-                              ),
-                              color: _markerService.getMarkerColor(
-                                marker['type'],
-                                severity: marker['severity'],
-                                colors: colors,
-                              ),
-                              size: 24,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                marker['title'] ??
-                                    marker['name'] ??
-                                    l.translate('unknown'),
-                                style: TextStyle(
-                                  color: colors.primary300,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildMarkerContent(marker, colors, l),
-                        const SizedBox(height: 16),
-                        _buildActionButtons(marker, colors, l),
-                      ],
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 8, bottom: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.text200.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  _markerService.getMarkerIcon(
+                                    currentMarker['type'],
+                                    disasterType: currentMarker['disasterType'],
+                                  ),
+                                  color: _markerService.getMarkerColor(
+                                    currentMarker['type'],
+                                    severity: currentMarker['severity'],
+                                    colors: colors,
+                                  ),
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    l.translate(currentMarker['title'] ??
+                                        currentMarker['name'] ??
+                                        'unknown'),
+                                    style: TextStyle(
+                                      color: colors.primary300,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _buildMarkerContent(currentMarker, colors, l),
+                            const SizedBox(height: 16),
+                            _buildActionButtons(currentMarker, colors, l),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
-    );
+    ).then((_) {
+      // Clean up resources when the bottom sheet is closed
+      subscription?.cancel();
+      markerStreamController.close();
+    });
   }
 
   Widget _buildMarkerContent(
@@ -304,7 +409,9 @@ class _MapScreenState extends State<MapScreen> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                marker['isActive'] == true ? 'Active' : 'Inactive',
+                marker['isActive'] == true
+                    ? l.translate('active')
+                    : l.translate('inactive'),
                 style: TextStyle(
                   color: marker['isActive'] == true
                       ? colors.warning
@@ -421,7 +528,9 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               if (marker['userCreatedAt'] != null)
                                 Text(
-                                  'Member since ${_formatDate(marker['userCreatedAt'])}',
+                                  l.translate('member_since', {
+                                    'date': _formatDate(marker['userCreatedAt'])
+                                  }),
                                   style: TextStyle(
                                     color: colors.text200.withOpacity(0.7),
                                     fontSize: 12,
@@ -500,7 +609,7 @@ class _MapScreenState extends State<MapScreen> {
                                   size: 16, color: colors.text200),
                               const SizedBox(width: 4),
                               Text(
-                                contact['name'] ?? 'Unknown',
+                                contact['name'] ?? l.translate('unknown'),
                                 style: TextStyle(
                                   color: colors.text200,
                                   fontWeight: FontWeight.w500,
@@ -569,7 +678,8 @@ class _MapScreenState extends State<MapScreen> {
                 Icon(Icons.update, size: 16, color: colors.text200),
                 const SizedBox(width: 4),
                 Text(
-                  'Last Updated: ${_formatTimestamp(marker['latestUpdateTime'])}',
+                  l.translate('last_updated',
+                      {'time': _formatTimestamp(marker['latestUpdateTime'])}),
                   style: TextStyle(color: colors.text200),
                 ),
               ],
@@ -585,7 +695,8 @@ class _MapScreenState extends State<MapScreen> {
                 Icon(Icons.cancel_outlined, size: 16, color: colors.text200),
                 const SizedBox(width: 4),
                 Text(
-                  'Cancelled: ${_formatTimestamp(marker['cancelTime'])}',
+                  l.translate('cancelled',
+                      {'time': _formatTimestamp(marker['cancelTime'])}),
                   style: TextStyle(color: colors.text200),
                 ),
               ],
@@ -940,6 +1051,226 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  /// Builds the verification UI for disaster markers
+  Widget _buildVerificationUI(
+    Map<String, dynamic> marker,
+    AppColorTheme colors,
+    AppLocalizations l,
+    _MapScreenState state,
+  ) {
+    if (marker['type'] != 'Disaster') return const SizedBox.shrink();
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return const SizedBox.shrink();
+
+    return FutureBuilder<Map<String, dynamic>>(
+      future: state._markerService.disasterService.getVerificationStatus(
+        marker['id'],
+        userId,
+      ),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final status = snapshot.data!;
+        final bool canVerify = status['canVerify'];
+        final bool hasVerified = status['hasVerified'];
+        final bool isFalseAlarm = status['isFalseAlarm'];
+        final int verificationCount = status['verificationCount'];
+        final int verifyFalseNum = status['verifyFalseNum'] ?? 0;
+        final Timestamp? lastUpdated = status['lastUpdated'];
+        final String message = status['message'];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            // Verification status
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.bg200,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isFalseAlarm
+                      ? colors.warning
+                      : hasVerified
+                          ? colors.accent200
+                          : colors.text200.withOpacity(0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        isFalseAlarm
+                            ? Icons.warning_amber_rounded
+                            : hasVerified
+                                ? Icons.verified_user
+                                : Icons.verified_outlined,
+                        color: isFalseAlarm
+                            ? colors.warning
+                            : hasVerified
+                                ? colors.accent200
+                                : colors.text200,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: TextStyle(
+                            color: colors.text200,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Verification counts
+                  Row(
+                    children: [
+                      Text(
+                        '${l.translate('verified_true')}: $verificationCount',
+                        style: TextStyle(
+                          color: colors.text200.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '${l.translate('verified_not_true')}: $verifyFalseNum',
+                        style: TextStyle(
+                          color: colors.text200.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Last updated time
+                  if (lastUpdated != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '${l.translate('last_updated')}: ${_formatTimestamp(lastUpdated)}',
+                      style: TextStyle(
+                        color: colors.text200.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (canVerify) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        if (state._currentLocation == null) {
+                          state._showSnackBar(
+                            'location_required_for_verification',
+                            colors.warning,
+                          );
+                          return;
+                        }
+                        final success = await state
+                            ._markerService.disasterService
+                            .verifyDisaster(
+                          marker['id'],
+                          userId,
+                          state._currentLocation!,
+                        );
+                        if (success) {
+                          state._showSnackBar(
+                            'verification_successful',
+                            colors.accent200,
+                          );
+                        } else {
+                          state._showSnackBar(
+                            'verification_failed',
+                            colors.warning,
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.verified_user),
+                      label: Text(l.translate('verify_disaster')),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.accent200,
+                        foregroundColor: colors.bg100,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      if (state._currentLocation == null) {
+                        state._showSnackBar(
+                          'location_required_for_verification',
+                          colors.warning,
+                        );
+                        return;
+                      }
+                      // Show confirmation dialog
+                      final bool? confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(l.translate('not_true')),
+                          content: Text(l.translate('not_true_confirmation')),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(l.translate('cancel')),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(l.translate('confirm')),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        final success = await state
+                            ._markerService.disasterService
+                            .markAsFalseAlarm(
+                          marker['id'],
+                          userId,
+                          state._currentLocation!,
+                        );
+                        if (success) {
+                          state._showSnackBar(
+                            'marked_as_not_true',
+                            colors.accent200,
+                          );
+                        } else {
+                          state._showSnackBar(
+                            'not_true_marking_failed',
+                            colors.warning,
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.warning_amber_rounded),
+                    label: Text(l.translate('not_true')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.warning,
+                      foregroundColor: colors.bg100,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildDisasterContent(
       Map<String, dynamic> marker, AppColorTheme colors, AppLocalizations l) {
     return Column(
@@ -1042,7 +1373,7 @@ class _MapScreenState extends State<MapScreen> {
                 const SizedBox(width: 4),
                 Text(
                   l.translate(
-                      'status_with_value', {'status': marker['status']}),
+                      'status_${marker['status'].toString().toLowerCase()}'),
                   style: TextStyle(color: colors.text200),
                 ),
               ],
@@ -1119,6 +1450,9 @@ class _MapScreenState extends State<MapScreen> {
               ],
             ),
           ),
+
+        // Add verification UI after the existing content
+        _buildVerificationUI(marker, colors, l, this),
       ],
     );
   }
@@ -1314,23 +1648,53 @@ class _Map extends StatelessWidget {
                     const Icon(Icons.my_location, color: Colors.blue, size: 30),
               ),
             ...markerService.getVisibleMarkers().map((marker) {
+              final bool isFalseAlarm = marker['type'] == 'Disaster' &&
+                  marker['status']?.toLowerCase() == 'false_alarm';
+
               return Marker(
                 point: marker['position'] as LatLng,
                 width: 40,
                 height: 40,
                 builder: (_) => GestureDetector(
                   onTap: () => onMarkerTap(marker),
-                  child: Icon(
-                    markerService.getMarkerIcon(
-                      marker['type'],
-                      disasterType: marker['disasterType'],
-                    ),
-                    color: markerService.getMarkerColor(
-                      marker['type'],
-                      severity: marker['severity'],
-                      colors: colors,
-                    ),
-                    size: 30,
+                  child: Stack(
+                    children: [
+                      Icon(
+                        markerService.getMarkerIcon(
+                          marker['type'],
+                          disasterType: marker['disasterType'],
+                        ),
+                        color: isFalseAlarm
+                            ? colors.warning.withOpacity(0.5)
+                            : markerService.getMarkerColor(
+                                marker['type'],
+                                severity: marker['severity'],
+                                colors: colors,
+                              ),
+                        size: 30,
+                      ),
+                      if (isFalseAlarm)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: colors.bg100,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: colors.warning,
+                                width: 1,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.warning_amber_rounded,
+                              color: colors.warning,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               );

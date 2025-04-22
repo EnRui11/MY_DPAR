@@ -1090,15 +1090,19 @@
   "shelters": "避难所",
   "report_disaster": "报告灾难",
   "unknown": "未知",
+  "active": "活跃",
+  "inactive": "非活跃",
   "reporter_information": "报告者信息",
   "emergency_contacts": "紧急联系人",
+  "member_since": "自{date}起为成员",
+  "last_updated": "最后更新：{time}",
+  "cancelled": "已取消：{time}",
   "current_occupancy": "当前入住情况",
   "demographics": "人口统计",
   "elderly": "老年人",
   "adults": "成人",
   "children": "儿童",
   "creator_information": "创建者信息",
-  "member_since": "自{date}起为成员",
   "created_at": "创建于{time}",
   "updated_at": "更新于{time}",
   "disaster_type_flood": "洪水",
@@ -1111,11 +1115,24 @@
   "severity_medium": "中",
   "severity_high": "高",
   "reported_at": "报告于{time}",
-  "status_with_value": "状态：{status}",
+  "status_active": "状态：活跃",
+  "status_resolved": "状态：已解决",
+  "status_false_alarm": "状态：虚假警报",
   "verification_count": "验证次数：{count}",
   "photos": "照片",
   "respond_to_sos": "响应SOS",
   "navigate_to_shelter": "导航至避难所",
+  "verified_true": "验证为真",
+  "verified_not_true": "验证为不真",
+  "location_required_for_verification": "验证需要当前位置。",
+  "verification_successful": "灾难验证成功。",
+  "verification_failed": "灾难验证失败。",
+  "not_true": "标记为不真",
+  "not_true_confirmation": "您确定要将此灾难标记为不真吗？",
+  "cancel": "取消",
+  "confirm": "确认",
+  "marked_as_not_true": "灾难已标记为不真。",
+  "not_true_marking_failed": "无法将灾难标记为不真。",
 
 
 
@@ -1951,5 +1968,23 @@
   "member": "成员",
   "no_location_available": "无可用地点",
   "participants": "参与者",
-  "location": "地点"
+  "location": "地点",
+
+
+
+
+
+  "alert_notification_service": "alert_notification_service.dart",
+  "a_user": "一名用户",
+  "offline": "离线",
+  "disaster_alert_title": "{severity} {type}警报",
+  "disaster_alert_body": "{name}在{location}报告了{severity} {type}",
+  "sos_alert_title": "SOS警报",
+  "sos_alert_body": "{name}从{address}发送了SOS",
+  "disaster_type_flood": "洪水",
+  "disaster_type_earthquake": "地震",
+  "disaster_type_fire": "火灾",
+  "disaster_type_hurricane": "飓风",
+  "disaster_type_tornado": "龙卷风",
+  "disaster_type_other": "其他"
 }

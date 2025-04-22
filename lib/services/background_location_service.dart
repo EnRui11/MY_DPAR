@@ -8,7 +8,8 @@ import 'package:geolocator/geolocator.dart';
 /// Manages background location updates for authenticated users, storing data in Firestore.
 class BackgroundLocationService {
   // Singleton pattern
-  static final BackgroundLocationService _instance = BackgroundLocationService._internal(
+  static final BackgroundLocationService _instance =
+      BackgroundLocationService._internal(
     FirebaseAuth.instance,
     FirebaseFirestore.instance,
   );
@@ -71,8 +72,11 @@ class BackgroundLocationService {
   /// Retrieves an address from a given position.
   Future<String> _getAddressFromPosition(Position position) async {
     try {
-      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      return placemarks.isNotEmpty ? _formatAddress(placemarks.first) : 'Unnamed Location';
+      final placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      return placemarks.isNotEmpty
+          ? _formatAddress(placemarks.first)
+          : 'Unnamed Location';
     } catch (e) {
       debugPrint('Error geocoding position: $e');
       return 'Unknown Location';
@@ -114,20 +118,50 @@ class BackgroundLocationService {
   }
 
   /// Saves the user's location data to Firestore.
-  Future<void> _saveLocationToFirestore(String uid, Position position, String address) async {
+  Future<void> _saveLocationToFirestore(
+      String uid, Position position, String address) async {
     final updateData = {
       'userId': uid,
       'lastUpdateTime': Timestamp.now(),
       'location': GeoPoint(position.latitude, position.longitude),
       'address': address,
       'isOnline': true,
+      'accuracy': position.accuracy,
+      'speed': position.speed,
+      'heading': position.heading,
+      'timestamp': Timestamp.now(),
+      'locationUpdateStatus': 'success',
     };
 
     try {
-      await _firestore.collection('user_locations').doc(uid).set(updateData);
+      // Use set with merge to ensure the document exists
+      await _firestore.collection('user_locations').doc(uid).set(
+            updateData,
+            SetOptions(merge: true),
+          );
+
+      // Update the user's main document to show they're active
+      await _firestore.collection('users').doc(uid).update({
+        'lastActive': Timestamp.now(),
+        'isOnline': true,
+      });
+
+      debugPrint('Location updated successfully for user $uid');
     } catch (e) {
       debugPrint('Failed to update Firestore: $e');
-      throw Exception('Failed to save location: $e'); // Propagate error for handling
+
+      // Try to update the error status
+      try {
+        await _firestore.collection('user_locations').doc(uid).set({
+          'locationUpdateStatus': 'error',
+          'lastError': e.toString(),
+          'lastErrorTime': Timestamp.now(),
+        }, SetOptions(merge: true));
+      } catch (innerE) {
+        debugPrint('Failed to update error status: $innerE');
+      }
+
+      throw Exception('Failed to save location: $e');
     }
   }
 

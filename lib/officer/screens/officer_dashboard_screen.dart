@@ -444,7 +444,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                             child: _buildOfficerDisasterCard(
                               severity: disaster.severity,
                               location: disaster.location,
-                              time: _formatDisasterTime(disaster.timestamp),
+                              timestamp: disaster.timestamp,
                               disasterType: disaster.disasterType,
                               status: disaster.status,
                               colors: colors,
@@ -501,138 +501,183 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   Widget _buildOfficerDisasterCard({
     required String severity,
     required String location,
-    required String time,
+    required Timestamp timestamp,
     required String disasterType,
     required String? status,
     required AppColorTheme colors,
     required AppLocalizations localize,
-  }) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.bg100.withOpacity(0.2)),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: DisasterService.getSeverityColor(severity, colors),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                DisasterService.getDisasterIcon(disasterType),
-                color: colors.bg100,
-                size: 24,
-              ),
+  }) {
+    final time = _formatDisasterTime(timestamp);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: colors.bg100.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: DisasterService.getSeverityColor(severity, colors),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              localize.translate(
-                                  'disaster_type_${disasterType.toLowerCase()}'),
-                              style: TextStyle(
-                                color: colors.primary300,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: DisasterService.getSeverityColor(
-                                        severity, colors)
-                                    .withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                localize.translate(
-                                    'severity_${severity.toLowerCase()}'),
-                                style: TextStyle(
-                                  color: DisasterService.getSeverityColor(
-                                      severity, colors),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (status != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(status, colors)
-                                .withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
+            child: Icon(
+              DisasterService.getDisasterIcon(disasterType),
+              color: colors.bg100,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             localize.translate(
-                                'status_${status.toLowerCase().replaceAll(' ', '_')}'),
+                                'disaster_type_${disasterType.toLowerCase()}'),
                             style: TextStyle(
-                              color: _getStatusColor(status, colors),
-                              fontSize: 12,
+                              color: colors.primary300,
                               fontWeight: FontWeight.w500,
+                              fontSize: 16,
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined,
-                          color: colors.text200, size: 16),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          location,
-                          style: TextStyle(
-                            color: colors.text200,
-                            fontSize: 12,
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: DisasterService.getSeverityColor(
+                                      severity, colors)
+                                  .withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              localize.translate(
+                                  'severity_${severity.toLowerCase()}'),
+                              style: TextStyle(
+                                color: DisasterService.getSeverityColor(
+                                    severity, colors),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
+                        ],
+                      ),
+                    ),
+                    if (status != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              _getStatusColor(status, colors).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          localize.translate(
+                              'status_${status.toLowerCase().replaceAll(' ', '_')}'),
+                          style: TextStyle(
+                            color: _getStatusColor(status, colors),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(Icons.access_time, color: colors.text200, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        time,
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.location_on_outlined,
+                        color: colors.text200, size: 16),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        location,
                         style: TextStyle(
                           color: colors.text200,
                           fontSize: 12,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildTimeInfo(timestamp, colors),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeInfo(Timestamp timestamp, AppColorTheme colors) {
+    final dateTime = timestamp.toDate();
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    String timeText;
+    if (difference.inDays > 365) {
+      final years = (difference.inDays / 365).floor();
+      timeText = years == 1
+          ? AppLocalizations.of(context).translate('time_year_ago')
+          : AppLocalizations.of(context)
+              .translate('time_years_ago')
+              .replaceAll('{count}', years.toString());
+    } else if (difference.inDays > 30) {
+      final months = (difference.inDays / 30).floor();
+      timeText = months == 1
+          ? AppLocalizations.of(context).translate('time_month_ago')
+          : AppLocalizations.of(context)
+              .translate('time_months_ago')
+              .replaceAll('{count}', months.toString());
+    } else if (difference.inDays > 0) {
+      timeText = difference.inDays == 1
+          ? AppLocalizations.of(context).translate('time_day_ago')
+          : AppLocalizations.of(context)
+              .translate('time_days_ago')
+              .replaceAll('{count}', difference.inDays.toString());
+    } else if (difference.inHours > 0) {
+      timeText = difference.inHours == 1
+          ? AppLocalizations.of(context).translate('time_hour_ago')
+          : AppLocalizations.of(context)
+              .translate('time_hours_ago')
+              .replaceAll('{count}', difference.inHours.toString());
+    } else if (difference.inMinutes > 0) {
+      timeText = difference.inMinutes == 1
+          ? AppLocalizations.of(context).translate('time_minute_ago')
+          : AppLocalizations.of(context)
+              .translate('time_minutes_ago')
+              .replaceAll('{count}', difference.inMinutes.toString());
+    } else {
+      timeText = AppLocalizations.of(context).translate('time_just_now');
+    }
+
+    return Row(
+      children: [
+        Icon(Icons.access_time, color: colors.text200, size: 16),
+        const SizedBox(width: 4),
+        Text(timeText, style: TextStyle(color: colors.text200, fontSize: 12)),
+      ],
+    );
+  }
 
   Color _getStatusColor(String status, AppColorTheme colors) {
     switch (status.toLowerCase()) {
@@ -649,9 +694,9 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
     }
   }
 
-  String _formatDisasterTime(String timestamp) {
+  String _formatDisasterTime(Timestamp timestamp) {
     try {
-      final dt = DateTime.parse(timestamp);
+      final dt = timestamp.toDate();
       final now = DateTime.now();
       final diff = now.difference(dt);
       if (diff.inMinutes < 60) {
@@ -662,7 +707,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
         return '${diff.inDays} days ago';
       }
     } catch (_) {
-      return timestamp;
+      return timestamp.toString();
     }
   }
 }

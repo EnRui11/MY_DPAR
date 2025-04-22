@@ -1087,15 +1087,19 @@
   "shelters": "Shelters",
   "report_disaster": "Report Disaster",
   "unknown": "Unknown",
+  "active": "Active",
+  "inactive": "Inactive",
   "reporter_information": "Reporter Information",
   "emergency_contacts": "Emergency Contacts",
+  "member_since": "Member since {date}",
+  "last_updated": "Last Updated: {time}",
+  "cancelled": "Cancelled: {time}",
   "current_occupancy": "Current Occupancy",
   "demographics": "Demographics",
   "elderly": "Elderly",
   "adults": "Adults",
   "children": "Children",
   "creator_information": "Creator Information",
-  "member_since": "Member since {date}",
   "created_at": "Created at {time}",
   "updated_at": "Updated at {time}",
   "disaster_type_flood": "Flood",
@@ -1108,11 +1112,24 @@
   "severity_medium": "Medium",
   "severity_high": "High",
   "reported_at": "Reported at {time}",
-  "status_with_value": "Status: {status}",
+  "status_active": "Status: Active",
+  "status_resolved": "Status: Resolved",
+  "status_false_alarm": "Status: False Alarm",
   "verification_count": "Verification Count: {count}",
   "photos": "Photos",
   "respond_to_sos": "Respond to SOS",
   "navigate_to_shelter": "Navigate to Shelter",
+  "verified_true": "Verified True",
+  "verified_not_true": "Verified Not True",
+  "location_required_for_verification": "Current location required for verification.",
+  "verification_successful": "Disaster verified successfully.",
+  "verification_failed": "Failed to verify disaster.",
+  "not_true": "Mark as Not True",
+  "not_true_confirmation": "Are you sure you want to mark this disaster as not true?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "marked_as_not_true": "Disaster marked as not true.",
+  "not_true_marking_failed": "Failed to mark disaster as not true.",
 
 
 
@@ -1943,5 +1960,24 @@
   "member": "Member",
   "no_location_available": "No Location Available",
   "participants": "Participants",
-  "location": "Location"
+  "location": "Location",
+
+
+
+
+
+  "alert_notification_service": "alert_notification_service.dart",
+  "a_user": "A User",
+  "offline": "Offline",
+  "disaster_alert_title": "{severity} {type} Alert",
+  "disaster_alert_body": "{name} reported a {severity} {type} at {location}",
+  "sos_alert_title": "SOS Alert",
+  "sos_alert_body": "{name} sent an SOS from {address}",
+  "disaster_type_flood": "Flood",
+  "disaster_type_earthquake": "Earthquake",
+  "disaster_type_fire": "Fire",
+  "disaster_type_hurricane": "Hurricane",
+  "disaster_type_tornado": "Tornado",
+  "disaster_type_other": "Other"
+
 }

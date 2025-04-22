@@ -19,15 +19,14 @@ class DisasterVerificationService {
     tz.setLocalLocation(tz.getLocation('Asia/Kuala_Lumpur'));
   }
 
-  /// Returns the current timestamp in Malaysia timezone as ISO 8601 string.
-  static String getCurrentTimestamp() {
-    return tz.TZDateTime.now(tz.local).toIso8601String();
+  /// Returns the current timestamp as a Firestore Timestamp.
+  static Timestamp getCurrentTimestamp() {
+    return Timestamp.now();
   }
 
-  /// Converts a UTC timestamp to Malaysia timezone.
-  static DateTime convertToLocalTime(String timestamp) {
-    final utcTime = DateTime.parse(timestamp);
-    return tz.TZDateTime.from(utcTime, tz.local);
+  /// Converts a Firestore Timestamp to DateTime.
+  static DateTime convertToLocalTime(Timestamp timestamp) {
+    return timestamp.toDate();
   }
 
   /// Caches recent disaster reports from Firestore.
@@ -49,10 +48,10 @@ class DisasterVerificationService {
     required String disasterType,
     required double latitude,
     required double longitude,
-    required String timestamp,
+    required Timestamp timestamp,
   }) async {
     try {
-      final reportTime = convertToLocalTime(timestamp);
+      final reportTime = timestamp.toDate();
 
       for (final doc in _cachedDisasters) {
         final data = doc.data() as Map<String, dynamic>;
@@ -87,9 +86,8 @@ class DisasterVerificationService {
     required String severity,
     required String description,
     required List<String> photoPaths,
-    // Add disasterType parameter for creating new disaster
     required String disasterType,
-    required String timestamp,
+    required Timestamp timestamp,
   }) async {
     try {
       final docRef = _firestore.collection('disaster_reports').doc(disasterId);
@@ -111,14 +109,16 @@ class DisasterVerificationService {
       }
 
       final data = doc.data() as Map<String, dynamic>;
-      
+
       // Ensure first reporter's location is in locationList
       if ((data['locationList'] as List<dynamic>?)?.isEmpty ?? true) {
-        data['locationList'] = [{
-          'latitude': data['latitude'],
-          'longitude': data['longitude'],
-          'timestamp': data['timestamp'],
-        }];
+        data['locationList'] = [
+          {
+            'latitude': data['latitude'],
+            'longitude': data['longitude'],
+            'timestamp': data['timestamp'],
+          }
+        ];
       }
 
       final updatedData = _prepareUpdatedDisasterData(
@@ -203,14 +203,16 @@ class DisasterVerificationService {
     required String severity,
     required String description,
     required List<String> photoPaths,
-    required String timestamp,
+    required Timestamp timestamp,
   }) async {
     try {
-      final locationList = [{
-        'latitude': latitude,
-        'longitude': longitude,
-        'timestamp': timestamp,
-      }];
+      final locationList = [
+        {
+          'latitude': latitude,
+          'longitude': longitude,
+          'timestamp': timestamp,
+        }
+      ];
 
       await _firestore.collection('disaster_reports').add({
         'disasterType': disasterType,
@@ -223,7 +225,7 @@ class DisasterVerificationService {
         'photoPaths': photoPaths,
         'timestamp': timestamp,
         'lastUpdated': timestamp,
-        'latitude': latitude,  // store initial location
+        'latitude': latitude, // store initial location
         'longitude': longitude,
       });
     } catch (e) {

@@ -224,7 +224,7 @@ class _DisasterDetailScreenState extends State<DisasterDetailScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '• ${_getLocalizedTimeAgo(context, DateTime.parse(_disaster!.timestamp))}',
+                    '• ${_getLocalizedTimeAgo(context, _disaster!.timestamp.toDate())}',
                     style: TextStyle(color: colors.text200, fontSize: 12),
                   ),
                 ],

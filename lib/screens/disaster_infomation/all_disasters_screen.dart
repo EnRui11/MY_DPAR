@@ -8,6 +8,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/screens/disaster_infomation/disaster_detail_screen.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Displays a list of ongoing disasters with filtering and sorting capabilities.
 class DisastersScreen extends StatefulWidget {
@@ -491,8 +492,7 @@ class _DisastersScreenState extends State<DisastersScreen> {
 
   /// Builds the time row with localized relative time.
   Widget _buildTimeRow(DisasterModel disaster, AppColorTheme colors) {
-    // Assuming disaster has a method to get the raw timestamp
-    final timestamp = DateTime.parse(disaster.timestamp);
+    final timestamp = disaster.timestamp.toDate();
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
@@ -593,13 +593,13 @@ class _DisastersScreenState extends State<DisastersScreen> {
   }
 
   /// Compares disaster times.
-  int _compareTime(String timeA, String timeB) {
+  int _compareTime(Timestamp timeA, Timestamp timeB) {
     try {
-      final dateA = DateTime.parse(timeA);
-      final dateB = DateTime.parse(timeB);
+      final dateA = timeA.toDate();
+      final dateB = timeB.toDate();
       return _isAscending ? dateA.compareTo(dateB) : dateB.compareTo(dateA);
     } catch (e) {
-      debugPrint('Error parsing time: $e');
+      debugPrint('Error comparing time: $e');
       return 0;
     }
   }

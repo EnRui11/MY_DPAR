@@ -73,7 +73,7 @@ class NavigationService extends ChangeNotifier {
         return const HomeScreen();
     }
   }
-  
+
   // Get the name for a specific screen index
   String getScreenName(int index) {
     switch (index) {
@@ -89,7 +89,7 @@ class NavigationService extends ChangeNotifier {
         return 'Home';
     }
   }
-  
+
   // Get the icon for a specific screen index
   IconData getScreenIcon(int index) {
     switch (index) {

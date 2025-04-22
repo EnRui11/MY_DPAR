@@ -17,6 +17,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:mydpar/services/alert_notification_service.dart';
 
 /// Displays an SOS emergency screen with location, countdown, and alert features.
 class SOSEmergencyScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   late Animation<Color?> _flickerAnimation;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   // Firebase instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -134,7 +135,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
     }
 
     const androidSettings = AndroidInitializationSettings('sos_icon');
-    const initializationSettings = InitializationSettings(android: androidSettings);
+    const initializationSettings =
+        InitializationSettings(android: androidSettings);
 
     await _notificationsPlugin.initialize(
       initializationSettings,
@@ -152,7 +154,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   /// Initializes the emergency alert audio.
   Future<void> _initializeAudio() async {
     try {
-      await _audioPlayer.setSource(AssetSource('sounds/loud-emergency-alarm.mp3'));
+      await _audioPlayer
+          .setSource(AssetSource('sounds/loud-emergency-alarm.mp3'));
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
     } catch (e) {
       _showSnackBar('Failed to initialize audio: $e', Colors.red);
@@ -162,7 +165,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   /// Starts periodic location updates.
   void _startLocationUpdates() {
     _locationTimer?.cancel();
-    _locationTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCurrentLocation());
+    _locationTimer = Timer.periodic(
+        const Duration(seconds: 1), (_) => _updateCurrentLocation());
   }
 
   /// Fetches and updates the current location and address.
@@ -175,7 +179,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      final placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
       final address = placemarks.isNotEmpty
           ? _formatAddress(placemarks.first)
           : 'Unnamed Location';
@@ -183,7 +188,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
       if (mounted) {
         setState(() {
           _currentPosition = position;
-          _mapController.move(LatLng(position.latitude, position.longitude), 15);
+          _mapController.move(
+              LatLng(position.latitude, position.longitude), 15);
           _currentAddress = address;
         });
       }
@@ -226,7 +232,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
     if (permission == LocationPermission.deniedForever) {
       if (mounted) {
-        setState(() => _currentAddress = 'Location permissions permanently denied');
+        setState(
+            () => _currentAddress = 'Location permissions permanently denied');
         _showSnackBar('Location permission permanently denied', Colors.red);
       }
       return false;
@@ -265,41 +272,22 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
     final userData = await _fetchUserData(user.uid);
     final initialData = _buildInitialAlertData(user.uid, userData);
-    await _saveAlertToFirestore(initialData);
-  }
 
-  /// Fetches user data from Firestore.
-  Future<Map<String, dynamic>?> _fetchUserData(String uid) async {
-    final userDoc = await _firestore.collection('users').doc(uid).get();
-    return userDoc.data();
-  }
-
-  /// Builds initial alert data for Firestore.
-  Map<String, dynamic> _buildInitialAlertData(String uid, Map<String, dynamic>? userData) {
-    final alertStartTime = DateTime.now();
-    return {
-      'uid': uid,
-      'username': userData?['lastName'] as String? ?? 'Unknown',
-      'phoneNumber': userData?['phoneNumber'] as String? ?? 'Unknown',
-      'emergencyContacts': (userData?['emergencyContacts'] as List<dynamic>? ?? [])
-          .map((contact) => contact as Map<String, dynamic>)
-          .toList(),
-      'alertStartTime': Timestamp.fromDate(alertStartTime),
-      'latestUpdateTime': Timestamp.fromDate(alertStartTime),
-      'location': _currentPosition != null
-          ? GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude)
-          : GeoPoint(_defaultLocation.latitude, _defaultLocation.longitude),
-      'address': _currentAddress,
-      'isActive': true,
-      'cancelTime': null,
-    };
-  }
-
-  /// Saves alert data to Firestore and updates local state.
-  Future<void> _saveAlertToFirestore(Map<String, dynamic> initialData) async {
     try {
+      // Save alert to Firestore
       final docRef = await _firestore.collection('alerts').add(initialData);
       _alertDocId = docRef.id;
+
+      // Send notifications to nearby users
+      final alertNotificationService = AlertNotificationService();
+      await alertNotificationService.alertNearbyUsersForSOS(
+        context: context,
+        alertId: _alertDocId!,
+        userName: userData?['lastName'] ?? 'Unknown',
+        latitude: _currentPosition?.latitude ?? _defaultLocation.latitude,
+        longitude: _currentPosition?.longitude ?? _defaultLocation.longitude,
+        address: _currentAddress,
+      );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('active_alert_id', _alertDocId!);
@@ -310,6 +298,35 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
     } catch (e) {
       _showSnackBar('Failed to save alert to Firebase: $e', Colors.red);
     }
+  }
+
+  /// Fetches user data from Firestore.
+  Future<Map<String, dynamic>?> _fetchUserData(String uid) async {
+    final userDoc = await _firestore.collection('users').doc(uid).get();
+    return userDoc.data();
+  }
+
+  /// Builds initial alert data for Firestore.
+  Map<String, dynamic> _buildInitialAlertData(
+      String uid, Map<String, dynamic>? userData) {
+    final alertStartTime = DateTime.now();
+    return {
+      'uid': uid,
+      'username': userData?['lastName'] as String? ?? 'Unknown',
+      'phoneNumber': userData?['phoneNumber'] as String? ?? 'Unknown',
+      'emergencyContacts':
+          (userData?['emergencyContacts'] as List<dynamic>? ?? [])
+              .map((contact) => contact as Map<String, dynamic>)
+              .toList(),
+      'alertStartTime': Timestamp.fromDate(alertStartTime),
+      'latestUpdateTime': Timestamp.fromDate(alertStartTime),
+      'location': _currentPosition != null
+          ? GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude)
+          : GeoPoint(_defaultLocation.latitude, _defaultLocation.longitude),
+      'address': _currentAddress,
+      'isActive': true,
+      'cancelTime': null,
+    };
   }
 
   /// Shows a persistent notification for the active alert.
@@ -336,7 +353,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
   /// Starts periodic updates to Firebase with latest time and location.
   void _startFirebaseUpdates() {
     _updateTimer?.cancel();
-    _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateAlertData());
+    _updateTimer =
+        Timer.periodic(const Duration(seconds: 1), (_) => _updateAlertData());
   }
 
   /// Updates the latest time and location in Firestore.
@@ -445,9 +463,12 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
       child: AnimatedBuilder(
         animation: _flickerController,
         builder: (context, child) => Scaffold(
-          backgroundColor: _isAlertSent ? (_flickerAnimation.value ?? colors.warning) : colors.bg200,
+          backgroundColor: _isAlertSent
+              ? (_flickerAnimation.value ?? colors.warning)
+              : colors.bg200,
           body: SafeArea(
-            child: SingleChildScrollView( // Add ScrollView here
+            child: SingleChildScrollView(
+              // Add ScrollView here
               child: Padding(
                 padding: const EdgeInsets.all(_padding),
                 child: Column(
@@ -477,130 +498,145 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
   /// Builds the countdown timer section.
   Widget _buildCountdownTimer(AppColorTheme colors) => GestureDetector(
-    onTapDown: (_) {
-      if (!_isCancelling && (_isAlertSent || _alertCountdown > 0)) {
-        _startCancelCountdown();
-      }
-    },
-    onTapUp: (_) => setState(() {
-      _isCancelling = false;
-      _cancelCountdown = 5;
-    }),
-    child: AnimatedBuilder(
-      animation: _flickerController,
-      builder: (context, child) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(_padding),
-        decoration: _buildTimerDecoration(colors),
-        child: Column(
-          children: [
-            Text(
-              _isAlertSent ? 'Emergency Alert Sent' : 'Automatic Alert in',
-              style: TextStyle(color: colors.bg100, fontSize: 18, fontWeight: FontWeight.w500),
+        onTapDown: (_) {
+          if (!_isCancelling && (_isAlertSent || _alertCountdown > 0)) {
+            _startCancelCountdown();
+          }
+        },
+        onTapUp: (_) => setState(() {
+          _isCancelling = false;
+          _cancelCountdown = 5;
+        }),
+        child: AnimatedBuilder(
+          animation: _flickerController,
+          builder: (context, child) => Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(_padding),
+            decoration: _buildTimerDecoration(colors),
+            child: Column(
+              children: [
+                Text(
+                  _isAlertSent ? 'Emergency Alert Sent' : 'Automatic Alert in',
+                  style: TextStyle(
+                      color: colors.bg100,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: _spacingSmall),
+                Text(
+                  _alertCountdown.toString(),
+                  style: TextStyle(
+                      color: colors.bg100,
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: _spacingSmall),
+                Text(
+                  _isCancelling
+                      ? 'Cancelling in $_cancelCountdown'
+                      : 'Press and hold to cancel',
+                  style: TextStyle(color: colors.bg100, fontSize: 14),
+                ),
+              ],
             ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              _alertCountdown.toString(),
-              style: TextStyle(color: colors.bg100, fontSize: 48, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: _spacingSmall),
-            Text(
-              _isCancelling ? 'Cancelling in $_cancelCountdown' : 'Press and hold to cancel',
-              style: TextStyle(color: colors.bg100, fontSize: 14),
-            ),
-          ],
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
   /// Builds the decoration for the countdown timer.
   BoxDecoration _buildTimerDecoration(AppColorTheme colors) => BoxDecoration(
-    gradient: LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: _isAlertSent
-          ? [
-        _flickerAnimation.value ?? colors.warning,
-        (_flickerAnimation.value ?? colors.warning).withOpacity(0.8),
-      ]
-          : [colors.warning, colors.warning.withOpacity(0.8)],
-    ),
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: colors.warning.withOpacity(0.3),
-        blurRadius: 8,
-        offset: const Offset(0, 4),
-      ),
-    ],
-  );
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: _isAlertSent
+              ? [
+                  _flickerAnimation.value ?? colors.warning,
+                  (_flickerAnimation.value ?? colors.warning).withOpacity(0.8),
+                ]
+              : [colors.warning, colors.warning.withOpacity(0.8)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: colors.warning.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
 
   /// Builds the location display section with a map.
   Widget _buildLocationSection(AppColorTheme colors) => Container(
-    padding: const EdgeInsets.all(_padding - 8),
-    decoration: _cardDecoration(colors),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your Location',
-          style: TextStyle(color: colors.primary300, fontSize: 16, fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.all(_padding - 8),
+        decoration: _cardDecoration(colors),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your Location',
+              style: TextStyle(
+                  color: colors.primary300,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: _spacingMedium),
+            SizedBox(
+              height: 150,
+              child: _buildMap(colors),
+            ),
+            const SizedBox(height: _spacingMedium),
+            Text(_currentAddress,
+                style: TextStyle(color: colors.text200, fontSize: 14)),
+          ],
         ),
-        const SizedBox(height: _spacingMedium),
-        SizedBox(
-          height: 150,
-          child: _buildMap(colors),
-        ),
-        const SizedBox(height: _spacingMedium),
-        Text(_currentAddress, style: TextStyle(color: colors.text200, fontSize: 14)),
-      ],
-    ),
-  );
+      );
 
   /// Builds the map widget.
   Widget _buildMap(AppColorTheme colors) => ClipRRect(
-    borderRadius: BorderRadius.circular(16),
-    child: FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        center: _currentPosition != null
-            ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
-            : _defaultLocation,
-        zoom: 15,
-        interactiveFlags: InteractiveFlag.none,
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          subdomains: const ['a', 'b', 'c'],
-        ),
-        MarkerLayer(
-          markers: [
-            if (_currentPosition != null)
-              Marker(
-                point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-                builder: (_) => Icon(Icons.location_pin, color: colors.warning, size: 40),
-              ),
+        borderRadius: BorderRadius.circular(16),
+        child: FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            center: _currentPosition != null
+                ? LatLng(
+                    _currentPosition!.latitude, _currentPosition!.longitude)
+                : _defaultLocation,
+            zoom: 15,
+            interactiveFlags: InteractiveFlag.none,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              subdomains: const ['a', 'b', 'c'],
+            ),
+            MarkerLayer(
+              markers: [
+                if (_currentPosition != null)
+                  Marker(
+                    point: LatLng(_currentPosition!.latitude,
+                        _currentPosition!.longitude),
+                    builder: (_) => Icon(Icons.location_pin,
+                        color: colors.warning, size: 40),
+                  ),
+              ],
+            ),
           ],
         ),
-      ],
-    ),
-  );
+      );
 
   /// Builds the emergency action buttons section.
   Widget _buildEmergencyActions(AppColorTheme colors) => Column(
-    children: [
-      _buildEmergencyButton(
-        icon: Icons.phone,
-        title: 'Emergency Services',
-        subtitle: 'Call 999',
-        colors: colors,
-        onTap: _callEmergencyServices,
-        isPulsing: true,
-      ),
-    ],
-  );
+        children: [
+          _buildEmergencyButton(
+            icon: Icons.phone,
+            title: 'Emergency Services',
+            subtitle: 'Call 999',
+            colors: colors,
+            onTap: _callEmergencyServices,
+            isPulsing: true,
+          ),
+        ],
+      );
 
   /// Builds a reusable emergency action button with optional pulsing animation.
   Widget _buildEmergencyButton({
@@ -625,14 +661,18 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
                 children: [
                   Text(
                     title,
-                    style: TextStyle(color: colors.primary300, fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: colors.primary300,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600),
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
                       color: colors.text200,
                       fontSize: 14,
-                      fontWeight: isPulsing ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight:
+                          isPulsing ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -640,21 +680,22 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
             ],
           ),
         ).animate(
-          onPlay: (controller) => isPulsing ? controller.repeat(reverse: true) : null,
+          onPlay: (controller) =>
+              isPulsing ? controller.repeat(reverse: true) : null,
           effects: isPulsing
               ? [
-            ScaleEffect(
-              begin: const Offset(1.0, 1.0),
-              end: const Offset(1.02, 1.02),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeInOut,
-            ),
-            ShimmerEffect(
-              color: colors.warning.withOpacity(0.3),
-              duration: const Duration(milliseconds: 1200),
-              curve: Curves.easeInOut,
-            ),
-          ]
+                  ScaleEffect(
+                    begin: const Offset(1.0, 1.0),
+                    end: const Offset(1.02, 1.02),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeInOut,
+                  ),
+                  ShimmerEffect(
+                    color: colors.warning.withOpacity(0.3),
+                    duration: const Duration(milliseconds: 1200),
+                    curve: Curves.easeInOut,
+                  ),
+                ]
               : [],
         ),
       );
@@ -675,7 +716,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
   /// Placeholder for alerting emergency contacts.
   void _alertEmergencyContacts() {
-    _showSnackBar('Emergency contacts alert not yet implemented', Colors.orange);
+    _showSnackBar(
+        'Emergency contacts alert not yet implemented', Colors.orange);
   }
 
   /// Displays a snackbar with a given message and background color.
@@ -692,8 +734,8 @@ class _SOSEmergencyScreenState extends State<SOSEmergencyScreen>
 
   /// Provides a reusable card decoration.
   BoxDecoration _cardDecoration(AppColorTheme colors) => BoxDecoration(
-    color: colors.bg100.withOpacity(0.7),
-    borderRadius: BorderRadius.circular(16),
-    border: Border.all(color: colors.bg100.withOpacity(0.2)),
-  );
+        color: colors.bg100.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.bg100.withOpacity(0.2)),
+      );
 }

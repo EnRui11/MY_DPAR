@@ -15,11 +15,13 @@ class DisasterModel {
   final LatLng? coordinates;
   final String description;
   final List<String>? photoPaths;
-  final String timestamp;
+  final Timestamp timestamp;
   final String status;
   final List<String>? userList;
   final List<Map<String, dynamic>>? locationList;
   final int verificationCount;
+  final int verifyFalseNum;
+  final Timestamp? lastUpdated;
 
   DisasterModel({
     required this.id,
@@ -36,6 +38,8 @@ class DisasterModel {
     this.userList,
     this.locationList,
     required this.verificationCount,
+    this.verifyFalseNum = 0,
+    this.lastUpdated,
   });
 
   factory DisasterModel.fromFirestore(DocumentSnapshot doc) {
@@ -52,12 +56,14 @@ class DisasterModel {
           : null,
       description: data['description'] ?? '',
       photoPaths: (data['photoPaths'] as List<dynamic>?)?.cast<String>(),
-      timestamp: data['timestamp'] ?? '',
+      timestamp: data['timestamp'] as Timestamp,
       status: data['status'] ?? 'happening',
       userList: (data['userList'] as List<dynamic>?)?.cast<String>(),
       locationList: (data['locationList'] as List<dynamic>?)
           ?.cast<Map<String, dynamic>>(),
       verificationCount: data['verifyNum'] ?? 0,
+      verifyFalseNum: data['verifyFalseNum'] ?? 0,
+      lastUpdated: data['lastUpdated'] as Timestamp?,
     );
   }
 
@@ -73,7 +79,7 @@ class DisasterModel {
   /// Convert to a formatted time string (e.g., "2 hours ago")
   String get formattedTime {
     try {
-      final DateTime disasterTime = DateTime.parse(timestamp);
+      final DateTime disasterTime = timestamp.toDate();
       final Duration difference = DateTime.now().difference(disasterTime);
 
       if (difference.inMinutes < 60) {
@@ -84,7 +90,7 @@ class DisasterModel {
         return '${difference.inDays} days ago';
       }
     } catch (e) {
-      return timestamp;
+      return timestamp.toString();
     }
   }
 
@@ -100,6 +106,8 @@ class DisasterModel {
         'timestamp': timestamp,
         'status': status,
         'verifyNum': verificationCount,
+        'verifyFalseNum': verifyFalseNum,
+        'lastUpdated': lastUpdated,
         'userList': userList,
         'locationList': locationList,
         'photoPaths': photoPaths,
@@ -118,11 +126,13 @@ class DisasterModel {
     LatLng? coordinates,
     String? description,
     List<String>? photoPaths,
-    String? timestamp,
+    Timestamp? timestamp,
     String? status,
     List<String>? userList,
     List<Map<String, dynamic>>? locationList,
     int? verificationCount,
+    int? verifyFalseNum,
+    Timestamp? lastUpdated,
   }) {
     return DisasterModel(
       id: id ?? this.id,
@@ -139,6 +149,8 @@ class DisasterModel {
       userList: userList ?? this.userList,
       locationList: locationList ?? this.locationList,
       verificationCount: verificationCount ?? this.verificationCount,
+      verifyFalseNum: verifyFalseNum ?? this.verifyFalseNum,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
 }
@@ -313,7 +325,7 @@ class DisasterService with ChangeNotifier {
     LatLng? coordinates,
     required String description,
     required List<String> photoPaths,
-    required String timestamp,
+    required Timestamp timestamp,
     required String status,
     required List<String> userList,
     required List<Map<String, dynamic>> locationList,
@@ -457,6 +469,152 @@ class DisasterService with ChangeNotifier {
       return [];
     } finally {
       _setLoading(false);
+    }
+  }
+
+  /// Check if a user is within verification range of a disaster
+  Future<bool> isUserWithinRange(String disasterId, LatLng userLocation) async {
+    try {
+      final disaster = await getDisasterById(disasterId);
+      if (disaster == null || disaster.coordinates == null) return false;
+
+      // Calculate distance between user and disaster
+      final Distance distance = const Distance();
+      final meters = distance(
+        userLocation,
+        disaster.coordinates!,
+      );
+
+      // Return true if user is within 1000 meters (1km)
+      return meters <= 1000;
+    } catch (e) {
+      debugPrint('Error checking user distance: $e');
+      return false;
+    }
+  }
+
+  /// Verify a disaster report
+  Future<bool> verifyDisaster(
+      String disasterId, String userId, LatLng userLocation) async {
+    try {
+      // Get the current disaster data
+      final disaster = await getDisasterById(disasterId);
+      if (disaster == null) return false;
+
+      // Check if user is within range
+      if (!await isUserWithinRange(disasterId, userLocation)) {
+        throw Exception('User is not within verification range');
+      }
+
+      // Check if user has already verified
+      if (disaster.userList?.contains(userId) ?? false) {
+        throw Exception('User has already verified this disaster');
+      }
+
+      // Update the disaster with atomic operations
+      await _firestore.collection('disaster_reports').doc(disasterId).update({
+        'verifyNum': FieldValue.increment(1),
+        'userList': FieldValue.arrayUnion([userId]),
+        'locationList': FieldValue.arrayUnion([
+          {
+            'userId': userId,
+            'latitude': userLocation.latitude,
+            'longitude': userLocation.longitude,
+            'timestamp': DateTime.now().toIso8601String(),
+          }
+        ]),
+      });
+
+      // Refresh the disaster data
+      await fetchDisasters();
+      return true;
+    } catch (e) {
+      debugPrint('Error verifying disaster: $e');
+      _error = 'Failed to verify disaster: $e';
+      return false;
+    }
+  }
+
+  /// Mark a disaster as false alarm
+  Future<bool> markAsFalseAlarm(
+      String disasterId, String userId, LatLng userLocation) async {
+    try {
+      // Get the current disaster data
+      final disaster = await getDisasterById(disasterId);
+      if (disaster == null) return false;
+
+      // Check if user is within range
+      if (!await isUserWithinRange(disasterId, userLocation)) {
+        throw Exception('User is not within verification range');
+      }
+
+      // Check if user has already verified
+      if (disaster.userList?.contains(userId) ?? false) {
+        throw Exception('User has already verified this disaster');
+      }
+
+      // Update the disaster with atomic operations
+      await _firestore.collection('disaster_reports').doc(disasterId).update({
+        'verifyFalseNum': FieldValue.increment(1),
+        'userList': FieldValue.arrayUnion([userId]),
+        'locationList': FieldValue.arrayUnion([
+          {
+            'userId': userId,
+            'latitude': userLocation.latitude,
+            'longitude': userLocation.longitude,
+            'timestamp': DateTime.now().toIso8601String(),
+            'action': 'false_alarm',
+          }
+        ]),
+        'lastUpdated': Timestamp.now(),
+      });
+
+      // Refresh the disaster data
+      await fetchDisasters();
+      return true;
+    } catch (e) {
+      debugPrint('Error marking as false alarm: $e');
+      _error = 'Failed to mark as false alarm: $e';
+      return false;
+    }
+  }
+
+  /// Get verification status for a user
+  Future<Map<String, dynamic>> getVerificationStatus(
+      String disasterId, String userId) async {
+    try {
+      final disaster = await getDisasterById(disasterId);
+      if (disaster == null) {
+        return {
+          'canVerify': false,
+          'hasVerified': false,
+          'message': 'Disaster not found',
+        };
+      }
+
+      final hasVerified = disaster.userList?.contains(userId) ?? false;
+      final isFalseAlarm = disaster.status.toLowerCase() == 'false_alarm';
+
+      return {
+        'canVerify': !hasVerified && !isFalseAlarm,
+        'hasVerified': hasVerified,
+        'verificationCount': disaster.verificationCount,
+        'verifyFalseNum': disaster.verifyFalseNum,
+        'isFalseAlarm': isFalseAlarm,
+        'lastUpdated': disaster.lastUpdated,
+        'message': isFalseAlarm
+            ? 'This disaster has been marked as a false alarm'
+            : hasVerified
+                ? 'You have already verified this disaster'
+                : 'You can verify this disaster',
+      };
+    } catch (e) {
+      debugPrint('Error getting verification status: $e');
+      return {
+        'canVerify': false,
+        'hasVerified': false,
+        'message': 'Error checking verification status',
+      };
     }
   }
 }

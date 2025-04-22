@@ -8,6 +8,7 @@ import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/localization/app_localizations.dart';
 import 'package:mydpar/officer/screens/disaster_information/officer_disaster_detail_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Displays a list of ongoing disasters with filtering and sorting capabilities.
 class OfficerAllDisastersScreen extends StatefulWidget {
@@ -43,13 +44,12 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
   static const _spacingMedium = 12.0;
   static const _spacingLarge = 24.0;
 
-
   static const _statusTypes = [
     'all_status',
     'happening',
     'pending',
     'resolved',
-    'false_alarm', 
+    'false_alarm',
   ];
 
   // Controllers
@@ -156,7 +156,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             Text(
-              AppLocalizations.of(context).translate('all_disasters'), 
+              AppLocalizations.of(context).translate('all_disasters'),
               style: TextStyle(
                   color: colors.accent200,
                   fontSize: 18,
@@ -178,7 +178,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
             const SizedBox(height: _spacingSmall),
             _buildTypeFilterChips(colors),
             const SizedBox(height: _spacingMedium),
-            Text(AppLocalizations.of(context).translate('filter_by_status'), 
+            Text(AppLocalizations.of(context).translate('filter_by_status'),
                 style: _labelStyle(colors)),
             const SizedBox(height: _spacingSmall),
             _buildStatusFilterChips(colors),
@@ -211,7 +211,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
                   ? Icons.warning_amber
                   : status == 'pending'
                       ? Icons.hourglass_empty
-                      : status == 'resolved' 
+                      : status == 'resolved'
                           ? Icons.check_circle
                           : Icons.cancel,
           size: 18,
@@ -351,7 +351,8 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await service.fetchDisasters(onlyHappening: false); // <-- Always fetch all
+        await service.fetchDisasters(
+            onlyHappening: false); // <-- Always fetch all
         await _fetchCurrentLocation();
       },
       color: colors.accent200,
@@ -404,7 +405,8 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OfficerDisasterDetailScreen(disasterId: disaster.id), 
+            builder: (_) =>
+                OfficerDisasterDetailScreen(disasterId: disaster.id),
           ),
         ),
         child: Padding(
@@ -553,8 +555,7 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
 
   /// Builds the time row with localized relative time.
   Widget _buildTimeRow(DisasterModel disaster, AppColorTheme colors) {
-    // Assuming disaster has a method to get the raw timestamp
-    final timestamp = DateTime.parse(disaster.timestamp);
+    final timestamp = disaster.timestamp.toDate();
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
@@ -629,7 +630,8 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
   /// Filters and sorts the disaster list based on user selections.
   List<DisasterModel> _filterAndSortDisasters(List<DisasterModel> disasters) {
     var filtered = disasters;
-    if (_selectedType != 'all_types') { // Check for 'all_types'
+    if (_selectedType != 'all_types') {
+      // Check for 'all_types'
       filtered = filtered
           .where((d) =>
               d.disasterType.toLowerCase() == _selectedType.toLowerCase())
@@ -661,13 +663,13 @@ class _OfficerAllDisastersScreenState extends State<OfficerAllDisastersScreen> {
   }
 
   /// Compares disaster times.
-  int _compareTime(String timeA, String timeB) {
+  int _compareTime(Timestamp timeA, Timestamp timeB) {
     try {
-      final dateA = DateTime.parse(timeA);
-      final dateB = DateTime.parse(timeB);
+      final dateA = timeA.toDate();
+      final dateB = timeB.toDate();
       return _isAscending ? dateA.compareTo(dateB) : dateB.compareTo(dateA);
     } catch (e) {
-      debugPrint('Error parsing time: $e');
+      debugPrint('Error comparing time: $e');
       return 0;
     }
   }

@@ -16,6 +16,7 @@ import 'package:mydpar/theme/theme_provider.dart';
 import 'package:mydpar/services/alert_notification_service.dart';
 import 'package:mydpar/services/disaster_information_service.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 const _padding = 24.0;
 const _spacingSmall = 8.0;
@@ -34,7 +35,7 @@ class DisasterReport {
   final double? longitude;
   final String description;
   final List<String> photoPaths;
-  final String timestamp;
+  final Timestamp timestamp;
   final String status;
   final List<String>? userList;
   final List<Map<String, dynamic>>? locationList;
@@ -240,7 +241,7 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
       if (user == null) throw Exception('User not authenticated');
 
       final photoUrls = await _uploadPhotos(colors);
-      final timestamp = DisasterVerificationService.getCurrentTimestamp();
+      final timestamp = Timestamp.now();
       final alertService = AlertNotificationService();
       final disasterService =
           Provider.of<DisasterService>(context, listen: false);
@@ -272,6 +273,7 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
 
             await disasterService.updateDisaster(updatedDisaster);
             await alertService.alertNearbyUsers(
+              context: context,
               disasterId: existingDisaster['id'],
               disasterType: internalDisasterType,
               latitude: _selectedMapLocation!.latitude,
@@ -311,6 +313,7 @@ class _ReportDisasterScreenState extends State<ReportDisasterScreen> {
 
       if (newDisasterId != null && _selectedMapLocation != null) {
         await alertService.alertNearbyUsers(
+          context: context,
           disasterId: newDisasterId,
           disasterType: internalDisasterType,
           latitude: _selectedMapLocation!.latitude,
@@ -629,7 +632,7 @@ class _LocationSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state =
-    context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
+        context.findAncestorStateOfType<_ReportDisasterScreenState>()!;
     return Column(
       children: [
         Container(
@@ -662,7 +665,7 @@ class _LocationSelector extends StatelessWidget {
                     children: [
                       TileLayer(
                         urlTemplate:
-                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
                         userAgentPackageName: 'com.mydpar.app',
                       ),

@@ -140,6 +140,18 @@ class UserInformationService extends ChangeNotifier {
     }
   }
 
+  /// Fetches user info from Firestore by userId.
+  Future<Map<String, dynamic>?> getUserInfo(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (!doc.exists) return null;
+      return doc.data();
+    } catch (e) {
+      debugPrint('Error fetching user info: $e');
+      return null;
+    }
+  }
+
   /// Register a new user with email and password
   Future<UserCredential> registerUser({
     required String firstName,

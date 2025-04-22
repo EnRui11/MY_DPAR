@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mydpar/officer/screens/community_groups_screen.dart';
-import 'package:mydpar/officer/screens/emergency_teams_screen.dart';
-import 'package:mydpar/officer/screens/officer_dashboard_screen.dart';
-import 'package:mydpar/officer/screens/shelter_management_screen.dart';
+import 'package:mydpar/officer/screens/main/community_groups_screen.dart';
+import 'package:mydpar/officer/screens/main/emergency_teams_screen.dart';
+import 'package:mydpar/officer/screens/main/officer_dashboard_screen.dart';
+import 'package:mydpar/officer/screens/main/shelter_management_screen.dart';
 
 class OfficerNavigationService extends ChangeNotifier {
   int _currentIndex = 0;

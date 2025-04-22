@@ -1042,6 +1042,19 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
                   localizations.translate('no_resources'),
                   style: TextStyle(color: colors.text200),
                 ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () =>
+                      _showAddResourceDialog(context, colors, localizations),
+                  icon: const Icon(Icons.add, size: 20),
+                  label: Text(localizations.translate('add_resource')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.accent200,
+                    foregroundColor: colors.bg100,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                  ),
+                ),
               ],
             ),
           );
@@ -1705,6 +1718,19 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
                   localizations.translate('no_help_requests'),
                   style: TextStyle(color: colors.text200),
                 ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () =>
+                      _showAddHelpRequestDialog(context, colors, localizations),
+                  icon: const Icon(Icons.add, size: 20),
+                  label: Text(localizations.translate('create_help_requests')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.accent200,
+                    foregroundColor: colors.bg100,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                  ),
+                ),
               ],
             ),
           );
@@ -1742,7 +1768,10 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
               ),
               const SizedBox(height: 16),
               ...requests.map((request) {
-                final createdAt = (request['createdAt'] as Timestamp).toDate();
+                final createdAtRaw = request['createdAt'];
+                final createdAt = createdAtRaw is Timestamp
+                    ? createdAtRaw.toDate()
+                    : DateTime.now();
                 return Column(
                   children: [
                     _buildHelpRequestItem(
@@ -1906,10 +1935,14 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
   }
 
   /// Shows dialog to add a new help request.
-  void _showAddHelpRequestDialog(BuildContext context, AppColorTheme colors,
-      AppLocalizations localizations) {
+  void _showAddHelpRequestDialog(
+    BuildContext context,
+    AppColorTheme colors,
+    AppLocalizations localizations,
+  ) {
     final typeController = TextEditingController(text: 'food');
     final descriptionController = TextEditingController();
+    final quantityController = TextEditingController();
 
     showDialog(
       context: context,
@@ -1926,7 +1959,7 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
               DropdownButtonFormField<String>(
                 value: typeController.text,
                 decoration: InputDecoration(
-                  labelText: localizations.translate('resource_type'),
+                  labelText: localizations.translate('request_type'),
                   labelStyle: TextStyle(color: colors.text200),
                   filled: true,
                   fillColor: colors.bg200,
@@ -1938,21 +1971,20 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
                 items: [
                   DropdownMenuItem(
                     value: 'food',
-                    child: Text(localizations.translate('resource_type_food')),
+                    child: Text(localizations.translate('request_type_food')),
                   ),
                   DropdownMenuItem(
                     value: 'water',
-                    child: Text(localizations.translate('resource_type_water')),
+                    child: Text(localizations.translate('request_type_water')),
                   ),
                   DropdownMenuItem(
                     value: 'medical',
                     child:
-                        Text(localizations.translate('resource_type_medical')),
+                        Text(localizations.translate('request_type_medical')),
                   ),
                   DropdownMenuItem(
-                    value: 'others',
-                    child:
-                        Text(localizations.translate('resource_type_others')),
+                    value: 'other',
+                    child: Text(localizations.translate('request_type_other')),
                   ),
                 ],
                 onChanged: (value) => typeController.text = value!,
@@ -1972,6 +2004,21 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
                 ),
                 maxLines: 3,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: quantityController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('quantity'),
+                  labelStyle: TextStyle(color: colors.text200),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: colors.bg300),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
         ),
@@ -1984,9 +2031,10 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
             ),
           ),
           ElevatedButton(
-            onPressed: () => _saveHelpRequest(
+            onPressed: () => _saveNewHelpRequest(
               typeController,
               descriptionController,
+              quantityController,
               colors,
               localizations,
             ),
@@ -2002,9 +2050,10 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
   }
 
   /// Saves a new help request.
-  Future<void> _saveHelpRequest(
+  Future<void> _saveNewHelpRequest(
     TextEditingController typeController,
     TextEditingController descriptionController,
+    TextEditingController quantityController,
     AppColorTheme colors,
     AppLocalizations localizations,
   ) async {
@@ -2013,12 +2062,26 @@ class _ShelterDetailScreenState extends State<ShelterDetailScreen>
       if (currentUser == null) {
         throw Exception('User not authenticated');
       }
+
+      if (descriptionController.text.isEmpty ||
+          quantityController.text.isEmpty) {
+        throw Exception('All fields are required');
+      }
+
+      final quantity = int.tryParse(quantityController.text);
+      if (quantity == null || quantity <= 0) {
+        throw Exception('Please enter a valid quantity');
+      }
+
+      // Use the ShelterService to create the help request
       await _shelterService.createHelpRequest(
         shelterId: widget.id,
         type: typeController.text,
         description: descriptionController.text,
+        quantity: quantity,
         requestedBy: currentUser.uid,
       );
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

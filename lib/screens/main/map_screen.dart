@@ -1067,6 +1067,7 @@ class _MapScreenState extends State<MapScreen> {
       future: state._markerService.disasterService.getVerificationStatus(
         marker['id'],
         userId,
+        context,
       ),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -1374,23 +1375,6 @@ class _MapScreenState extends State<MapScreen> {
                 Text(
                   l.translate(
                       'status_${marker['status'].toString().toLowerCase()}'),
-                  style: TextStyle(color: colors.text200),
-                ),
-              ],
-            ),
-          ),
-
-        // Verification Count
-        if (marker['verificationCount'] != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Icon(Icons.verified, size: 16, color: colors.text200),
-                const SizedBox(width: 4),
-                Text(
-                  l.translate('verification_count',
-                      {'count': marker['verificationCount'].toString()}),
                   style: TextStyle(color: colors.text200),
                 ),
               ],

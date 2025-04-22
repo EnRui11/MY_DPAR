@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mydpar/theme/color_theme.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 /// Model for disaster data with consistent structure across the app
 class DisasterModel {
@@ -581,14 +582,15 @@ class DisasterService with ChangeNotifier {
 
   /// Get verification status for a user
   Future<Map<String, dynamic>> getVerificationStatus(
-      String disasterId, String userId) async {
+      String disasterId, String userId, BuildContext context) async {
+    final l = AppLocalizations.of(context);
     try {
       final disaster = await getDisasterById(disasterId);
       if (disaster == null) {
         return {
           'canVerify': false,
           'hasVerified': false,
-          'message': 'Disaster not found',
+          'message': l.translate('disaster_not_found'),
         };
       }
 
@@ -603,17 +605,17 @@ class DisasterService with ChangeNotifier {
         'isFalseAlarm': isFalseAlarm,
         'lastUpdated': disaster.lastUpdated,
         'message': isFalseAlarm
-            ? 'This disaster has been marked as a false alarm'
+            ? l.translate('disaster_marked_false_alarm')
             : hasVerified
-                ? 'You have already verified this disaster'
-                : 'You can verify this disaster',
+                ? l.translate('already_verified_disaster')
+                : l.translate('can_verify_disaster'),
       };
     } catch (e) {
       debugPrint('Error getting verification status: $e');
       return {
         'canVerify': false,
         'hasVerified': false,
-        'message': 'Error checking verification status',
+        'message': l.translate('error_checking_verification_status'),
       };
     }
   }

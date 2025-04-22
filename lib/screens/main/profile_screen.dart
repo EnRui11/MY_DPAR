@@ -14,7 +14,7 @@ import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/main/community_screen.dart';
-import 'package:mydpar/officer/screens/officer_nav_container.dart';
+import 'package:mydpar/officer/screens/main/officer_nav_container.dart';
 
 // Model for settings items
 class SettingItem {

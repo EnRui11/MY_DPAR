@@ -1095,7 +1095,7 @@
   "reporter_information": "报告者信息",
   "emergency_contacts": "紧急联系人",
   "member_since": "自{date}起为成员",
-  "last_updated": "最后更新：{time}",
+  "last_updated": "最后更新",
   "cancelled": "已取消：{time}",
   "current_occupancy": "当前入住情况",
   "demographics": "人口统计",
@@ -1123,16 +1123,22 @@
   "respond_to_sos": "响应SOS",
   "navigate_to_shelter": "导航至避难所",
   "verified_true": "验证为真",
-  "verified_not_true": "验证为不真",
+  "verified_not_true": "验证为虚假",
   "location_required_for_verification": "验证需要当前位置。",
   "verification_successful": "灾难验证成功。",
   "verification_failed": "灾难验证失败。",
-  "not_true": "标记为不真",
-  "not_true_confirmation": "您确定要将此灾难标记为不真吗？",
+  "verify_disaster": "正在发生",
+  "not_true": "未发生",
+  "not_true_confirmation": "您确定要将此灾难标记为虚假吗？",
   "cancel": "取消",
   "confirm": "确认",
-  "marked_as_not_true": "灾难已标记为不真。",
-  "not_true_marking_failed": "无法将灾难标记为不真。",
+  "marked_as_not_true": "灾难已标记为虚假。",
+  "not_true_marking_failed": "无法将灾难标记为虚假。",
+  "disaster_not_found": "未找到灾害",
+  "disaster_marked_false_alarm": "此灾害已被标记为误报",
+  "already_verified_disaster": "您已验证此灾害",
+  "can_verify_disaster": "您可以验证此灾害",
+  "error_checking_verification_status": "检查验证状态时出错",
 
 
 
@@ -1288,7 +1294,8 @@
 
 
 
-  "ShelterDetailScreen": "shelter_detail_screen.dart","demographics": "人口统计",
+  "ShelterDetailScreen": "shelter_detail_screen.dart",
+  "demographics": "人口统计",
   "resources": "资源",
   "help_requests": "帮助请求",
   "location": "位置",

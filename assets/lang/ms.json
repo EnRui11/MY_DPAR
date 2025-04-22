@@ -1096,7 +1096,7 @@
   "reporter_information": "Maklumat Pelapor",
   "emergency_contacts": "Kenalan Kecemasan",
   "member_since": "Ahli sejak {date}",
-  "last_updated": "Dikemas kini Terakhir: {time}",
+  "last_updated": "Dikemas kini Terakhir",
   "cancelled": "Dibatalkan: {time}",
   "current_occupancy": "Kedudukan Semasa",
   "demographics": "Demografi",
@@ -1128,12 +1128,18 @@
   "location_required_for_verification": "Lokasi semasa diperlukan untuk pengesahan.",
   "verification_successful": "Bencana disahkan dengan jayanya.",
   "verification_failed": "Gagal mengesahkan bencana.",
-  "not_true": "Tandakan sebagai Tidak Benar",
+  "verify_disaster": "Berlaku",
+  "not_true": "Tidak berlaku",
   "not_true_confirmation": "Adakah anda pasti ingin menandakan bencana ini sebagai tidak benar?",
   "cancel": "Batal",
   "confirm": "Sahkan",
   "marked_as_not_true": "Bencana ditandakan sebagai tidak benar.",
   "not_true_marking_failed": "Gagal menandakan bencana sebagai tidak benar.",
+  "disaster_not_found": "Bencana tidak dijumpai",
+  "disaster_marked_false_alarm": "Bencana ini telah ditandakan sebagai amaran palsu",
+  "already_verified_disaster": "Anda telah mengesahkan bencana ini",
+  "can_verify_disaster": "Anda boleh mengesahkan bencana ini",
+  "error_checking_verification_status": "Ralat semasa menyemak status pengesahan",
 
 
 

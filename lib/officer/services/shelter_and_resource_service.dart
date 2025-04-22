@@ -389,6 +389,7 @@ class ShelterService {
     required String shelterId,
     required String type,
     required String description,
+    required int quantity,
     required String requestedBy,
   }) async {
     try {
@@ -399,9 +400,12 @@ class ShelterService {
           .add({
         'type': type,
         'description': description,
-        'status': 'pending',
+        'requestedQuantity': quantity,
+        'fulfilledQuantity': 0,
+        'status': 'in_progress',
         'requestedBy': requestedBy,
         'respondBy': [],
+        'responses': [],
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -412,6 +416,128 @@ class ShelterService {
     }
   }
 
+  // Respond to a help request
+  Future<void> respondToHelpRequest({
+    required String shelterId,
+    required String requestId,
+    required String responderId,
+    required int amount,
+  }) async {
+    try {
+      // Get the current request data
+      final requestDoc = await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('help_requests')
+          .doc(requestId)
+          .get();
+
+      if (!requestDoc.exists) {
+        throw Exception('Help request not found');
+      }
+
+      final data = requestDoc.data()!;
+      final currentFulfilled = data['fulfilledQuantity'] as int;
+      final requestedQuantity = data['requestedQuantity'] as int;
+      final newFulfilled = currentFulfilled + amount;
+      final responderInfo =
+          await _userInformationService.getUserInfo(responderId);
+
+      // Create the response entry
+      final response = {
+        'responderId': responderId,
+        'responderName':
+            '${responderInfo?['firstName']} ${responderInfo?['lastName']}',
+        'amount': amount,
+        'timestamp': Timestamp.now(),
+      };
+
+      // Update the request document
+      await _firestore
+          .collection(_collection)
+          .doc(shelterId)
+          .collection('help_requests')
+          .doc(requestId)
+          .update({
+        'fulfilledQuantity': newFulfilled,
+        'status':
+            newFulfilled >= requestedQuantity ? 'fulfilled' : 'in_progress',
+        'respondBy': FieldValue.arrayUnion([responderId]),
+        'responses': FieldValue.arrayUnion([response]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to respond to help request: $e');
+    }
+  }
+
+  // Get all active help requests across all shelters
+  Stream<List<Map<String, dynamic>>> getAllActiveHelpRequests() {
+    try {
+      return _firestore
+          .collection(_collection)
+          .snapshots()
+          .asyncMap((shelterSnapshot) async {
+        List<Map<String, dynamic>> allRequests = [];
+
+        for (var shelterDoc in shelterSnapshot.docs) {
+          final shelterData = shelterDoc.data();
+          final shelterName = shelterData['name'] as String;
+          final location = shelterData['location'] as GeoPoint;
+
+          // Get all help requests for this shelter
+          final requestsSnapshot = await _firestore
+              .collection(_collection)
+              .doc(shelterDoc.id)
+              .collection('help_requests')
+              .where('status', isEqualTo: 'in_progress')
+              .get();
+
+          final requests = requestsSnapshot.docs.map((requestDoc) {
+            final requestData = requestDoc.data();
+            return {
+              'id': requestDoc.id,
+              'shelterId': shelterDoc.id,
+              'shelterName': shelterName,
+              'shelterLocation': LatLng(
+                location.latitude,
+                location.longitude,
+              ),
+              'type': requestData['type'],
+              'description': requestData['description'],
+              'requestedQuantity': requestData['requestedQuantity'],
+              'fulfilledQuantity': requestData['fulfilledQuantity'],
+              'status': requestData['status'],
+              'requestedBy': requestData['requestedBy'],
+              'respondBy': (requestData['respondBy'] as List<dynamic>?)
+                      ?.cast<String>() ??
+                  [],
+              'responses': (requestData['responses'] as List<dynamic>?)
+                      ?.cast<Map<String, dynamic>>() ??
+                  [],
+              'createdAt': requestData['createdAt'],
+              'updatedAt': requestData['updatedAt'],
+            };
+          }).toList();
+
+          allRequests.addAll(requests);
+        }
+
+        // Sort all requests by creation date
+        allRequests.sort((a, b) {
+          final aDate = (a['createdAt'] as Timestamp).toDate();
+          final bDate = (b['createdAt'] as Timestamp).toDate();
+          return bDate.compareTo(aDate);
+        });
+
+        return allRequests;
+      });
+    } catch (e) {
+      print('Error fetching help requests: $e');
+      return Stream.value([]);
+    }
+  }
+
   // Updating help request status and description
   Future<void> updateHelpRequest({
     required String shelterId,
@@ -419,19 +545,23 @@ class ShelterService {
     required String status,
     required String description,
     required String requestedBy,
+    int? quantity,
   }) async {
     try {
+      final updateData = {
+        'status': status,
+        'description': description,
+        'requestedBy': requestedBy,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      if (quantity != null) updateData['quantity'] = quantity;
+
       await _firestore
           .collection(_collection)
           .doc(shelterId)
           .collection('help_requests')
           .doc(requestId)
-          .update({
-        'status': status,
-        'description': description,
-        'requestedBy': requestedBy,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+          .update(updateData);
     } catch (e) {
       throw Exception('Failed to update help request: $e');
     }

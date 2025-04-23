@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mydpar/officer/screens/community_group/group_detail_screen.dart';
+import 'package:mydpar/officer/screens/community_group/group_detail_admin_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -118,7 +118,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
                       style: TextStyle(color: colors.text200)),
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Show edit group modal
+                    _showEditGroupDialog(group, colors, localizations);
                   },
                 ),
                 ListTile(
@@ -921,4 +921,106 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen> {
 
   /// Returns the minimum of two integers.
   int _min(int a, int b) => a < b ? a : b;
+
+  void _showEditGroupDialog(Map<String, dynamic> group, AppColorTheme colors,
+      AppLocalizations localizations) {
+    final nameController = TextEditingController(text: group['name']);
+    final descriptionController =
+        TextEditingController(text: group['description']);
+    final communityNameController =
+        TextEditingController(text: group['community_name']);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: colors.bg100,
+        title: Text(
+          localizations.translate('edit_group_details'),
+          style: TextStyle(color: colors.primary300),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('group_name'),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('description'),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: communityNameController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('community_name'),
+                  filled: true,
+                  fillColor: colors.bg200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: Text(
+              localizations.translate('cancel'),
+              style: TextStyle(color: colors.accent200),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: Text(
+              localizations.translate('save'),
+              style: TextStyle(color: colors.accent200),
+            ),
+            onPressed: () async {
+              try {
+                await _groupService.updateCommunityGroup(
+                  id: group['id'],
+                  name: nameController.text,
+                  description: descriptionController.text,
+                  communityName: communityNameController.text,
+                );
+
+                if (mounted) {
+                  Navigator.pop(context);
+                  _showSnackBar(
+                    localizations.translate('group_updated'),
+                    backgroundColor: Colors.green,
+                  );
+                  setState(() {});
+                }
+              } catch (e) {
+                _showErrorSnackBar(
+                  localizations.translate('failed_to_update_group'),
+                  e,
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

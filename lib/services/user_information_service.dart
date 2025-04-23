@@ -548,4 +548,19 @@ class UserInformationService extends ChangeNotifier {
       throw Exception('Failed to update FCM token: $e');
     }
   }
+
+  Future<Map<String, String>> getUserFullName(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        final firstName = data['first_name'] ?? 'Unknown';
+        final lastName = data['last_name'] ?? '';
+        return {'firstName': firstName, 'lastName': lastName};
+      }
+      return {'firstName': 'Unknown', 'lastName': ''};
+    } catch (e) {
+      throw Exception('Failed to get user full name: $e');
+    }
+  }
 }

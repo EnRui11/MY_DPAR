@@ -499,6 +499,7 @@ class ShelterService {
               'id': requestDoc.id,
               'shelterId': shelterDoc.id,
               'shelterName': shelterName,
+              'name': shelterName,
               'shelterLocation': LatLng(
                 location.latitude,
                 location.longitude,
@@ -536,6 +537,26 @@ class ShelterService {
       print('Error fetching help requests: $e');
       return Stream.value([]);
     }
+  }
+
+  Stream<Map<String, dynamic>> getHelpRequestStream(
+      String shelterId, String requestId) {
+    return _firestore
+        .collection(_collection)
+        .doc(shelterId)
+        .collection('help_requests')
+        .doc(requestId)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) {
+        return {};
+      }
+      final data = doc.data()!;
+      return {
+        'id': doc.id,
+        ...data,
+      };
+    });
   }
 
   // Updating help request status and description

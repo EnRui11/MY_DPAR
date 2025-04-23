@@ -180,14 +180,37 @@ class CommunityGroupService {
         .collection('group_members')
         .orderBy('joined_at', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
+        .asyncMap((snapshot) async {
+      final members = <Map<String, dynamic>>[];
+
+      for (final doc in snapshot.docs) {
         final data = doc.data();
-        return {
-          'id': doc.id,
-          ...data,
-        };
-      }).toList();
+        final userId = data['user_id'] as String;
+
+        try {
+          // Get user information
+          final userDoc =
+              await _firestore.collection('users').doc(userId).get();
+
+          if (userDoc.exists) {
+            final userData = userDoc.data()!;
+            members.add({
+              'id': doc.id,
+              'user_id': userId,
+              'firstName': userData['firstName'] ?? '',
+              'lastName': userData['lastName'] ?? '',
+              'email': userData['email'] ?? '',
+              'photo_url': userData['photo_url'],
+              'role': data['role'] ?? 'member',
+              'joined_at': data['joined_at'],
+            });
+          }
+        } catch (e) {
+          print('Error fetching user data: $e');
+        }
+      }
+
+      return members;
     });
   }
 
@@ -472,7 +495,8 @@ class CommunityGroupService {
             final userData = userDoc.data()!;
             participantsData.add({
               'id': userId,
-              'name': userData['name'] ?? 'Unknown User',
+              'firstName': userData['firstName'] ?? '',
+              'lastName': userData['lastName'] ?? '',
               'email': userData['email'] ?? '',
               'photo_url': userData['photo_url'],
               'role': memberDoc.exists
@@ -487,5 +511,175 @@ class CommunityGroupService {
 
       return participantsData;
     });
+  }
+
+  // Get groups that the current user is a member of
+  Stream<List<Map<String, dynamic>>> getUserGroups() {
+    return _firestore
+        .collection('community_groups')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final groups = <Map<String, dynamic>>[];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final groupId = doc.id;
+
+        // Check if current user is a member
+        final memberSnapshot = await _firestore
+            .collection('community_groups')
+            .doc(groupId)
+            .collection('group_members')
+            .doc(currentUserId)
+            .get();
+
+        if (memberSnapshot.exists) {
+          // User is a member of this group
+          final membersSnapshot = await _firestore
+              .collection('community_groups')
+              .doc(groupId)
+              .collection('group_members')
+              .get();
+
+          final membersList =
+              membersSnapshot.docs.map((doc) => doc.id).toList();
+
+          groups.add({
+            'id': groupId,
+            'name': data['name'] ?? 'Unnamed Group',
+            'description': data['description'] ?? 'No description',
+            'community_name': data['community_name'] ?? 'Community',
+            'created_by': data['created_by'],
+            'created_at': data['created_at'],
+            'members': membersList,
+          });
+        }
+      }
+
+      return groups;
+    });
+  }
+
+  // Get all community groups
+  Stream<List<Map<String, dynamic>>> getAllCommunityGroups() {
+    return _firestore
+        .collection('community_groups')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final groups = <Map<String, dynamic>>[];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final groupId = doc.id;
+
+        // Get all members
+        final membersSnapshot = await _firestore
+            .collection('community_groups')
+            .doc(groupId)
+            .collection('group_members')
+            .get();
+
+        final membersList = membersSnapshot.docs.map((doc) => doc.id).toList();
+
+        groups.add({
+          'id': groupId,
+          'name': data['name'] ?? 'Unnamed Group',
+          'description': data['description'] ?? 'No description',
+          'community_name': data['community_name'] ?? 'Community',
+          'created_by': data['created_by'],
+          'created_at': data['created_at'],
+          'members': membersList,
+        });
+      }
+
+      return groups;
+    });
+  }
+
+  // Join a community group
+  Future<void> joinCommunityGroup(String groupId) async {
+    try {
+      // Get user information
+      final userInfo = await _userInformationService.getUserInfo(currentUserId);
+      final firstName = userInfo?['firstName'] ?? '';
+      final lastName = userInfo?['lastName'] ?? '';
+      final phoneNumber = userInfo?['phoneNumber'] ?? '';
+
+      // Add user to group members
+      await _firestore
+          .collection('community_groups')
+          .doc(groupId)
+          .collection('group_members')
+          .doc(currentUserId)
+          .set({
+        'user_id': currentUserId,
+        'role': 'member',
+        'name': '$firstName $lastName',
+        'contact': phoneNumber,
+        'joined_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to join community group: $e');
+    }
+  }
+
+  // Join a group event
+  Future<void> joinGroupEvent(String groupId, String eventId) async {
+    try {
+      final eventRef = _firestore
+          .collection('community_groups')
+          .doc(groupId)
+          .collection('group_events')
+          .doc(eventId);
+
+      final eventDoc = await eventRef.get();
+      if (!eventDoc.exists) {
+        throw Exception('Event not found');
+      }
+
+      final eventData = eventDoc.data()!;
+      final participants = List<String>.from(eventData['participants'] ?? []);
+
+      // Check if user is already a participant
+      if (participants.contains(currentUserId)) {
+        throw Exception('Already joined this event');
+      }
+
+      // Add user to participants
+      participants.add(currentUserId);
+      await eventRef.update({'participants': participants});
+    } catch (e) {
+      throw Exception('Failed to join event: $e');
+    }
+  }
+
+  // Leave a group event
+  Future<void> leaveGroupEvent(String groupId, String eventId) async {
+    try {
+      final eventRef = _firestore
+          .collection('community_groups')
+          .doc(groupId)
+          .collection('group_events')
+          .doc(eventId);
+
+      final eventDoc = await eventRef.get();
+      if (!eventDoc.exists) {
+        throw Exception('Event not found');
+      }
+
+      final eventData = eventDoc.data()!;
+      final participants = List<String>.from(eventData['participants'] ?? []);
+
+      // Check if user is a participant
+      if (!participants.contains(currentUserId)) {
+        throw Exception('Not joined this event');
+      }
+
+      // Remove user from participants
+      participants.remove(currentUserId);
+      await eventRef.update({'participants': participants});
+    } catch (e) {
+      throw Exception('Failed to leave event: $e');
+    }
   }
 }

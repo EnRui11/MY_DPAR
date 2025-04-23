@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mydpar/screens/community/help_requests_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -7,17 +8,21 @@ import 'package:mydpar/widgets/bottom_nav_bar.dart';
 import 'package:mydpar/screens/main/home_screen.dart';
 import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/main/profile_screen.dart';
+import 'package:mydpar/officer/services/shelter_and_resource_service.dart';
+import 'package:mydpar/services/user_information_service.dart';
+import 'package:mydpar/screens/community/community_groups_member_screen.dart';
+import 'package:mydpar/localization/app_localizations.dart';
 
 // Model for feature items
 class FeatureItem {
   final IconData icon;
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
 
   const FeatureItem({
     required this.icon,
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
   });
 }
 
@@ -78,6 +83,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
   static const double _spacingMedium = 12.0;
   static const double _spacingLarge = 24.0;
 
+  final ShelterService _shelterService = ShelterService();
+  final UserInformationService _userInformationService =
+      UserInformationService();
+
   @override
   void initState() {
     super.initState();
@@ -107,7 +116,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       bottomNavigationBar: BottomNavBar(
         onTap: (index) {
-          if (index != 2) { // Only navigate if not already on community screen
+          if (index != 2) {
+            // Only navigate if not already on community screen
             navigationService.changeIndex(index);
             _navigateToScreen(index);
           }
@@ -131,7 +141,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       default:
         return;
     }
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => screen),
@@ -146,34 +156,33 @@ class _CommunityScreenState extends State<CommunityScreen> {
               _buildFeatureGrid(context, colors),
               const SizedBox(height: _spacingLarge),
               _buildActiveHelpRequests(context, colors),
-              const SizedBox(height: _spacingLarge),
-              _buildAvailableResources(context, colors),
             ],
           ),
         ),
       );
 
   Widget _buildFeatureGrid(BuildContext context, AppColorTheme colors) {
+    final l = AppLocalizations.of(context);
     const List<FeatureItem> features = [
       FeatureItem(
         icon: Icons.group_outlined,
-        title: 'Volunteer',
-        description: 'Join our volunteer network',
+        titleKey: 'volunteer',
+        descriptionKey: 'join_volunteer_network',
       ),
       FeatureItem(
         icon: Icons.inventory_2_outlined,
-        title: 'Resources',
-        description: 'Share or request resources',
+        titleKey: 'resources',
+        descriptionKey: 'respond_to_resources',
       ),
       FeatureItem(
         icon: Icons.people_outline,
-        title: 'Groups',
-        description: 'Join community groups',
+        titleKey: 'groups',
+        descriptionKey: 'join_community_groups',
       ),
       FeatureItem(
         icon: Icons.help_outline,
-        title: 'Help & Support',
-        description: 'Request assistance',
+        titleKey: 'help_and_support',
+        descriptionKey: 'request_assistance',
       ),
     ];
 
@@ -189,8 +198,27 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  Widget _buildFeatureCard(FeatureItem feature, AppColorTheme colors) =>
-      Container(
+  Widget _buildFeatureCard(FeatureItem feature, AppColorTheme colors) {
+    final l = AppLocalizations.of(context);
+    return GestureDetector(
+      onTap: () {
+        if (l.translate(feature.titleKey) == l.translate('resources')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HelpRequestsScreen(),
+            ),
+          );
+        } else if (l.translate(feature.titleKey) == l.translate('groups')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CommunityGroupsScreen(),
+            ),
+          );
+        }
+      },
+      child: Container(
         decoration: BoxDecoration(
           color: colors.bg100.withOpacity(0.7),
           borderRadius: BorderRadius.circular(16),
@@ -203,7 +231,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             Icon(feature.icon, size: 32, color: colors.accent200),
             const SizedBox(height: _spacingSmall),
             Text(
-              feature.title,
+              l.translate(feature.titleKey),
               style: TextStyle(
                 color: colors.primary300,
                 fontSize: 16,
@@ -212,7 +240,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              feature.description,
+              l.translate(feature.descriptionKey),
               style: TextStyle(
                 color: colors.text200,
                 fontSize: 12,
@@ -220,26 +248,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ),
           ],
         ),
-      );
+      ),
+    );
+  }
 
   Widget _buildActiveHelpRequests(BuildContext context, AppColorTheme colors) {
-    const List<HelpRequest> helpRequests = [
-      HelpRequest(
-        title: 'Food Distribution',
-        description:
-            'Help needed to distribute food packages to affected areas',
-        needs: '200 food packages needed',
-        category: 'Supplies',
-      ),
-      HelpRequest(
-        title: 'Medical Supplies Needed',
-        description:
-            'First aid kits and medications needed for elderly care center',
-        needs: '10 first aid kits, basic medications',
-        category: 'Medical',
-      ),
-    ];
-
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -247,7 +261,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Active Help Requests',
+              l.translate('active_help_requests'),
               style: TextStyle(
                 color: colors.primary300,
                 fontSize: 18,
@@ -256,10 +270,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Navigate to full help requests screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HelpRequestsScreen(),
+                  ),
+                );
               },
               child: Text(
-                'View All',
+                l.translate('view_all'),
                 style: TextStyle(
                   color: colors.accent200,
                   fontWeight: FontWeight.w500,
@@ -270,23 +289,81 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         const SizedBox(height: _spacingLarge),
         SizedBox(
-          height: 200,
+          height: 300,
           child: Scrollbar(
             thickness: 6,
             radius: const Radius.circular(8),
-            child: ListView(
-              children: helpRequests
-                  .map((request) => Padding(
-                        padding: const EdgeInsets.only(bottom: _spacingMedium),
-                        child: _buildHelpRequestCard(
-                          request.title,
-                          request.description,
-                          request.needs,
-                          request.category,
-                          colors,
-                        ),
-                      ))
-                  .toList(),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _shelterService.getAllActiveHelpRequests(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      l.translate('error_loading_help_requests',
+                          {'error': snapshot.error.toString()}),
+                      style: TextStyle(color: colors.warning),
+                    ),
+                  );
+                }
+
+                final helpRequests = snapshot.data ?? [];
+
+                if (helpRequests.isEmpty) {
+                  return Center(
+                    child: Text(
+                      l.translate('no_active_help_requests'),
+                      style: TextStyle(color: colors.text200),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: helpRequests.length > 3 ? 3 : helpRequests.length,
+                  itemBuilder: (context, index) {
+                    final request = helpRequests[index];
+
+                    // Extract createdAt from the request
+                    DateTime createdAt;
+                    if (request.containsKey('createdAt')) {
+                      if (request['createdAt'] is DateTime) {
+                        createdAt = request['createdAt'];
+                      } else {
+                        createdAt = request['createdAt'].toDate();
+                      }
+                    } else {
+                      createdAt = DateTime.now();
+                    }
+
+                    // Get the correct shelter name
+                    final shelterName = request['shelterName'] ??
+                        l.translate('unknown_shelter');
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: _spacingMedium),
+                      child: _buildHelpRequestCard(
+                        request['type'] ?? l.translate('unknown'),
+                        request['description'] ?? l.translate('no_description'),
+                        l.translate('items_needed_fulfilled', {
+                          'requested':
+                              request['requestedQuantity']?.toString() ?? '0',
+                          'fulfilled':
+                              request['fulfilledQuantity']?.toString() ?? '0'
+                        }),
+                        request['type'] ?? l.translate('general'),
+                        colors,
+                        request['shelterId'],
+                        request['id'],
+                        shelterName, // Pass the correct shelter name
+                        createdAt,
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ),
@@ -300,69 +377,126 @@ class _CommunityScreenState extends State<CommunityScreen> {
     String needs,
     String category,
     AppColorTheme colors,
+    String shelterId,
+    String requestId,
+    String name,
+    DateTime createdAt,
   ) =>
-      Container(
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.bg100.withOpacity(0.2)),
-        ),
-        padding: const EdgeInsets.all(_paddingValue),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      StreamBuilder<Map<String, dynamic>>(
+          stream: _shelterService.getHelpRequestStream(shelterId, requestId),
+          builder: (context, snapshot) {
+            final l = AppLocalizations.of(context);
+            // Safely parse requested and fulfilled quantities from needs string
+            int parsedRequestedQuantity = 0;
+            int parsedFulfilledQuantity = 0;
+
+            try {
+              final parts = needs.split(' ');
+              if (parts.isNotEmpty) {
+                parsedRequestedQuantity = int.tryParse(parts[0]) ?? 0;
+              }
+
+              if (needs.contains('(')) {
+                final fulfilledPart = needs.split('(')[1];
+                final fulfilledParts = fulfilledPart.split(' ');
+                if (fulfilledParts.isNotEmpty) {
+                  parsedFulfilledQuantity =
+                      int.tryParse(fulfilledParts[0]) ?? 0;
+                }
+              }
+            } catch (e) {
+              // If any parsing error occurs, default to 0
+              parsedRequestedQuantity = 0;
+              parsedFulfilledQuantity = 0;
+            }
+
+            // Use the initial data passed to the card if stream hasn't loaded yet
+            final request = snapshot.data ??
+                {
+                  'type': title,
+                  'description': description,
+                  'requestedQuantity': parsedRequestedQuantity,
+                  'fulfilledQuantity': parsedFulfilledQuantity,
+                  'status': 'in_progress',
+                };
+
+            // Update the needs text with live data if available
+            final liveNeeds = snapshot.hasData
+                ? l.translate('items_needed_fulfilled', {
+                    'requested': (request['requestedQuantity'] ?? 0).toString(),
+                    'fulfilled': (request['fulfilledQuantity'] ?? 0).toString(),
+                  })
+                : needs;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: colors.bg100.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colors.bg100.withOpacity(0.2)),
+              ),
+              padding: const EdgeInsets.all(_paddingValue),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: colors.primary300,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l.translate(
+                                  'help_request_type_${(request['type'] ?? title).toLowerCase()}'),
+                              style: TextStyle(
+                                color: colors.primary300,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              request['description'] ?? description,
+                              style: TextStyle(
+                                color: colors.text200,
+                                fontSize: 14,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l.translate('from_shelter', {'name': name}),
+                              style: TextStyle(
+                                color: colors.text200,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          color: colors.text200,
-                          fontSize: 14,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: _spacingSmall, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: colors.bg100.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        child: Text(
+                          l.translate(
+                              'category_${(request['type'] ?? category).toLowerCase()}'),
+                          style: TextStyle(
+                            color: colors.accent200,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: _spacingSmall, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: colors.bg100.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    category,
-                    style: TextStyle(
-                      color: colors.accent200,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: _spacingMedium),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    needs,
+                  const SizedBox(height: _spacingMedium),
+                  Text(
+                    liveNeeds,
                     style: TextStyle(
                       color: colors.text200,
                       fontSize: 14,
@@ -370,174 +504,158 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement respond functionality
-                  },
-                  child: Text(
-                    'Respond',
-                    style: TextStyle(
-                      color: colors.accent200,
-                      fontWeight: FontWeight.w500,
+                  const SizedBox(height: _spacingSmall),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _showRespondDialog(context, colors, shelterId,
+                            requestId, request['type'] ?? title);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.accent200,
+                        foregroundColor: colors.bg100,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(l.translate('respond_to_request')),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
+                ],
+              ),
+            );
+          });
 
-  Widget _buildAvailableResources(BuildContext context, AppColorTheme colors) {
-    const List<Resource> resources = [
-      Resource(
-        title: 'Water Supplies',
-        description: '20 boxes of bottled water available for distribution',
-        location: '123 Main Street, Kuala Lumpur, 50000',
-        isAvailable: true,
-      ),
-      Resource(
-        title: 'Medical Equipment',
-        description: 'Wheelchairs and basic medical supplies',
-        location: '78 Hospital Street, Shah Alam, 40000',
-        isAvailable: false,
-      ),
-    ];
+  void _showRespondDialog(
+    BuildContext context,
+    AppColorTheme colors,
+    String shelterId,
+    String requestId,
+    String requestTitle,
+  ) {
+    final l = AppLocalizations.of(context);
+    final TextEditingController amountController = TextEditingController();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l.translate('respond_to_help_request')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Available Resources',
-              style: TextStyle(
-                color: colors.primary300,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              l.translate('request_title', {'title': requestTitle}),
+              style: TextStyle(color: colors.primary300),
             ),
-            TextButton(
-              onPressed: () {
-                // TODO: Navigate to full resources screen
-              },
-              child: Text(
-                'View All',
-                style: TextStyle(
-                  color: colors.accent200,
-                  fontWeight: FontWeight.w500,
-                ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              decoration: InputDecoration(
+                labelText: l.translate('amount_to_contribute'),
+                hintText: l.translate('enter_amount_hint'),
+                labelStyle: TextStyle(color: colors.text100),
+                hintStyle: TextStyle(color: colors.text100),
               ),
+              keyboardType: TextInputType.number,
             ),
           ],
         ),
-        const SizedBox(height: _spacingLarge),
-        SizedBox(
-          height: 200,
-          child: Scrollbar(
-            thickness: 6,
-            radius: const Radius.circular(8),
-            child: SingleChildScrollView(
-              child: Column(
-                children: resources
-                    .map((resource) => Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: _spacingMedium),
-                          child: _buildResourceCard(
-                            resource.title,
-                            resource.description,
-                            resource.location,
-                            resource.isAvailable,
-                            colors,
-                          ),
-                        ))
-                    .toList(),
-              ),
-            ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.translate('cancel')),
           ),
-        ),
-      ],
+          ElevatedButton(
+            onPressed: () async {
+              if (amountController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l.translate('please_enter_amount')),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              final amount = int.tryParse(amountController.text);
+              if (amount == null || amount <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l.translate('please_enter_valid_amount')),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              final userId = _userInformationService.userId;
+              if (userId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l.translate('must_be_logged_in')),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                Navigator.pop(context);
+                return;
+              }
+
+              try {
+                await _shelterService.respondToHelpRequest(
+                  shelterId: shelterId,
+                  requestId: requestId,
+                  responderId: userId,
+                  amount: amount,
+                );
+
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l.translate('thank_you_for_contribution')),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        l.translate('error_occurred', {'error': e.toString()})),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: Text(l.translate('submit')),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildResourceCard(
-    String title,
-    String description,
-    String location,
-    bool isAvailable,
-    AppColorTheme colors,
-  ) =>
-      Container(
-        decoration: BoxDecoration(
-          color: colors.bg100.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.bg100.withOpacity(0.2)),
-        ),
-        padding: const EdgeInsets.all(_paddingValue),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: colors.primary300,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          color: colors.text200,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: _spacingSmall, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: colors.bg100.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    isAvailable ? 'Available' : 'Unavailable',
-                    style: TextStyle(
-                      color: isAvailable ? colors.accent200 : colors.warning,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: _spacingMedium),
-            Row(
-              children: [
-                Icon(Icons.location_on_outlined,
-                    size: 16, color: colors.text200),
-                const SizedBox(width: 4),
-                Text(
-                  location,
-                  style: TextStyle(
-                    color: colors.text200,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
+  String _formatTimeAgo(DateTime dateTime) {
+    final l = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 7) {
+      return l.translate('date_format', {
+        'day': dateTime.day.toString(),
+        'month': dateTime.month.toString(),
+        'year': dateTime.year.toString()
+      });
+    } else if (difference.inDays > 0) {
+      return l.translate('days_ago', {'days': difference.inDays.toString()});
+    } else if (difference.inHours > 0) {
+      return l.translate('hours_ago', {'hours': difference.inHours.toString()});
+    } else if (difference.inMinutes > 0) {
+      return l.translate(
+          'minutes_ago', {'minutes': difference.inMinutes.toString()});
+    } else {
+      return l.translate('just_now');
+    }
+  }
 }

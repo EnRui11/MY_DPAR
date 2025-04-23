@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mydpar/officer/screens/community_group/event_detail_screen.dart';
+import 'package:mydpar/officer/screens/community_group/event_detail_admin_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -1409,128 +1409,125 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                   final member = members[index];
                   final isAdmin = member['role'] == 'admin';
                   final isCurrentUser = member['user_id'] == currentUserId;
+                  final fullName =
+                      '${member['firstName']} ${member['lastName']}'.trim();
 
-                  return FutureBuilder<String>(
-                    future: _getUserName(member['user_id']),
-                    builder: (context, snapshot) {
-                      final userName = snapshot.data ?? 'Unknown User';
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: isAdmin
-                                      ? colors.accent200
-                                      : colors.primary200,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    userName.isNotEmpty
-                                        ? userName[0].toUpperCase()
-                                        : 'U',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: isCurrentUser
+                                  ? colors.accent200
+                                  : colors.primary200,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                fullName.isNotEmpty
+                                    ? fullName[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          userName,
-                                          style: TextStyle(
-                                            color: colors.primary300,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        if (isAdmin) ...[
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: colors.accent200
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              localizations.translate('admin'),
-                                              style: TextStyle(
-                                                color: colors.accent200,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
                                     Text(
-                                      _formatTimestamp(member['joined_at']),
+                                      isCurrentUser
+                                          ? localizations.translate('me')
+                                          : fullName,
                                       style: TextStyle(
-                                        color: colors.text100,
-                                        fontSize: 12,
+                                        color: colors.primary300,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                    if (isAdmin) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              colors.accent200.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          localizations.translate('admin'),
+                                          style: TextStyle(
+                                            color: colors.accent200,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
-                              ),
-                              if (_isAdmin && !isCurrentUser)
-                                PopupMenuButton<String>(
-                                  icon: Icon(Icons.more_vert,
-                                      color: colors.text200),
-                                  onSelected: (value) {
-                                    if (value == 'role') {
-                                      _showUpdateRoleDialog(
-                                          member, colors, localizations);
-                                    } else if (value == 'remove') {
-                                      _showRemoveMemberConfirmation(
-                                          member, colors, localizations);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'role',
-                                      child: Text(localizations
-                                          .translate('change_role')),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'remove',
-                                      child: Text(localizations
-                                          .translate('remove_member')),
-                                    ),
-                                  ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatTimestamp(member['joined_at']),
+                                  style: TextStyle(
+                                    color: colors.text100,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                          if (_isAdmin && !isCurrentUser)
+                            PopupMenuButton<String>(
+                              icon:
+                                  Icon(Icons.more_vert, color: colors.text200),
+                              onSelected: (value) {
+                                if (value == 'role') {
+                                  _showUpdateRoleDialog(
+                                      member, colors, localizations);
+                                } else if (value == 'remove') {
+                                  _showRemoveMemberConfirmation(
+                                      member, colors, localizations);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'role',
+                                  child: Text(
+                                      localizations.translate('change_role')),
+                                ),
+                                PopupMenuItem(
+                                  value: 'remove',
+                                  child: Text(
+                                      localizations.translate('remove_member')),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               );
@@ -1851,5 +1848,15 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
       debugPrint('Error getting user name: $e');
     }
     return 'Unknown User';
+  }
+
+  Future<String> _getUserFullName(String userId) async {
+    try {
+      final userData = await _userInformationService.getUserFullName(userId);
+      return '${userData['firstName']} ${userData['lastName']}'.trim();
+    } catch (e) {
+      debugPrint('Error fetching user full name: $e');
+      return 'Unknown User';
+    }
   }
 }

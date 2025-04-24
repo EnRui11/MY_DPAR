@@ -24,12 +24,23 @@ class _ResourceManagementScreenState extends State<ResourceManagementScreen>
     with SingleTickerProviderStateMixin {
   final EmergencyTeamService _teamService = EmergencyTeamService();
   bool _isLoading = false;
+  bool _isVolunteerMember = false;
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _checkVolunteerStatus();
+  }
+
+  Future<void> _checkVolunteerStatus() async {
+    final isVolunteer = await _teamService.isVolunteerMember(widget.teamId);
+    if (mounted) {
+      setState(() {
+        _isVolunteerMember = isVolunteer;
+      });
+    }
   }
 
   @override
@@ -110,10 +121,11 @@ class _ResourceManagementScreenState extends State<ResourceManagementScreen>
               ),
             ],
           ),
-          IconButton(
-            icon: Icon(Icons.add, color: colors.accent200),
-            onPressed: () => _showAddResourceModal(colors, localizations),
-          ),
+          if (!_isVolunteerMember)
+            IconButton(
+              icon: Icon(Icons.add, color: colors.accent200),
+              onPressed: () => _showAddResourceModal(colors, localizations),
+            ),
         ],
       ),
     );
@@ -243,36 +255,37 @@ class _ResourceManagementScreenState extends State<ResourceManagementScreen>
               ],
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: colors.bg300)),
+          if (!_isVolunteerMember)
+            Container(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: colors.bg300)),
+              ),
+              child: Row(
+                children: [
+                  _buildActionButton(
+                    icon: Icons.edit,
+                    label: localizations.translate('edit'),
+                    onTap: () =>
+                        _showEditResourceModal(resource, colors, localizations),
+                    colors: colors,
+                  ),
+                  _buildActionButton(
+                    icon: Icons.delete,
+                    label: localizations.translate('delete'),
+                    onTap: () => _showDeleteConfirmation(
+                        resource, colors, localizations),
+                    colors: colors,
+                  ),
+                  _buildActionButton(
+                    icon: Icons.update,
+                    label: localizations.translate('update_quantity'),
+                    onTap: () => _showUpdateQuantityModal(
+                        resource, colors, localizations),
+                    colors: colors,
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                _buildActionButton(
-                  icon: Icons.edit,
-                  label: localizations.translate('edit'),
-                  onTap: () =>
-                      _showEditResourceModal(resource, colors, localizations),
-                  colors: colors,
-                ),
-                _buildActionButton(
-                  icon: Icons.delete,
-                  label: localizations.translate('delete'),
-                  onTap: () =>
-                      _showDeleteConfirmation(resource, colors, localizations),
-                  colors: colors,
-                ),
-                _buildActionButton(
-                  icon: Icons.update,
-                  label: localizations.translate('update_quantity'),
-                  onTap: () =>
-                      _showUpdateQuantityModal(resource, colors, localizations),
-                  colors: colors,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

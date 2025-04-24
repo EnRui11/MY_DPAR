@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mydpar/screens/community/help_requests_screen.dart';
+import 'package:mydpar/screens/community/volunteer_emergency_teams_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mydpar/theme/color_theme.dart';
 import 'package:mydpar/theme/theme_provider.dart';
@@ -12,6 +13,7 @@ import 'package:mydpar/officer/services/shelter_and_resource_service.dart';
 import 'package:mydpar/services/user_information_service.dart';
 import 'package:mydpar/screens/community/community_groups_member_screen.dart';
 import 'package:mydpar/localization/app_localizations.dart';
+import 'package:mydpar/screens/community/faq_feedback_screen.dart';
 
 // Model for feature items
 class FeatureItem {
@@ -181,8 +183,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       FeatureItem(
         icon: Icons.help_outline,
-        titleKey: 'help_and_support',
-        descriptionKey: 'request_assistance',
+        titleKey: 'faq',
+        descriptionKey: 'faq_and_feedback',
       ),
     ];
 
@@ -202,7 +204,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
     final l = AppLocalizations.of(context);
     return GestureDetector(
       onTap: () {
-        if (l.translate(feature.titleKey) == l.translate('resources')) {
+        if (l.translate(feature.titleKey) == l.translate('volunteer')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const VolunteerEmergencyTeamsScreen(),
+            ),
+          );
+        } else if (l.translate(feature.titleKey) == l.translate('resources')) {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -214,6 +223,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => const CommunityGroupsScreen(),
+            ),
+          );
+        } else if (l.translate(feature.titleKey) == l.translate('faq')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FAQFeedbackScreen(),
             ),
           );
         }

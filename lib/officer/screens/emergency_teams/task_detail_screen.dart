@@ -28,11 +28,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   bool _isLoading = true;
   Map<String, dynamic>? _taskData;
+  bool _isVolunteerMember = false;
 
   @override
   void initState() {
     super.initState();
     _loadTaskData();
+    _checkVolunteerStatus();
   }
 
   @override
@@ -60,6 +62,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           e,
         );
       }
+    }
+  }
+
+  Future<void> _checkVolunteerStatus() async {
+    final isVolunteer = await _teamService.isVolunteerMember(widget.teamId);
+    if (mounted) {
+      setState(() {
+        _isVolunteerMember = isVolunteer;
+      });
     }
   }
 
@@ -624,7 +635,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               icon: Icon(Icons.more_vert, color: colors.accent200),
               onPressed: () => _showTaskOptionsMenu(colors, localizations),
             )
-          else
+          else if (!_isVolunteerMember)
             IconButton(
               icon: Icon(Icons.update, color: colors.accent200),
               onPressed: () => _showUpdateStatusModal(colors, localizations),
@@ -1442,12 +1453,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       return AppLocalizations.of(context)!.translate('just_now');
     }
     if (difference.inHours < 1) {
-      return AppLocalizations.of(context)!.translate('minutes_ago', {
+      return AppLocalizations.of(context)!.translate('time_minutes_ago', {
         'count': difference.inMinutes.toString(),
       });
     }
     if (difference.inDays < 1) {
-      return AppLocalizations.of(context)!.translate('hours_ago', {
+      return AppLocalizations.of(context)!.translate('time_hours_ago', {
         'count': difference.inHours.toString(),
       });
     }
@@ -1455,7 +1466,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       return AppLocalizations.of(context)!.translate('yesterday');
     }
     if (difference.inDays < 7) {
-      return AppLocalizations.of(context)!.translate('days_ago', {
+      return AppLocalizations.of(context)!.translate('time_days_ago', {
         'count': difference.inDays.toString(),
       });
     }

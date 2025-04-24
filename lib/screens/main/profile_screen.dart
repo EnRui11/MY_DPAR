@@ -16,6 +16,8 @@ import 'package:mydpar/screens/main/map_screen.dart';
 import 'package:mydpar/screens/main/community_screen.dart';
 import 'package:mydpar/officer/screens/main/officer_nav_container.dart';
 
+import '../community/faq_feedback_screen.dart';
+
 // Model for settings items
 class SettingItem {
   final IconData icon;
@@ -197,11 +199,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
-            ),
-            IconButton(
-              icon: Icon(Icons.settings, color: colors.primary300),
-              onPressed: () => _navigateTo(const Placeholder()),
-              tooltip: AppLocalizations.of(context).translate('settings'),
             ),
           ],
         ),
@@ -424,18 +421,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           _buildSettingItem(
             SettingItem(
-              icon: Icons.shield_outlined,
-              title: AppLocalizations.of(context).translate('privacy'),
-              onTap: () => _navigateTo(const Placeholder()),
-            ),
-            colors,
-          ),
-          const SizedBox(height: _spacingMedium),
-          _buildSettingItem(
-            SettingItem(
               icon: Icons.help_outline,
               title: AppLocalizations.of(context).translate('help_support'),
-              onTap: () => _navigateTo(const Placeholder()),
+              onTap: () => _navigateTo(const FAQFeedbackScreen()),
             ),
             colors,
           ),

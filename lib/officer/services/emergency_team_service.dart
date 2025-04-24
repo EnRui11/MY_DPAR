@@ -1315,4 +1315,23 @@ class EmergencyTeamService {
       return teams;
     });
   }
+
+  /// Checks if the current user is a volunteer member of a team
+  Future<bool> isVolunteerMember(String teamId) async {
+    try {
+      final userId = _userInformationService.userId;
+      if (userId == null) return false;
+
+      final volunteerMemberDoc = await _firestore
+          .collection('emergency_teams')
+          .doc(teamId)
+          .collection('volunteer_members')
+          .doc(userId)
+          .get();
+
+      return volunteerMemberDoc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
 }

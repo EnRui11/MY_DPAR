@@ -391,25 +391,42 @@ class _TaskManagementScreenState extends State<TaskManagementScreen>
                         ),
                       ],
                     )
-                  : Row(
-                      children: [
-                        if (widget.isLeader) ...[
-                          _buildActionButton(
-                            icon: Icons.group,
-                            label: localizations.translate('assign_members'),
-                            onTap: () => _showAssignMembersModal(
-                                task, colors, localizations),
-                            colors: colors,
-                          ),
-                        ],
-                        _buildActionButton(
-                          icon: Icons.update,
-                          label: localizations.translate('update_status'),
-                          onTap: () => _showUpdateStatusModal(
-                              task, colors, localizations),
-                          colors: colors,
-                        ),
-                      ],
+                  : StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: _teamService.getTeamMembers(widget.teamId),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final members = snapshot.data!;
+                        final userId = _teamService.currentUserId;
+                        final isVolunteerMember = members.any((member) =>
+                            member['id'] == userId &&
+                            member['collection'] == 'volunteer_members');
+
+                        return Row(
+                          children: [
+                            if (widget.isLeader) ...[
+                              _buildActionButton(
+                                icon: Icons.group,
+                                label:
+                                    localizations.translate('assign_members'),
+                                onTap: () => _showAssignMembersModal(
+                                    task, colors, localizations),
+                                colors: colors,
+                              ),
+                            ],
+                            if (!isVolunteerMember)
+                              _buildActionButton(
+                                icon: Icons.update,
+                                label: localizations.translate('update_status'),
+                                onTap: () => _showUpdateStatusModal(
+                                    task, colors, localizations),
+                                colors: colors,
+                              ),
+                          ],
+                        );
+                      },
                     ),
             ),
           ],
